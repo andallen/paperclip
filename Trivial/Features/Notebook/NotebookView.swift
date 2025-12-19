@@ -11,26 +11,34 @@ struct NotebookView: View {
   let documentHandle: DocumentHandle
 
   var body: some View {
-    // Use VStack as the main container to avoid ZStack touch-handling issues.
-    VStack(spacing: 0) {
-      // Display the notebook name at the top.
-      Text(model.displayName)
-        .font(.system(size: 32, weight: .semibold))
-        .foregroundStyle(Color.ink)
-        .padding(.top, 24)
-        .padding(.bottom, 16)
-
-      // Drawing canvas fills the remaining space.
-      PKCanvasViewRepresentable()
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-    // Apply background behind the entire view hierarchy.
-    .background(
+    ZStack {
       BackgroundWhite()
         .ignoresSafeArea()
-    )
+        .allowsHitTesting(false)
+
+      VStack(spacing: 0) {
+        Text(model.displayName)
+          .font(.system(size: 32, weight: .semibold))
+          .foregroundStyle(Color.ink)
+          .padding(.top, 24)
+          .padding(.bottom, 16)
+
+        DrawingCanvas()
+      }
+    }
     .fontDesign(.rounded)
     .navigationBarTitleDisplayMode(.inline)
+  }
+}
+
+// Drawing canvas that wraps PencilKit for ink input.
+// Supports Apple Pencil and finger drawing with vertical scrolling.
+private struct DrawingCanvas: View {
+  var body: some View {
+    // The canvas fills the available space below the title.
+    PKCanvasViewRepresentable()
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
+      .background(Color.white)
   }
 }
 
@@ -43,26 +51,22 @@ private struct PKCanvasViewRepresentable: UIViewRepresentable {
 
   func makeUIView(context: Context) -> PKCanvasView {
     let canvasView = PKCanvasView()
-    // Enable drawing with both Apple Pencil and finger.
     canvasView.drawingPolicy = .anyInput
-    // Set up the default drawing tool (black ink pen).
     canvasView.tool = PKInkingTool(.pen, color: .black, width: 5)
-    // Configure the canvas appearance.
     canvasView.backgroundColor = .white
     canvasView.isOpaque = true
-    // Ensure touch events are received.
     canvasView.isUserInteractionEnabled = true
-    // Enable vertical scrolling on the canvas.
     canvasView.isScrollEnabled = true
     return canvasView
   }
 
   func updateUIView(_ canvasView: PKCanvasView, context: Context) {
-    // Set the content size for vertical scrolling once bounds are available.
+    // Set content size for vertical scrolling once the view has a valid width.
     if canvasView.bounds.width > 0 {
       canvasView.contentSize = CGSize(width: canvasView.bounds.width, height: canvasHeight)
     }
-    // Ensure the canvas can receive pencil input by becoming first responder.
+
+    // Ensure the canvas can receive pencil input.
     if canvasView.window != nil, !canvasView.isFirstResponder {
       DispatchQueue.main.async { canvasView.becomeFirstResponder() }
     }
