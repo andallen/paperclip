@@ -78,5 +78,12 @@ class NotebookLibrary: ObservableObject {
       // Later on, should show error message to the user.
     }
   }
+
+  // Opens a Notebook by asking the Bundle Manager to validate and open the Bundle.
+  // Returns a DocumentHandle that the editor can use for safe operations.
+  // Throws if the Notebook cannot be opened.
+  func openNotebook(notebookID: String) async throws -> DocumentHandle {
+    return try await bundleManager.openNotebook(id: notebookID)
+  }
 }
 

@@ -150,6 +150,60 @@ actor BundleManager {
     try fileManager.removeItem(at: bundleURL)
   }
 
+  // Opens a Notebook and returns a DocumentHandle for safe access.
+  // Validates that the Bundle exists, the Manifest can be decoded,
+  // the version is supported, and required fields are present.
+  // Throws if any validation fails.
+  func openNotebook(id notebookID: String) async throws -> DocumentHandle {
+    // Get the directory where Bundles are stored.
+    let bundlesDirectory = try await BundleStorage.bundlesDirectory()
+
+    // Build the Bundle folder URL from the notebook ID.
+    let bundleURL = bundlesDirectory.appendingPathComponent(notebookID, isDirectory: true)
+    let fileManager = FileManager.default
+
+    // Check if the Bundle exists.
+    var isDirectory: ObjCBool = false
+    guard fileManager.fileExists(atPath: bundleURL.path, isDirectory: &isDirectory),
+      isDirectory.boolValue
+    else {
+      throw BundleError.bundleNotFound(notebookID: notebookID)
+    }
+
+    // Check if the Manifest file exists.
+    let manifestURL = bundleURL.appendingPathComponent(Self.manifestFileName)
+    guard fileManager.fileExists(atPath: manifestURL.path) else {
+      throw BundleError.manifestNotFound(notebookID: notebookID)
+    }
+
+    // Read the Manifest data.
+    let data = try Data(contentsOf: manifestURL)
+
+    // Decode the Manifest.
+    let manifest: Manifest
+    do {
+      manifest = try JSONDecoder().decode(Manifest.self, from: data)
+    } catch {
+      throw BundleError.manifestDecodingFailed(notebookID: notebookID, underlyingError: error)
+    }
+
+    // Check the Manifest version is supported.
+    guard Manifest.supportedVersions.contains(manifest.version) else {
+      throw BundleError.unsupportedManifestVersion(notebookID: notebookID, version: manifest.version)
+    }
+
+    // Check required fields are present and valid.
+    guard !manifest.notebookID.isEmpty else {
+      throw BundleError.invalidManifest(notebookID: notebookID, reason: "notebookID is empty")
+    }
+    guard !manifest.displayName.isEmpty else {
+      throw BundleError.invalidManifest(notebookID: notebookID, reason: "displayName is empty")
+    }
+
+    // All checks passed. Create and return the DocumentHandle.
+    return DocumentHandle(notebookID: notebookID, bundleURL: bundleURL, manifest: manifest)
+  }
+
   // Writes a Manifest to disk using atomic write.
   // Writes to a temporary file first, then replaces the target file.
   // This prevents corruption if the write is interrupted.
@@ -180,6 +234,9 @@ actor BundleManager {
 enum BundleError: LocalizedError {
   case bundleNotFound(notebookID: String)
   case manifestNotFound(notebookID: String)
+  case manifestDecodingFailed(notebookID: String, underlyingError: Error)
+  case unsupportedManifestVersion(notebookID: String, version: Int)
+  case invalidManifest(notebookID: String, reason: String)
 
   var errorDescription: String? {
     switch self {
@@ -187,6 +244,12 @@ enum BundleError: LocalizedError {
       return "Bundle not found: \(notebookID)"
     case let .manifestNotFound(notebookID):
       return "Manifest not found in Bundle: \(notebookID)"
+    case let .manifestDecodingFailed(notebookID, underlyingError):
+      return "Failed to decode Manifest in Bundle \(notebookID): \(underlyingError.localizedDescription)"
+    case let .unsupportedManifestVersion(notebookID, version):
+      return "Unsupported Manifest version \(version) in Bundle: \(notebookID)"
+    case let .invalidManifest(notebookID, reason):
+      return "Invalid Manifest in Bundle \(notebookID): \(reason)"
     }
   }
 }

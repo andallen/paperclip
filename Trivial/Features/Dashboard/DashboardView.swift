@@ -142,6 +142,7 @@ private struct NoteCard: View {
   @ObservedObject var library: NotebookLibrary
   @State private var showingRenameAlert = false
   @State private var newName = ""
+  @State private var showingDeleteAlert = false
 
   var body: some View {
     ZStack(alignment: .topTrailing) {
@@ -165,9 +166,7 @@ private struct NoteCard: View {
         }
 
         Button(role: .destructive) {
-          Task {
-            await library.deleteNotebook(notebookID: notebookID)
-          }
+          showingDeleteAlert = true
         } label: {
           Label("Delete", systemImage: "trash")
         }
@@ -200,6 +199,16 @@ private struct NoteCard: View {
       }
     } message: {
       Text("Enter a new name for this notebook.")
+    }
+    .alert("Delete Notebook", isPresented: $showingDeleteAlert) {
+      Button("Cancel", role: .cancel) {}
+      Button("Delete", role: .destructive) {
+        Task {
+          await library.deleteNotebook(notebookID: notebookID)
+        }
+      }
+    } message: {
+      Text("Are you sure you want to delete \"\(title)\"? This action cannot be undone.")
     }
   }
 }
