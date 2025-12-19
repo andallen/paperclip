@@ -50,5 +50,33 @@ class NotebookLibrary: ObservableObject {
       // Later on, should show error message to the user.
     }
   }
+
+  // Renames a Notebook by asking the Bundle Manager to update the display name.
+  // After renaming, refreshes the list of Notebooks to show the updated name.
+  // Errors are silently ignored to keep the app usable.
+  func renameNotebook(notebookID: String, newDisplayName: String) async {
+    do {
+      try await bundleManager.renameBundle(notebookID: notebookID, newDisplayName: newDisplayName)
+      // Refresh the list to show the updated name.
+      await loadBundles()
+    } catch {
+      // Silently ignore errors to keep the app usable.
+      // Later on, should show error message to the user.
+    }
+  }
+
+  // Deletes a Notebook by asking the Bundle Manager to remove the Bundle.
+  // After deletion, refreshes the list of Notebooks to remove the deleted one.
+  // Errors are silently ignored to keep the app usable.
+  func deleteNotebook(notebookID: String) async {
+    do {
+      try await bundleManager.deleteBundle(notebookID: notebookID)
+      // Refresh the list to remove the deleted Notebook.
+      await loadBundles()
+    } catch {
+      // Silently ignore errors to keep the app usable.
+      // Later on, should show error message to the user.
+    }
+  }
 }
 

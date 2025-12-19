@@ -72,6 +72,7 @@ actor BundleManager {
 
     // Get the directory where Bundles are stored.
     let bundlesDirectory = try await BundleStorage.bundlesDirectory()
+    print("Notebooks root:", bundlesDirectory.path)
 
     // Create the Bundle folder using the Notebook ID as the folder name.
     let bundleURL = bundlesDirectory.appendingPathComponent(notebookID, isDirectory: true)
@@ -80,6 +81,7 @@ actor BundleManager {
       withIntermediateDirectories: true,
       attributes: nil
     )
+    print("Created bundle:", bundleURL.path)
 
     // Create the initial Manifest on the main actor.
     let manifest = await MainActor.run { Manifest(notebookID: notebookID, displayName: displayName) }

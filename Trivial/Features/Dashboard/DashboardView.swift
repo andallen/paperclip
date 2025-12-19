@@ -66,7 +66,7 @@ private struct RightPane: View {
 
         ForEach(library.notebooks) { notebook in
           NavigationLink(value: notebook.id) {
-            NoteCard(title: notebook.displayName)
+            NoteCard(title: notebook.displayName, notebookID: notebook.id, library: library)
           }
           .buttonStyle(.plain)
         }
@@ -138,19 +138,69 @@ private struct SearchBar: View {
 // Card displaying a Notebook in the grid.
 private struct NoteCard: View {
   let title: String
+  let notebookID: String
+  @ObservedObject var library: NotebookLibrary
+  @State private var showingRenameAlert = false
+  @State private var newName = ""
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 10) {
-      Text(title)
-        .font(.system(.title3, weight: .semibold))
-        .foregroundStyle(Color.ink)
-        .lineLimit(2)
+    ZStack(alignment: .topTrailing) {
+      VStack(alignment: .leading, spacing: 10) {
+        Text(title)
+          .font(.system(.title3, weight: .semibold))
+          .foregroundStyle(Color.ink)
+          .lineLimit(2)
 
-      Spacer(minLength: 0)
+        Spacer(minLength: 0)
+      }
+      .padding(16)
+      .frame(maxWidth: .infinity, minHeight: 160, alignment: .topLeading)
+
+      Menu {
+        Button {
+          newName = title
+          showingRenameAlert = true
+        } label: {
+          Label("Rename", systemImage: "pencil")
+        }
+
+        Button(role: .destructive) {
+          Task {
+            await library.deleteNotebook(notebookID: notebookID)
+          }
+        } label: {
+          Label("Delete", systemImage: "trash")
+        }
+
+        Button(role: .cancel) {
+        } label: {
+          Label("Cancel", systemImage: "xmark")
+        }
+      } label: {
+        Image(systemName: "ellipsis")
+          .font(.system(size: 16, weight: .medium))
+          .foregroundStyle(Color.inkSubtle)
+          .padding(8)
+          .contentShape(Rectangle())
+      }
+      .menuIndicator(.hidden)
+      .transaction { transaction in
+        transaction.animation = nil
+      }
+      .padding(8)
     }
-    .padding(16)
-    .frame(maxWidth: .infinity, minHeight: 160, alignment: .topLeading)
     .glassBackground(cornerRadius: 14)
+    .alert("Rename Notebook", isPresented: $showingRenameAlert) {
+      TextField("Name", text: $newName)
+      Button("Cancel", role: .cancel) {}
+      Button("Rename") {
+        Task {
+          await library.renameNotebook(notebookID: notebookID, newDisplayName: newName)
+        }
+      }
+    } message: {
+      Text("Enter a new name for this notebook.")
+    }
   }
 }
 
