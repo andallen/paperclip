@@ -2,7 +2,7 @@
 description: General project-wide rules.
 alwaysApply: true
 ---
-Comment frequently with simple and direct language. Comments should concisely spell out what EVERY PART OF THE CODE is doing, being easy to read and understand. Use clear grammar. Avoid any special headers or decorative markers. Do not use comments made of symbols or any section labels.
+Comment frequently with simple and direct language. Comments should concisely spell out what EVERY PART OF THE CODE is doing, being easy to read and understand. Use clear grammar. Avoid any special headers or decorative markers. Do not use comments made of symbols or any section labels. Do not use 2nd person terms like "you" in your comments.
 
 UI must be replaceable. Views and view models may only handle presentation (layout, formatting for display, user input, navigation state). They must not contain persistence logic, file access, data format logic, or “business rules.” All core operations must live in non-UI types and be exposed through a small, stable API (protocol/service). UI code must depend on that API and plain Swift data types, not on file paths or storage details.
 

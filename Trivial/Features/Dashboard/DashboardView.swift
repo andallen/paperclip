@@ -3,9 +3,17 @@ import SwiftUI
 // The Dashboard is the screen the user sees first.
 // It shows a list of Notebooks and provides actions to create, rename, delete, and open Notebooks.
 struct DashboardView: View {
+  // The Notebook Library that provides the list of Notebooks.
+  @StateObject private var library: NotebookLibrary
+
   private let columns: [GridItem] = [
     GridItem(.adaptive(minimum: 240, maximum: 360), spacing: 22, alignment: .top)
   ]
+
+  // Creates a Dashboard with a Notebook Library that uses the given Bundle Manager.
+  init(bundleManager: BundleManager = BundleManager()) {
+    _library = StateObject(wrappedValue: NotebookLibrary(bundleManager: bundleManager))
+  }
 
   var body: some View {
     ZStack {
@@ -17,7 +25,7 @@ struct DashboardView: View {
           .frame(width: 240)
 
         ScrollView(showsIndicators: false) {
-          RightPane(columns: columns)
+          RightPane(columns: columns, library: library)
             .padding(.vertical, 18)
             .padding(.trailing, 22)
             .padding(.leading, 6)
@@ -26,19 +34,17 @@ struct DashboardView: View {
       .padding(.leading, 22)
     }
     .fontDesign(.rounded)
+    .task {
+      // Load bundles when the Dashboard appears.
+      await library.loadBundles()
+    }
   }
 }
 
 // Right pane containing the main content area with the list of Notebooks.
 private struct RightPane: View {
   let columns: [GridItem]
-
-  private let notes: [(title: String, subtitle: String, date: String)] = [
-    (
-      "Linear Algebra — Eigenvectors", "Intuition, geometric meaning, and worked examples…",
-      "Dec 18"
-    )
-  ]
+  @ObservedObject var library: NotebookLibrary
 
   var body: some View {
     VStack(alignment: .leading, spacing: 18) {
@@ -56,17 +62,17 @@ private struct RightPane: View {
       Spacer().frame(height: 14)
 
       LazyVGrid(columns: columns, alignment: .leading, spacing: 22) {
-        NewNoteCard()
+        NewNoteCard(library: library)
 
-        ForEach(notes, id: \.title) { note in
-          NavigationLink(value: note.title) {
-            NoteCard(title: note.title, subtitle: note.subtitle, date: note.date)
+        ForEach(library.notebooks) { notebook in
+          NavigationLink(value: notebook.id) {
+            NoteCard(title: notebook.displayName)
           }
           .buttonStyle(.plain)
         }
       }
-      .navigationDestination(for: String.self) { notebookName in
-        NotebookView(notebookName: notebookName)
+      .navigationDestination(for: String.self) { notebookID in
+        NotebookView(notebookName: notebookID)
       }
 
       Spacer(minLength: 22)
@@ -132,8 +138,6 @@ private struct SearchBar: View {
 // Card displaying a Notebook in the grid.
 private struct NoteCard: View {
   let title: String
-  let subtitle: String
-  let date: String
 
   var body: some View {
     VStack(alignment: .leading, spacing: 10) {
@@ -142,17 +146,7 @@ private struct NoteCard: View {
         .foregroundStyle(Color.ink)
         .lineLimit(2)
 
-      Text(subtitle)
-        .font(.system(.body))
-        .foregroundStyle(Color.inkSubtle)
-        .lineSpacing(3)
-        .lineLimit(3)
-
       Spacer(minLength: 0)
-
-      Text(date.uppercased())
-        .font(.system(.footnote))
-        .foregroundStyle(Color.inkFaint)
     }
     .padding(16)
     .frame(maxWidth: .infinity, minHeight: 160, alignment: .topLeading)
@@ -162,19 +156,28 @@ private struct NoteCard: View {
 
 // Card for creating a new Notebook.
 private struct NewNoteCard: View {
-  var body: some View {
-    VStack(spacing: 10) {
-      Image(systemName: "plus")
-        .font(.system(size: 22, weight: .semibold))
-        .foregroundStyle(Color.inkSubtle)
+  @ObservedObject var library: NotebookLibrary
 
-      Text("New note")
-        .font(.system(.body, weight: .semibold))
-        .foregroundStyle(Color.ink)
+  var body: some View {
+    Button {
+      Task {
+        await library.createNotebook()
+      }
+    } label: {
+      VStack(spacing: 10) {
+        Image(systemName: "plus")
+          .font(.system(size: 22, weight: .semibold))
+          .foregroundStyle(Color.inkSubtle)
+
+        Text("New note")
+          .font(.system(.body, weight: .semibold))
+          .foregroundStyle(Color.ink)
+      }
+      .padding(16)
+      .frame(maxWidth: .infinity, minHeight: 160)
+      .glassBackground(cornerRadius: 14)
     }
-    .padding(16)
-    .frame(maxWidth: .infinity, minHeight: 160)
-    .glassBackground(cornerRadius: 14)
+    .buttonStyle(.plain)
   }
 }
 
