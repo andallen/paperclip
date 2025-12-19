@@ -30,10 +30,12 @@ actor DocumentHandle {
 
   // Loads the current Manifest from disk.
   // Use this to get the latest state of the Notebook.
-  func loadManifest() throws -> Manifest {
+  func loadManifest() async throws -> Manifest {
     let manifestURL = bundleURL.appendingPathComponent(Self.manifestFileName)
     let data = try Data(contentsOf: manifestURL)
-    let manifest = try JSONDecoder().decode(Manifest.self, from: data)
+    let manifest: Manifest = try await MainActor.run {
+      try JSONDecoder().decode(Manifest.self, from: data)
+    }
     return manifest
   }
 
@@ -85,13 +87,15 @@ actor DocumentHandle {
   // Updates the Manifest on disk.
   // Writes ink payload files first, then updates the Manifest,
   // so the Manifest never points to missing data.
-  func updateManifest(_ manifest: Manifest) throws {
+  func updateManifest(_ manifest: Manifest) async throws {
     let manifestURL = bundleURL.appendingPathComponent(Self.manifestFileName)
 
     // Encode the Manifest to JSON data.
     let encoder = JSONEncoder()
     encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-    let data = try encoder.encode(manifest)
+    let data: Data = try await MainActor.run {
+      try encoder.encode(manifest)
+    }
 
     // Write to a temporary file first for safe atomic write.
     let tempURL = bundleURL.appendingPathComponent(".\(Self.manifestFileName).tmp")

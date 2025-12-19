@@ -72,7 +72,7 @@ private struct RightPane: View {
         }
       }
       .navigationDestination(for: String.self) { notebookID in
-        NotebookView(notebookName: notebookID)
+        NotebookLoadingView(notebookID: notebookID, library: library)
       }
 
       Spacer(minLength: 22)

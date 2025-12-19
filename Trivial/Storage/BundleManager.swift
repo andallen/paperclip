@@ -179,16 +179,20 @@ actor BundleManager {
     // Read the Manifest data.
     let data = try Data(contentsOf: manifestURL)
 
-    // Decode the Manifest.
+    // Decode the Manifest on the main actor because its Decodable conformance is main-actor isolated.
     let manifest: Manifest
     do {
-      manifest = try JSONDecoder().decode(Manifest.self, from: data)
+      manifest = try await MainActor.run { () throws -> Manifest in
+        try JSONDecoder().decode(Manifest.self, from: data)
+      }
     } catch {
       throw BundleError.manifestDecodingFailed(notebookID: notebookID, underlyingError: error)
     }
 
     // Check the Manifest version is supported.
-    guard Manifest.supportedVersions.contains(manifest.version) else {
+    // Access the main actor-isolated static property safely
+    let supportedVersions = await MainActor.run { Manifest.supportedVersions }
+    guard supportedVersions.contains(manifest.version) else {
       throw BundleError.unsupportedManifestVersion(notebookID: notebookID, version: manifest.version)
     }
 
