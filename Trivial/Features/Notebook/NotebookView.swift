@@ -40,6 +40,9 @@ private struct DrawingCanvasWithScrollBar: View {
   // Tracks whether the scroll bar should be visible.
   @State private var showScrollBar: Bool = false
 
+  // Tracks the current zoom scale for scroll bar calculations.
+  @State private var zoomScale: CGFloat = 1.0
+
   // The height of the scrollable canvas area in points.
   private let canvasHeight: CGFloat = 5000
 
@@ -52,7 +55,8 @@ private struct DrawingCanvasWithScrollBar: View {
       PKCanvasViewRepresentable(
         canvasHeight: canvasHeight,
         scrollPosition: $scrollPosition,
-        showScrollBar: $showScrollBar
+        showScrollBar: $showScrollBar,
+        zoomScale: $zoomScale
       )
       .frame(maxWidth: .infinity, maxHeight: .infinity)
       .background(Color.white)
@@ -62,6 +66,7 @@ private struct DrawingCanvasWithScrollBar: View {
         ScrollBar(
           scrollPosition: scrollPosition,
           canvasHeight: canvasHeight,
+          zoomScale: zoomScale,
           onDrag: { newPosition in
             scrollPosition = newPosition
           }
@@ -86,6 +91,15 @@ private struct PKCanvasViewRepresentable: UIViewRepresentable {
   // Binding to control scroll bar visibility.
   @Binding var showScrollBar: Bool
 
+  // Binding to track the current zoom scale.
+  @Binding var zoomScale: CGFloat
+
+  // Minimum zoom scale (zoomed out).
+  private let minZoom: CGFloat = 0.5
+
+  // Maximum zoom scale (zoomed in).
+  private let maxZoom: CGFloat = 3.0
+
   func makeUIView(context: Context) -> PKCanvasView {
     let canvasView = PKCanvasView()
     canvasView.drawingPolicy = .anyInput
@@ -95,7 +109,15 @@ private struct PKCanvasViewRepresentable: UIViewRepresentable {
     canvasView.isUserInteractionEnabled = true
     canvasView.isScrollEnabled = true
 
-    // Find the scroll view inside PKCanvasView and set up scroll tracking.
+    // Enable pinch-to-zoom with two fingers.
+    canvasView.minimumZoomScale = minZoom
+    canvasView.maximumZoomScale = maxZoom
+    canvasView.bouncesZoom = true
+
+    // Store the canvas view reference in the coordinator for zooming.
+    context.coordinator.canvasView = canvasView
+
+    // Set up scroll and zoom tracking.
     context.coordinator.setupScrollTracking(for: canvasView)
 
     return canvasView
@@ -104,14 +126,16 @@ private struct PKCanvasViewRepresentable: UIViewRepresentable {
   func updateUIView(_ canvasView: PKCanvasView, context: Context) {
     // Set content size for vertical scrolling once the view has a valid width.
     if canvasView.bounds.width > 0 {
-      let scrollView = context.coordinator.findScrollView(in: canvasView)
-      scrollView?.contentSize = CGSize(width: canvasView.bounds.width, height: canvasHeight)
+      canvasView.contentSize = CGSize(width: canvasView.bounds.width, height: canvasHeight)
 
       // Update scroll position if it was changed externally (e.g., by dragging the scroll bar).
       if context.coordinator.lastExternalScrollPosition != scrollPosition {
-        let maxOffset = max(0, canvasHeight - canvasView.bounds.height)
+        // Account for zoom when calculating target offset.
+        let zoomScale = canvasView.zoomScale
+        let scaledContentHeight = canvasHeight * zoomScale
+        let maxOffset = max(0, scaledContentHeight - canvasView.bounds.height)
         let targetOffset = scrollPosition * maxOffset
-        scrollView?.contentOffset = CGPoint(x: 0, y: targetOffset)
+        canvasView.contentOffset = CGPoint(x: canvasView.contentOffset.x, y: targetOffset)
         context.coordinator.lastExternalScrollPosition = scrollPosition
       }
     }
@@ -124,20 +148,34 @@ private struct PKCanvasViewRepresentable: UIViewRepresentable {
 
   func makeCoordinator() -> Coordinator {
     Coordinator(
-      scrollPosition: $scrollPosition, showScrollBar: $showScrollBar, canvasHeight: canvasHeight)
+      scrollPosition: $scrollPosition,
+      showScrollBar: $showScrollBar,
+      zoomScale: $zoomScale,
+      canvasHeight: canvasHeight
+    )
   }
 
   // Coordinator that tracks scroll position and manages scroll view interactions.
   class Coordinator: NSObject {
     @Binding var scrollPosition: CGFloat
     @Binding var showScrollBar: Bool
+    @Binding var zoomScale: CGFloat
     let canvasHeight: CGFloat
     var scrollView: UIScrollView?
     var lastExternalScrollPosition: CGFloat = 0.0
 
-    init(scrollPosition: Binding<CGFloat>, showScrollBar: Binding<Bool>, canvasHeight: CGFloat) {
+    // Reference to the canvas view, used for zooming delegate method.
+    weak var canvasView: PKCanvasView?
+
+    init(
+      scrollPosition: Binding<CGFloat>,
+      showScrollBar: Binding<Bool>,
+      zoomScale: Binding<CGFloat>,
+      canvasHeight: CGFloat
+    ) {
       _scrollPosition = scrollPosition
       _showScrollBar = showScrollBar
+      _zoomScale = zoomScale
       self.canvasHeight = canvasHeight
     }
 
@@ -172,10 +210,13 @@ private struct PKCanvasViewRepresentable: UIViewRepresentable {
   }
 }
 
-// UIScrollViewDelegate extension to track scroll position changes.
+// UIScrollViewDelegate extension to track scroll position and zoom changes.
 extension PKCanvasViewRepresentable.Coordinator: UIScrollViewDelegate {
   func scrollViewDidScroll(_ scrollView: UIScrollView) {
-    let maxOffset = max(0, canvasHeight - scrollView.bounds.height)
+    // Account for zoom when calculating scroll position.
+    let zoomScale = scrollView.zoomScale
+    let scaledContentHeight = canvasHeight * zoomScale
+    let maxOffset = max(0, scaledContentHeight - scrollView.bounds.height)
     if maxOffset > 0 {
       scrollPosition = scrollView.contentOffset.y / maxOffset
       scrollPosition = max(0, min(1, scrollPosition))
@@ -183,6 +224,21 @@ extension PKCanvasViewRepresentable.Coordinator: UIScrollViewDelegate {
       scrollPosition = 0
     }
     lastExternalScrollPosition = scrollPosition
+  }
+
+  // Returns the view that should be zoomed when pinching.
+  // PKCanvasView uses its first subview as the zoomable content.
+  func viewForZooming(in scrollView: UIScrollView) -> UIView? {
+    guard let canvas = canvasView else { return nil }
+    // The drawing content is in the first subview of PKCanvasView.
+    return canvas.subviews.first
+  }
+
+  func scrollViewDidZoom(_ scrollView: UIScrollView) {
+    // Update zoom scale binding.
+    zoomScale = scrollView.zoomScale
+    // Update scroll position after zoom changes.
+    scrollViewDidScroll(scrollView)
   }
 }
 
@@ -194,6 +250,9 @@ private struct ScrollBar: View {
 
   // Total height of the scrollable canvas content.
   let canvasHeight: CGFloat
+
+  // Current zoom scale of the canvas.
+  let zoomScale: CGFloat
 
   // Callback when the user drags the scroll bar.
   let onDrag: (CGFloat) -> Void
@@ -210,7 +269,10 @@ private struct ScrollBar: View {
   var body: some View {
     GeometryReader { geometry in
       let trackHeight = geometry.size.height - 16
-      let visibleRatio = min(1.0, (geometry.size.height) / canvasHeight)
+      // Account for zoom when calculating visible ratio.
+      // When zoomed in, less content is visible so thumb should be smaller.
+      let scaledCanvasHeight = canvasHeight * zoomScale
+      let visibleRatio = min(1.0, geometry.size.height / scaledCanvasHeight)
       let thumbHeight = max(minThumbHeight, trackHeight * visibleRatio)
       let maxThumbOffset = trackHeight - thumbHeight
       let thumbOffset = scrollPosition * maxThumbOffset
