@@ -27,11 +27,6 @@ struct NotebookModel {
     self.inkItems = manifest.inkItems
   }
 
-  // Returns the ID of the first (and currently only) ink item, if one exists.
-  // For the single-item milestone, the entire drawing is stored as one ink item.
-  var primaryInkItemID: String? {
-    inkItems.first?.id
-  }
 
   // Returns true if this Notebook has any ink content.
   var hasInkContent: Bool {
