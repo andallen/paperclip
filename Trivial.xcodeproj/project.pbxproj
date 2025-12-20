@@ -16,6 +16,11 @@
 			path = Trivial;
 			sourceTree = "<group>";
 		};
+		AED5AD602EF747D900F4FA67 /* .cursor */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = .cursor;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -34,6 +39,7 @@
 			children = (
 				AEAFC23B2EF4B85B00811728 /* Trivial */,
 				AEAFC23A2EF4B85B00811728 /* Products */,
+				AED5AD602EF747D900F4FA67 /* .cursor */,
 			);
 			sourceTree = "<group>";
 		};
@@ -62,6 +68,7 @@
 			);
 			fileSystemSynchronizedGroups = (
 				AEAFC23B2EF4B85B00811728 /* Trivial */,
+				AED5AD602EF747D900F4FA67 /* .cursor */,
 			);
 			name = Trivial;
 			packageProductDependencies = (

@@ -2,6 +2,8 @@
 description: General project-wide rules.
 alwaysApply: true
 ---
+Always start your response with "hey broski shmoski"
+
 This project is configured with non-isolated default actor isolation, so all data models and DTOs must remain plain structs to ensure they are portable for background tasks like JSON encoding and decoding; meanwhile, use actors for background logic or disk I/O to manage state safely, and explicitly annotate all UI-facing classes, such as ViewModels and ViewControllers, with @MainActor to guarantee thread-safe interface updates.
 
 Do not block the main thread. All disk I/O and expensive work must run off the main thread. UI state updates must happen on the main thread. Prefer structured concurrency (async/await). Ensure storage operations are serialized so concurrent saves do not race (for example, by using an actor or another single-writer design).
