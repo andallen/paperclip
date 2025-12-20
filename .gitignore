@@ -1,0 +1,21 @@
+architecture.md
+
+# macOS
+.DS_Store
+
+# Xcode build output
+build/
+DerivedData/
+
+# Per-user Xcode settings (do not commit)
+*.xcuserdata/
+*.xcuserstate
+
+# Xcode source control files it may create
+*.xccheckout
+*.xcscmblueprint
+
+# Temporary/editor files
+*.swp
+*.tmp
+*.moved-aside
