@@ -18,18 +18,22 @@ class RenderView: UIView, IINKIRenderTarget {
     // MARK: - IINKIRenderTarget
     
     func invalidate(_ renderer: IINKRenderer, layers: IINKLayerType) {
-        // Dispatch to main thread since setNeedsDisplay() must be called on the main thread.
-        // The MyScript SDK may call this from background threads.
+        // MyScript calls this frequently during a stroke.
+        // If this isn't on the main thread, the screen won't update.
         DispatchQueue.main.async { [weak self] in
             self?.setNeedsDisplay()
         }
     }
 
     func invalidate(_ renderer: IINKRenderer, area: CGRect, layers: IINKLayerType) {
-        // Dispatch to main thread since setNeedsDisplay() must be called on the main thread.
-        // The MyScript SDK may call this from background threads.
+        // MyScript calls this on a background thread whenever the ink model changes.
         DispatchQueue.main.async { [weak self] in
-            self?.setNeedsDisplay(area)
+            // Passing the specific 'area' is more efficient for the GPU.
+            if area.isEmpty || area.isInfinite {
+                self?.setNeedsDisplay()
+            } else {
+                self?.setNeedsDisplay(area)
+            }
         }
     }
 
@@ -67,41 +71,52 @@ class RenderView: UIView, IINKIRenderTarget {
         canvas.size = self.bounds.size
         canvas.clearAtStartDraw = false
         
-        // Draw the permanent background ink (Model) and the active strokes (Capture).
+        // 1. Draw Model: The permanent, recognized ink.
         renderer.drawModel(rect, canvas: canvas)
+        
+        // 2. Draw Capture: The "temporary" ink currently under the pen/mouse.
+        // IF THIS LINE IS MISSING, YOU WILL SEE NOTHING DURING THE DRAG.
         renderer.drawCaptureStrokes(rect, canvas: canvas)
     }
 
     // MARK: - Input Routing
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        print("📱 UIKit: touchesBegan - sending pointerDown (type 0)")
+        // DO NOT call processTouches(touches, type: .down) here!
         processTouches(touches, type: .down)
     }
 
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+        // DO NOT call processTouches(touches, type: .down) here!
         guard let touch = touches.first, let event = event else { return }
         let coalesced = event.coalescedTouches(for: touch) ?? [touch]
         processTouches(Set(coalesced), type: .move)
     }
 
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        print("📱 UIKit: touchesEnded - sending pointerUp (type 2)")
         processTouches(touches, type: .up)
     }
 
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
-        guard let editor = editor else { return }
-        for touch in touches {
-            let pointerId = Int32(truncatingIfNeeded: touch.hash)
-            try? editor.pointerCancel(Int(pointerId))
-        }
+        print("📱 UIKit: touchesCancelled - treating as pointerUp (type 2)")
+        // Treat cancelled touches as pointerUp to ensure strokes are completed.
+        processTouches(touches, type: .up)
     }
 
     private func processTouches(_ touches: Set<UITouch>, type: IINKPointerEventType) {
-        guard let editor = editor else { return }
+        // Check if the editor reference exists.
+        guard let editor = editor else {
+            print("⚠️ Input Routing Failed: Editor is NIL in RenderView")
+            return
+        }
+        
+        print("🖱️ Touch detected: \(touches.count) points of type \(type.rawValue)")
         
         let pointerEvents = touches.map { touch in
             let location = touch.location(in: self)
-            let force = touch.maximumPossibleForce > 0 ? Float(touch.force / touch.maximumPossibleForce) : 0
+            let force = touch.maximumPossibleForce > 0 ? Float(touch.force / touch.maximumPossibleForce) : 1.0
             let timestamp = Int64(touch.timestamp * 1000)
             let pointerType: IINKPointerType = (touch.type == .stylus) ? .pen : .touch
             let pointerId = Int32(truncatingIfNeeded: touch.hash)
@@ -109,12 +124,17 @@ class RenderView: UIView, IINKIRenderTarget {
             return IINKPointerEventMake(type, location, timestamp, force, pointerType, pointerId)
         }
 
-        // Convert array to UnsafeMutablePointer for the API
+        // Convert array to UnsafeMutablePointer for the API.
         var mutableEvents = pointerEvents
         let count = mutableEvents.count
         mutableEvents.withUnsafeMutableBufferPointer { buffer in
             guard let baseAddress = buffer.baseAddress else { return }
-            try? editor.pointerEvents(baseAddress, count: count, doProcessGestures: true)
+            do {
+                // Send the events to the engine.
+                try editor.pointerEvents(baseAddress, count: count, doProcessGestures: true)
+            } catch {
+                print("❌ MyScript failed to process pointer events: \(error.localizedDescription)")
+            }
         }
     }
 }

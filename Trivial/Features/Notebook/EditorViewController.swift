@@ -25,9 +25,21 @@ class EditorViewController: UIViewController {
   override func viewDidLoad() {
     super.viewDidLoad()
 
+    // Ensure the parent view allows interaction.
+    self.view.isUserInteractionEnabled = true
+    
     // Initialize the custom RenderView.
     let canvas = RenderView(frame: self.view.bounds)
     canvas.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+    
+    // Explicitly enable interaction to ensure touch events are received.
+    canvas.isUserInteractionEnabled = true
+    
+    // Prevent the system from stealing touches for navigation gestures.
+    // If this is in a navigation controller, it prevents the "swipe to go back"
+    // gesture from canceling your ink strokes.
+    self.navigationController?.interactivePopGestureRecognizer?.isEnabled = false
+    
     self.view.addSubview(canvas)
     self.renderView = canvas
 
@@ -55,21 +67,20 @@ class EditorViewController: UIViewController {
       return
     }
 
-    // CORRECTED: Use nativeScale to calculate physical DPI (iPad Pro is ~264 DPI).
-    // This ensures ink appears exactly under the Apple Pencil tip.
-    // Use trait collection scale if available, otherwise fall back to screen scale.
-    // In viewDidLoad, the window might not be set yet, so we use the trait collection.
-    let scale: CGFloat
-    if let windowScene = self.view.window?.windowScene {
-      scale = windowScene.screen.nativeScale
-    } else if #available(iOS 13.0, *) {
-      // Use trait collection scale as fallback (iOS 26.0+ recommendation)
-      scale = self.view.traitCollection.displayScale
-    } else {
-      // Final fallback for older iOS versions
-      scale = UIScreen.main.nativeScale
-    }
-    let physicalDPI = Float(scale * 132) 
+    // Adjust DPI based on environment.
+    // Simulator needs a fixed DPI to ensure strokes aren't rejected as "too small".
+    // Physical devices use native scale for accurate coordinate mapping.
+    let physicalDPI: Float
+    #if targetEnvironment(simulator)
+      // Use a fixed, standard DPI for the Simulator to ensure correct scale.
+      physicalDPI = 96.0
+    #else
+      // Use the actual device scale for physical hardware.
+      let scale = UIScreen.main.nativeScale
+      physicalDPI = Float(scale * 132)
+    #endif
+    
+    print("📏 Setting MyScript DPI to: \(physicalDPI)")
 
     if let renderer = try? engine.createRenderer(dpiX: physicalDPI, dpiY: physicalDPI, target: canvas) {
       self.renderer = renderer
