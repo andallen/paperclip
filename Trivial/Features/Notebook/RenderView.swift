@@ -9,7 +9,9 @@ class RenderView: UIView, IINKIRenderTarget {
     override init(frame: CGRect) {
         super.init(frame: frame)
         self.backgroundColor = .white
-        self.isMultipleTouchEnabled = true
+        // Disable multiple touch while drawing ink to prevent gesture conflicts.
+        // Two simultaneous touches will be treated as a gesture and can prevent stroke creation.
+        self.isMultipleTouchEnabled = false
         self.canvas = Canvas()
     }
 

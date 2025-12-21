@@ -29,11 +29,11 @@ class Canvas: NSObject, IINKICanvas {
         // Add this log to see the raw hex value the engine is sending.
         print("🎨 Canvas: setStrokeColor called with hex: \(String(format: "0x%08X", color))")
         
-        // Correct bit shifting for 0xAARRGGBB format.
-        let a = CGFloat((color >> 24) & 0xFF) / 255.0
-        let r = CGFloat((color >> 16) & 0xFF) / 255.0
-        let g = CGFloat((color >> 8) & 0xFF) / 255.0
-        let b = CGFloat(color & 0xFF) / 255.0
+        // Correct bit shifting for 0xRRGGBBAA format (MyScript uses RGBA, not ARGB).
+        let r = CGFloat((color >> 24) & 0xFF) / 255.0
+        let g = CGFloat((color >> 16) & 0xFF) / 255.0
+        let b = CGFloat((color >> 8) & 0xFF) / 255.0
+        let a = CGFloat(color & 0xFF) / 255.0
         context?.setStrokeColor(red: r, green: g, blue: b, alpha: a)
     }
     
@@ -92,11 +92,11 @@ class Canvas: NSObject, IINKICanvas {
     
     func setFillColor(_ color: UInt32) {
         style.fillColor = color
-        // Correct bit shifting for 0xAARRGGBB format.
-        let a = CGFloat((color >> 24) & 0xFF) / 255.0
-        let r = CGFloat((color >> 16) & 0xFF) / 255.0
-        let g = CGFloat((color >> 8) & 0xFF) / 255.0
-        let b = CGFloat(color & 0xFF) / 255.0
+        // Correct bit shifting for 0xRRGGBBAA format (MyScript uses RGBA, not ARGB).
+        let r = CGFloat((color >> 24) & 0xFF) / 255.0
+        let g = CGFloat((color >> 16) & 0xFF) / 255.0
+        let b = CGFloat((color >> 8) & 0xFF) / 255.0
+        let a = CGFloat(color & 0xFF) / 255.0
         context?.setFillColor(red: r, green: g, blue: b, alpha: a)
     }
     
@@ -106,6 +106,7 @@ class Canvas: NSObject, IINKICanvas {
     
     func setDropShadow(_ xOffset: Float, yOffset: Float, radius: Float, color: UInt32) {
         if color != 0 {
+            // Correct bit shifting for 0xRRGGBBAA format (MyScript uses RGBA, not ARGB).
             let r = CGFloat((color >> 24) & 0xFF) / 255.0
             let g = CGFloat((color >> 16) & 0xFF) / 255.0
             let b = CGFloat((color >> 8) & 0xFF) / 255.0
@@ -163,14 +164,14 @@ class Canvas: NSObject, IINKICanvas {
         context.saveGState()
         
         // Configure stroke properties from the MyScript style object.
-        // Check the Alpha channel (highest 8 bits) instead of the Blue channel.
-        if (style.strokeColor >> 24) > 0 {
+        // Check the Alpha channel (low byte) for RGBA format.
+        if (style.strokeColor & 0xFF) > 0 {
             let strokeColor = style.strokeColor
-            // Correct bit shifting for 0xAARRGGBB format.
-            let a = CGFloat((strokeColor >> 24) & 0xFF) / 255.0
-            let r = CGFloat((strokeColor >> 16) & 0xFF) / 255.0
-            let g = CGFloat((strokeColor >> 8) & 0xFF) / 255.0
-            let b = CGFloat(strokeColor & 0xFF) / 255.0
+            // Correct bit shifting for 0xRRGGBBAA format (MyScript uses RGBA, not ARGB).
+            let r = CGFloat((strokeColor >> 24) & 0xFF) / 255.0
+            let g = CGFloat((strokeColor >> 16) & 0xFF) / 255.0
+            let b = CGFloat((strokeColor >> 8) & 0xFF) / 255.0
+            let a = CGFloat(strokeColor & 0xFF) / 255.0
             context.setStrokeColor(red: r, green: g, blue: b, alpha: a)
             context.setLineWidth(CGFloat(style.strokeWidth))
             
@@ -203,29 +204,29 @@ class Canvas: NSObject, IINKICanvas {
         context.addPath(path.bezierPath.cgPath)
         
         // Fill if fill color has alpha.
-        // Check the Alpha channel (highest 8 bits) instead of the Blue channel.
-        if (style.fillColor >> 24) > 0 {
+        // Check the Alpha channel (low byte) for RGBA format.
+        if (style.fillColor & 0xFF) > 0 {
             let fillColor = style.fillColor
-            // Correct bit shifting for 0xAARRGGBB format.
-            let a = CGFloat((fillColor >> 24) & 0xFF) / 255.0
-            let r = CGFloat((fillColor >> 16) & 0xFF) / 255.0
-            let g = CGFloat((fillColor >> 8) & 0xFF) / 255.0
-            let b = CGFloat(fillColor & 0xFF) / 255.0
+            // Correct bit shifting for 0xRRGGBBAA format (MyScript uses RGBA, not ARGB).
+            let r = CGFloat((fillColor >> 24) & 0xFF) / 255.0
+            let g = CGFloat((fillColor >> 16) & 0xFF) / 255.0
+            let b = CGFloat((fillColor >> 8) & 0xFF) / 255.0
+            let a = CGFloat(fillColor & 0xFF) / 255.0
             context.setFillColor(red: r, green: g, blue: b, alpha: a)
             let fillRule: CGPathFillRule = style.fillRule == .evenOdd ? .evenOdd : .winding
             context.fillPath(using: fillRule)
             // Re-add path for stroke if needed, since fillPath consumes the path.
-            if (style.strokeColor >> 24) > 0 {
+            if (style.strokeColor & 0xFF) > 0 {
                 context.addPath(path.bezierPath.cgPath)
             }
         }
         
         // Stroke if stroke color has alpha.
-        // Check the Alpha channel (highest 8 bits) instead of the Blue channel.
-        if (style.strokeColor >> 24) > 0 {
+        // Check the Alpha channel (low byte) for RGBA format.
+        if (style.strokeColor & 0xFF) > 0 {
             context.strokePath()
         } else {
-            print("🛑 Canvas: strokePath skipped! Alpha channel (0x\(String(format: "%02X", (style.strokeColor >> 24) & 0xFF))) is 0.")
+            print("🛑 Canvas: strokePath skipped! Alpha channel (0x\(String(format: "%02X", style.strokeColor & 0xFF))) is 0.")
         }
         
         context.restoreGState()

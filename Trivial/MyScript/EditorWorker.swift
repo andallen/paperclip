@@ -7,30 +7,55 @@ class EditorWorker: NSObject, ObservableObject {
     private var documentHandle: DocumentHandle?
 
     func attach(engine: IINKEngine, renderer: IINKRenderer) {
+        // Create a tool controller for the editor.
+        let toolController = engine.createToolController()
+        
+        // Map pointer types to tools.
+        // By default, TOUCH → HAND (pan/interaction) and PEN → PEN (ink).
+        // Disable "active pen mode" behavior: let finger draw ink.
+        do {
+            try toolController.set(tool: IINKPointerTool.toolPen, forType: IINKPointerType.touch)
+            // Keep stylus drawing ink too.
+            try toolController.set(tool: IINKPointerTool.toolPen, forType: IINKPointerType.pen)
+        } catch {
+            print("❌ EditorWorker: Failed to map tools: \(error)")
+        }
+        
         // Create the editor synchronously.
         // Defer the @Published update to avoid publishing during view updates.
-        let newEditor = engine.createEditor(renderer: renderer, toolController: nil)
+        let newEditor = engine.createEditor(renderer: renderer, toolController: toolController)
         
-        // Define a default CSS theme.
+        // Diagnostic: Check if toolController is present.
+        print("🔧 EditorWorker: toolController is nil? \(newEditor?.toolController == nil)")
+        
+        // Define a default CSS theme with 8-digit colors (alpha included).
         // Without this, colors default to 0x00000000 (fully transparent).
         let theme = """
         .ink {
-            color: #000000;
+            color: #000000FF;
             -myscript-pen-width: 1.5;
-            -myscript-pen-fill-color: #000000;
         }
         """
         
         do {
-            // Set the theme globally for this editor instance.
-            try newEditor?.configuration.set(string: theme, forKey: "theme")
+            // Apply the theme using the correct API (not configuration.set).
+            try newEditor?.set(theme: theme)
+            
+            // Make the active pen tool explicitly visible (this overrides theme if needed).
+            if let editor = newEditor {
+                try editor.toolController.set(
+                    style: "color: #000000FF; -myscript-pen-width: 1.5",
+                    forTool: IINKPointerTool.toolPen
+                )
+            }
+            
             newEditor?.set(fontMetricsProvider: FontMetricsProvider())
             
             // Assign the delegate to this instance of EditorWorker.
             // This allows the engine to notify of background errors.
             newEditor?.delegate = self
         } catch {
-            print("❌ EditorWorker: Failed to set theme: \(error.localizedDescription)")
+            print("❌ EditorWorker: Theme/style failed: \(error)")
         }
         
         // Update @Published asynchronously to avoid publishing during view updates.
