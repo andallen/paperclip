@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		AEAB2C862EF7BD3300424068 /* Trivial.c in Sources */ = {isa = PBXBuildFile; fileRef = AEAB2C842EF7BD3300424068 /* Trivial.c */; };
+		AE4C26BF2EF84C9A0089CC3C /* me.andy.allen.Trivial.c in Sources */ = {isa = PBXBuildFile; fileRef = AE4C26BE2EF84C9A0089CC3C /* me.andy.allen.Trivial.c */; };
 		C4B8257FA31BED22370271D6 /* libPods-Trivial.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8C6004BA06274FD2310574B0 /* libPods-Trivial.a */; };
 /* End PBXBuildFile section */
 
@@ -15,8 +15,8 @@
 		0FA740AD3C1724826C80E68D /* Pods-Trivial.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Trivial.debug.xcconfig"; path = "Target Support Files/Pods-Trivial/Pods-Trivial.debug.xcconfig"; sourceTree = "<group>"; };
 		7AEECD521EFF89C6373D9C02 /* Pods-Trivial.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Trivial.release.xcconfig"; path = "Target Support Files/Pods-Trivial/Pods-Trivial.release.xcconfig"; sourceTree = "<group>"; };
 		8C6004BA06274FD2310574B0 /* libPods-Trivial.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Trivial.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		AE4C26BE2EF84C9A0089CC3C /* me.andy.allen.Trivial.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = me.andy.allen.Trivial.c; path = /Users/andrewallen/Downloads/me.andy.allen.Trivial.c; sourceTree = "<absolute>"; };
 		AEAB2C832EF7BD3300424068 /* MyCertificate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MyCertificate.h; sourceTree = "<group>"; };
-		AEAB2C842EF7BD3300424068 /* Trivial.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Trivial.c; sourceTree = "<group>"; };
 		AEAFC2392EF4B85B00811728 /* Trivial.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Trivial.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -71,7 +71,7 @@
 			isa = PBXGroup;
 			children = (
 				AEAB2C832EF7BD3300424068 /* MyCertificate.h */,
-				AEAB2C842EF7BD3300424068 /* Trivial.c */,
+				AE4C26BE2EF84C9A0089CC3C /* me.andy.allen.Trivial.c */,
 			);
 			path = MyScriptCertificate;
 			sourceTree = "<group>";
@@ -171,7 +171,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				AEAB2C862EF7BD3300424068 /* Trivial.c in Sources */,
+				AE4C26BF2EF84C9A0089CC3C /* me.andy.allen.Trivial.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

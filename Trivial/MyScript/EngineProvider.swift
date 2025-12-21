@@ -32,42 +32,58 @@ final class EngineProvider {
   // Can be used by the UI to display an error to the user.
   private(set) var engineErrorMessage: String = ""
 
-  // The IINKEngine instance. Lazily initialized with the MyScript certificate.
+  // The IINKEngine instance. Set after async initialization completes.
   // Returns nil if the certificate is missing or invalid.
-  private(set) lazy var engine: IINKEngine? = {
+  private(set) var engine: IINKEngine?
+
+  // Tracks whether initialization has been attempted.
+  private var hasInitialized = false
+
+  // Private initializer to enforce singleton pattern.
+  private init() {}
+
+  // Initializes the engine asynchronously to avoid blocking the main thread.
+  // The MyScript SDK performs license validation over the network during initialization.
+  // This method should be called once at app startup.
+  func initializeEngine() async {
+    // Only initialize once.
+    guard !hasInitialized else { return }
+    hasInitialized = true
+
     // Check if certificate data is present.
     // The myCertificate constant is defined in the bridged MyCertificate.h file.
     guard myCertificate.length > 0 else {
       self.engineErrorMessage = EngineProviderError.missingCertificate.localizedDescription
-      return nil
+      return
     }
 
     // Convert the certificate bytes into a Data object.
-    // The bytes pointer is cast to UInt8 since Swift Data expects unsigned bytes.
     let certificateData = Data(
       bytes: myCertificate.bytes,
       count: myCertificate.length
     )
 
-    // Attempt to instantiate the engine with the certificate.
-    guard let engine = IINKEngine(certificate: certificateData) else {
+    // Perform engine initialization on a background thread to avoid blocking UI.
+    // The IINKEngine(certificate:) call makes a synchronous network request for license validation.
+    let createdEngine: IINKEngine? = await Task.detached(priority: .userInitiated) {
+      return IINKEngine(certificate: certificateData)
+    }.value
+
+    // Check if engine was created successfully.
+    guard let createdEngine else {
       self.engineErrorMessage = EngineProviderError.invalidCertificate.localizedDescription
-      return nil
+      return
     }
 
     // Configure the engine with asset paths and temporary directory.
+    // This runs on the main thread since engine configuration should happen there.
     do {
-      try configure(engine: engine)
+      try configure(engine: createdEngine)
+      self.engine = createdEngine
     } catch {
       self.engineErrorMessage = error.localizedDescription
-      return nil
     }
-
-    return engine
-  }()
-
-  // Private initializer to enforce singleton pattern.
-  private init() {}
+  }
 
   // Configures the engine with the required paths for recognition assets
   // and a temporary directory for intermediate data.
@@ -111,4 +127,3 @@ final class EngineProvider {
     return engine != nil
   }
 }
-

@@ -6,9 +6,15 @@ struct AppRootView: View {
   // Track whether the engine failed to initialize.
   @State private var engineError: String?
 
+  // Track whether engine initialization is in progress.
+  @State private var isInitializing = true
+
   var body: some View {
     Group {
-      if let errorMessage = engineError {
+      if isInitializing {
+        // Show loading indicator while engine initializes.
+        EngineLoadingView()
+      } else if let errorMessage = engineError {
         // Display an error view if the engine failed to initialize.
         EngineErrorView(errorMessage: errorMessage)
       } else {
@@ -19,12 +25,31 @@ struct AppRootView: View {
       }
     }
     .task {
-      // Validate engine initialization on launch.
-      // Access the engine property to trigger lazy initialization.
+      // Initialize the engine asynchronously on launch.
+      // This runs the license validation on a background thread.
       let provider = EngineProvider.shared
+      await provider.initializeEngine()
+
+      // Check if initialization succeeded.
       if provider.engine == nil {
         engineError = provider.engineErrorMessage
       }
+
+      isInitializing = false
+    }
+  }
+}
+
+// Displays a loading indicator while the MyScript engine initializes.
+struct EngineLoadingView: View {
+  var body: some View {
+    VStack(spacing: 16) {
+      ProgressView()
+        .scaleEffect(1.5)
+
+      Text("Initializing...")
+        .font(.subheadline)
+        .foregroundStyle(.secondary)
     }
   }
 }
@@ -62,6 +87,10 @@ struct EngineErrorView: View {
 
 #Preview("Normal") {
   AppRootView()
+}
+
+#Preview("Loading") {
+  EngineLoadingView()
 }
 
 #Preview("Engine Error") {
