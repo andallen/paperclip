@@ -105,7 +105,6 @@ actor DocumentHandle {
     guard let capturedPackage = self.package else {
       throw DocumentHandleError.packageNotAvailable
     }
-    let capturedPath = self.packagePath
     try await MainActor.run {
       try capturedPackage.save()
     }
