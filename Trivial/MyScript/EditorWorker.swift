@@ -13,41 +13,45 @@ final class EditorWorker: NSObject, ObservableObject {
         let tc = engine.createToolController()
         toolController = tc
         
-        // Map pointer types to tools.
-        // By default, TOUCH → HAND (pan/interaction) and PEN → PEN (ink).
-        // Disable "active pen mode" behavior: let finger draw ink.
-        do {
-            try tc.set(tool: IINKPointerTool.toolPen, forType: IINKPointerType.touch)
-            // Keep stylus drawing ink too.
-            try tc.set(tool: IINKPointerTool.toolPen, forType: IINKPointerType.pen)
-        } catch {
-            print("❌ EditorWorker: Failed to map tools: \(error)")
+        // Create the editor with the tool controller.
+        // The tool controller must be passed at creation time.
+        guard let e = engine.createEditor(renderer: renderer, toolController: tc) else {
+            print("❌ EditorWorker: Failed to create editor")
+            return
         }
         
-        // Create the editor synchronously.
-        let e = engine.createEditor(renderer: renderer, toolController: tc)
-        
         // Assign the delegate immediately.
-        e?.delegate = self
+        e.delegate = self
         
-        // Apply theme using the correct API (editor.set(theme:), not configuration.set).
+        // Apply theme using the editor's theme API (not configuration.set).
         // Use 8-digit color format (#000000FF) to ensure alpha is included.
         do {
-            try e?.set(theme: ".ink { color: #000000FF; -myscript-pen-width: 1.5; }")
+            try e.set(theme: ".ink { color: #000000FF; -myscript-pen-width: 1.5; }")
         } catch {
             print("❌ EditorWorker: Failed to set theme: \(error)")
         }
         
-        // Set tool style through the tool controller (not configuration).
+        // Map pointer types to tools using the editor's tool controller.
+        // By default, TOUCH → HAND (pan/interaction) and PEN → PEN (ink).
+        // Disable "active pen mode" behavior: let finger draw ink.
+        do {
+            try e.toolController.set(tool: IINKPointerTool.toolPen, forType: IINKPointerType.touch)
+            // Keep stylus drawing ink too.
+            try e.toolController.set(tool: IINKPointerTool.toolPen, forType: IINKPointerType.pen)
+        } catch {
+            print("❌ EditorWorker: Failed to map tools: \(error)")
+        }
+        
+        // Set tool style through the editor's tool controller (not configuration).
         // This ensures the pen tool has an explicit opaque color.
         do {
-            try tc.set(style: "color: #000000FF; -myscript-pen-width: 1.5", forTool: IINKPointerTool.toolPen)
+            try e.toolController.set(style: "color: #000000FF; -myscript-pen-width: 1.5", forTool: IINKPointerTool.toolPen)
         } catch {
             print("❌ EditorWorker: Failed to set tool style: \(error)")
         }
         
         // Set font metrics provider.
-        e?.set(fontMetricsProvider: FontMetricsProvider())
+        e.set(fontMetricsProvider: FontMetricsProvider())
         
         // Assign editor synchronously to avoid race conditions.
         // This ensures loadPart can immediately set the part if it arrives first.
@@ -55,7 +59,7 @@ final class EditorWorker: NSObject, ObservableObject {
         
         // If a part was loaded before the editor was ready, apply it now.
         if let part = pendingPart {
-            e?.part = part
+            e.part = part
             pendingPart = nil
         }
     }
