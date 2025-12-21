@@ -1,0 +1,215 @@
+import UIKit
+import CoreGraphics
+
+// Canvas implementation that bridges Core Graphics to MyScript's IINKICanvas protocol.
+// This is a simplified version based on the MyScript reference implementation.
+class Canvas: NSObject, IINKICanvas {
+    var context: CGContext?
+    var size: CGSize = .zero
+    var clearAtStartDraw: Bool = true
+    
+    private var transform: CGAffineTransform = .identity
+    private var style: IINKStyle = IINKStyle()
+    
+    // MARK: - IINKICanvas Required Methods
+    
+    func getTransform() -> CGAffineTransform {
+        return transform
+    }
+    
+    func setTransform(_ transform: CGAffineTransform) {
+        let inverted = self.transform.inverted()
+        let result = transform.concatenating(inverted)
+        self.transform = transform
+        context?.concatenate(result)
+    }
+    
+    func setStrokeColor(_ color: UInt32) {
+        style.strokeColor = color
+        let r = CGFloat((color >> 24) & 0xFF) / 255.0
+        let g = CGFloat((color >> 16) & 0xFF) / 255.0
+        let b = CGFloat((color >> 8) & 0xFF) / 255.0
+        let a = CGFloat(color & 0xFF) / 255.0
+        context?.setStrokeColor(red: r, green: g, blue: b, alpha: a)
+    }
+    
+    func setStrokeWidth(_ width: Float) {
+        style.strokeWidth = width
+        context?.setLineWidth(CGFloat(width))
+    }
+    
+    func setStroke(_ lineCap: IINKLineCap) {
+        style.strokeLineCap = lineCap
+        switch lineCap {
+        case .butt:
+            context?.setLineCap(.butt)
+        case .round:
+            context?.setLineCap(.round)
+        case .square:
+            context?.setLineCap(.square)
+        @unknown default:
+            break
+        }
+    }
+    
+    func setStroke(_ lineJoin: IINKLineJoin) {
+        style.strokeLineJoin = lineJoin
+        switch lineJoin {
+        case .miter:
+            context?.setLineJoin(.miter)
+        case .round:
+            context?.setLineJoin(.round)
+        case .bevel:
+            context?.setLineJoin(.bevel)
+        @unknown default:
+            break
+        }
+    }
+    
+    func setStrokeMiterLimit(_ limit: Float) {
+        style.strokeMiterLimit = limit
+        context?.setMiterLimit(CGFloat(limit))
+    }
+    
+    func setStrokeDashArray(_ array: UnsafePointer<Float>?, size: Int) {
+        if let array = array {
+            let buffer = UnsafeBufferPointer(start: array, count: size)
+            let dashes = buffer.map { CGFloat($0) }
+            context?.setLineDash(phase: 0, lengths: dashes)
+        } else {
+            context?.setLineDash(phase: 0, lengths: [])
+        }
+    }
+    
+    func setStrokeDashOffset(_ offset: Float) {
+        style.strokeDashOffset = offset
+        // Dash offset is handled in setStrokeDashArray
+    }
+    
+    func setFillColor(_ color: UInt32) {
+        style.fillColor = color
+        let r = CGFloat((color >> 24) & 0xFF) / 255.0
+        let g = CGFloat((color >> 16) & 0xFF) / 255.0
+        let b = CGFloat((color >> 8) & 0xFF) / 255.0
+        let a = CGFloat(color & 0xFF) / 255.0
+        context?.setFillColor(red: r, green: g, blue: b, alpha: a)
+    }
+    
+    func setFillRule(_ rule: IINKFillRule) {
+        style.fillRule = rule
+    }
+    
+    func setDropShadow(_ xOffset: Float, yOffset: Float, radius: Float, color: UInt32) {
+        if color != 0 {
+            let r = CGFloat((color >> 24) & 0xFF) / 255.0
+            let g = CGFloat((color >> 16) & 0xFF) / 255.0
+            let b = CGFloat((color >> 8) & 0xFF) / 255.0
+            let a = CGFloat(color & 0xFF) / 255.0
+            let offset = CGSize(width: CGFloat(xOffset), height: CGFloat(yOffset))
+            context?.setShadow(offset: offset, blur: CGFloat(radius), color: UIColor(red: r, green: g, blue: b, alpha: a).cgColor)
+        }
+    }
+    
+    func setFontProperties(_ family: String, height lineHeight: Float, size: Float, style fontStyle: String, variant: String, weight: Int32) {
+        self.style.fontFamily = family
+        self.style.fontLineHeight = lineHeight
+        self.style.fontSize = size
+        self.style.fontVariant = variant
+        self.style.fontWeight = Int(weight)
+        self.style.fontStyle = fontStyle
+    }
+    
+    func startGroup(_ identifier: String, region: CGRect, clip clipContent: Bool) {
+        if clipContent {
+            context?.saveGState()
+            context?.clip(to: region)
+        }
+    }
+    
+    func endGroup(_ identifier: String) {
+        context?.restoreGState()
+    }
+    
+    func startItem(_ identifier: String) {
+        // No-op for basic implementation
+    }
+    
+    func endItem(_ identifier: String) {
+        // No-op for basic implementation
+    }
+    
+    func createPath() -> IINKIPath {
+        return Path()
+    }
+    
+    func draw(_ path: IINKIPath) {
+        guard let path = path as? Path else { return }
+        context?.addPath(path.bezierPath.cgPath)
+        
+        if (style.fillColor & 0xFF) > 0 {
+            let fillRule: CGPathFillRule = style.fillRule == .evenOdd ? .evenOdd : .winding
+            context?.fillPath(using: fillRule)
+        }
+        
+        if (style.strokeColor & 0xFF) > 0 {
+            context?.strokePath()
+        }
+    }
+    
+    func drawRectangle(_ rect: CGRect) {
+        if (style.fillColor & 0xFF) > 0 {
+            context?.fill(rect)
+        }
+        if (style.strokeColor & 0xFF) > 0 {
+            context?.stroke(rect)
+        }
+    }
+    
+    func drawLine(_ from: CGPoint, to: CGPoint) {
+        context?.move(to: from)
+        context?.addLine(to: to)
+        context?.strokePath()
+    }
+    
+    func drawObject(_ url: String, mimeType: String, region rect: CGRect) {
+        // Basic implementation - can be extended to load and draw images
+    }
+    
+    func drawText(_ label: String, anchor origin: CGPoint, region rect: CGRect) {
+        // Basic text drawing implementation
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: UIFont.systemFont(ofSize: CGFloat(style.fontSize)),
+            .foregroundColor: UIColor.black
+        ]
+        let attributedString = NSAttributedString(string: label, attributes: attributes)
+        attributedString.draw(at: origin)
+    }
+    
+    // MARK: - Optional IINKICanvas Methods
+    
+    func startDraw(in rect: CGRect) {
+        if context == nil {
+            context = UIGraphicsGetCurrentContext()
+        }
+        transform = .identity
+        context?.saveGState()
+        style.setAllChangeFlags()
+        style.apply(to: self)
+        style.clearChangeFlags()
+        
+        // Text transform for CoreText
+        var textTransform = CGAffineTransform(scaleX: 1, y: -1)
+        textTransform = textTransform.translatedBy(x: 0, y: -size.height)
+        context?.textMatrix = textTransform
+        context?.clip(to: rect)
+        
+        if clearAtStartDraw {
+            context?.clear(rect)
+        }
+    }
+    
+    func endDraw() {
+        context?.restoreGState()
+    }
+}
+

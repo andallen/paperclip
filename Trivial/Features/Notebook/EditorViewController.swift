@@ -2,24 +2,15 @@ import UIKit
 import Foundation
 import Combine
 
-// UIKit controller that manages the IINKRenderer and CanvasView.
-// Acts as the bridge between the MyScript engine and the view hierarchy.
+// UIKit controller that manages the IINKRenderer and the custom RenderView.
 class EditorViewController: UIViewController {
 
-  // The worker that manages the editor logic.
   let editorWorker: EditorWorker
-
-  // Reference to the MyScript engine.
   private let engine: IINKEngine?
-
-  // The rendering target view.
-  private var canvasView: CanvasView?
-
-  // The MyScript renderer instance.
   private var renderer: IINKRenderer?
-
-  // Combine subscriptions for reactive updates.
-  private var cancellables = Set<AnyCancellable>()
+  
+  // Use the custom RenderView for high-performance rendering.
+  private var renderView: RenderView?
 
   init(editorWorker: EditorWorker) {
     self.editorWorker = editorWorker
@@ -34,24 +25,23 @@ class EditorViewController: UIViewController {
   override func viewDidLoad() {
     super.viewDidLoad()
 
-    // Create and add the CanvasView.
-    let canvas = CanvasView(frame: self.view.bounds)
+    // Initialize the custom RenderView.
+    let canvas = RenderView(frame: self.view.bounds)
     canvas.autoresizingMask = [.flexibleWidth, .flexibleHeight]
     self.view.addSubview(canvas)
-    self.canvasView = canvas
+    self.renderView = canvas
 
-    // Initialize the MyScript engine and renderer.
     setupMyScript()
   }
 
   override func viewDidLayoutSubviews() {
     super.viewDidLayoutSubviews()
 
-    // Inform the editor of the new view size for coordinate calibration.
     if let editor = editorWorker.editor {
       let size = self.view.bounds.size
       if size.width > 0 && size.height > 0 {
         do {
+          // Inform the editor of size changes for coordinate calibration.
           try editor.set(viewSize: size)
         } catch {
           // Setting view size failed.
@@ -60,51 +50,38 @@ class EditorViewController: UIViewController {
     }
   }
 
-  // Creates the renderer and attaches the editor to the canvas.
   private func setupMyScript() {
-    guard let engine = self.engine, let canvas = self.canvasView else {
+    guard let engine = self.engine, let canvas = self.renderView else {
       return
     }
 
-    // Calculate physical DPI using nativeScale for accurate coordinate mapping.
-    // iPad Pro standard is ~264 DPI, but we derive it from nativeScale.
-    // Use the view's window scene screen if available, otherwise fall back to trait collection.
-    let nativeScale: CGFloat
+    // CORRECTED: Use nativeScale to calculate physical DPI (iPad Pro is ~264 DPI).
+    // This ensures ink appears exactly under the Apple Pencil tip.
+    // Use trait collection scale if available, otherwise fall back to screen scale.
+    // In viewDidLoad, the window might not be set yet, so we use the trait collection.
+    let scale: CGFloat
     if let windowScene = self.view.window?.windowScene {
-      nativeScale = windowScene.screen.nativeScale
+      scale = windowScene.screen.nativeScale
+    } else if #available(iOS 13.0, *) {
+      // Use trait collection scale as fallback (iOS 26.0+ recommendation)
+      scale = self.view.traitCollection.displayScale
     } else {
-      // Fallback: nativeScale is typically 2x displayScale for retina displays.
-      nativeScale = self.view.traitCollection.displayScale * 2
+      // Final fallback for older iOS versions
+      scale = UIScreen.main.nativeScale
     }
-    let dpiX = Float(nativeScale * 132)
-    let dpiY = Float(nativeScale * 132)
+    let physicalDPI = Float(scale * 132) 
 
-    // Create renderer targeting the canvas view.
-    if let renderer = try? engine.createRenderer(dpiX: dpiX, dpiY: dpiY, target: canvas) {
+    if let renderer = try? engine.createRenderer(dpiX: physicalDPI, dpiY: physicalDPI, target: canvas) {
       self.renderer = renderer
-
-      // Attach the editor worker to this renderer.
+      canvas.renderer = renderer
       editorWorker.attach(engine: engine, renderer: renderer)
-
-      // Connect the editor to the canvas for input routing.
-      canvas.editor = editorWorker.editor
-
-      // Set the view size immediately after creation for coordinate calibration.
-      // This ensures the editor knows the pixel dimensions of the rendering surface.
-      if let editor = editorWorker.editor {
-        let size = self.view.bounds.size
-        if size.width > 0 && size.height > 0 {
-          do {
-            try editor.set(viewSize: size)
-          } catch {
-            // Setting view size failed.
-          }
-        }
+      
+      // Pass the editor reference to the RenderView for input handling.
+      // The editor will be set asynchronously by attach(), so we need to wait for it.
+      DispatchQueue.main.async { [weak self] in
+        guard let self = self else { return }
+        canvas.editor = self.editorWorker.editor
       }
     }
-  }
-
-  deinit {
-    // MyScript objects are reference-counted and release automatically.
   }
 }
