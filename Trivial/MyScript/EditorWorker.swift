@@ -54,16 +54,15 @@ final class EditorWorker: NSObject, ObservableObject {
         // Set font metrics provider.
         e.set(fontMetricsProvider: FontMetricsProvider())
         
-        // Assign editor synchronously to avoid race conditions.
-        // This ensures loadPart can immediately set the part if it arrives first.
-        editor = e
-        
         // Apply pending view size if it was set before the editor was ready.
         // The SDK requires viewSize to be set before attaching a part.
         if let size = pendingViewSize, size.width > 0 && size.height > 0 {
             do {
                 try e.set(viewSize: size)
-                pendingViewSize = nil
+                // Defer clearing pendingViewSize to avoid publishing during view updates.
+                DispatchQueue.main.async { [weak self] in
+                    self?.pendingViewSize = nil
+                }
             } catch {
                 print("❌ EditorWorker: Failed to set pending view size: \(error)")
             }
@@ -76,8 +75,16 @@ final class EditorWorker: NSObject, ObservableObject {
             // If not set yet, keep part pending until view size is available.
             if e.viewSize.width > 0 && e.viewSize.height > 0 {
                 e.part = part
-                pendingPart = nil
+                DispatchQueue.main.async { [weak self] in
+                    self?.pendingPart = nil
+                }
             }
+        }
+        
+        // Defer @Published assignment to avoid "publishing during view update" warnings.
+        // This ensures the assignment happens after the current view update cycle completes.
+        DispatchQueue.main.async { [weak self] in
+            self?.editor = e
         }
     }
     
@@ -90,7 +97,9 @@ final class EditorWorker: NSObject, ObservableObject {
                 // If we have a pending part and view size is now valid, apply it.
                 if let part = pendingPart, size.width > 0 && size.height > 0 {
                     e.part = part
-                    pendingPart = nil
+                    DispatchQueue.main.async { [weak self] in
+                        self?.pendingPart = nil
+                    }
                 }
             } catch {
                 print("❌ EditorWorker: Failed to set view size: \(error)")

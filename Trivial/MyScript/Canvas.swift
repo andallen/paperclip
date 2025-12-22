@@ -12,6 +12,7 @@ class Canvas: NSObject, IINKICanvas {
     
     private var transform: CGAffineTransform = .identity
     private var style: IINKStyle = IINKStyle()
+    private var clippedGroupIdentifier: [String] = []
     
     // MARK: - IINKICanvas Required Methods
     
@@ -19,11 +20,26 @@ class Canvas: NSObject, IINKICanvas {
         return transform
     }
     
-    func setTransform(_ transform: CGAffineTransform) {
+    func setTransform(_ newTransform: CGAffineTransform) {
         guard let context = self.context else { return }
-        // Concatenation ensures internal engine coordinates map to the UI coordinates.
-        self.transform = transform
-        context.concatenate(transform)
+        
+        // Calculate delta as newTransform * inverse(oldTransform) to avoid compounding transforms.
+        // This ensures only the change from the previous transform is applied.
+        // Check if transform is invertible by computing determinant (a*d - b*c).
+        let det = transform.a * transform.d - transform.b * transform.c
+        if abs(det) > 1e-10 {
+            let invOld = transform.inverted()
+            let delta = newTransform.concatenating(invOld)
+            transform = newTransform
+            context.concatenate(delta)
+        } else {
+            // Non-invertible transform: restore clean state.
+            // This is rare but must be handled to avoid drawing corruption.
+            context.restoreGState()
+            context.saveGState()
+            transform = newTransform
+            context.concatenate(newTransform)
+        }
     }
     
     func setStrokeColor(_ color: UInt32) {
@@ -128,14 +144,28 @@ class Canvas: NSObject, IINKICanvas {
     }
     
     func startGroup(_ identifier: String, region: CGRect, clip clipContent: Bool) {
-        if clipContent {
-            context?.saveGState()
-            context?.clip(to: region)
-        }
+        guard clipContent else { return }
+        context?.saveGState()
+        context?.clip(to: region)
+        clippedGroupIdentifier.append(identifier)
     }
     
     func endGroup(_ identifier: String) {
+        // Only restore if this group saved state (proper stack behavior).
+        // Check that identifier is at the top of the stack to handle early termination.
+        guard let idx = clippedGroupIdentifier.lastIndex(of: identifier),
+              idx == clippedGroupIdentifier.count - 1 else {
+            // Identifier not at top of stack - early termination or error path.
+            return
+        }
+        clippedGroupIdentifier.removeLast()
+        
         context?.restoreGState()
+        
+        // Restore resets CGContext state; force style to re-apply like the reference.
+        style.setAllChangeFlags()
+        style.apply(to: self)
+        style.clearChangeFlags()
     }
     
     func startItem(_ identifier: String) {
