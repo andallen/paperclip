@@ -12,7 +12,7 @@ struct NotebookView: View {
         // Hosts a UIKit editor controller inside SwiftUI.
         NotebookEditorHost(documentHandle: documentHandle)
             // Sets the navigation title for the screen.
-            .navigationTitle(model.name)
+            .navigationTitle(model.displayName)
             // Keeps the title compact for a writing surface.
             .navigationBarTitleDisplayMode(.inline)
     }

@@ -28,7 +28,12 @@ struct AppRootView: View {
       // Initialize the engine asynchronously on launch.
       // This runs the license validation on a background thread.
       let provider = EngineProvider.shared
-      await provider.initializeEngine()
+      do {
+        try await provider.initializeEngine()
+      } catch {
+        // Engine initialization failed.
+        engineError = provider.engineErrorMessage ?? "Unknown error"
+      }
 
       // Check if initialization succeeded.
       if provider.engine == nil {

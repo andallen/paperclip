@@ -62,10 +62,15 @@ final class Canvas: NSObject, IINKICanvas {
 
     // Begin a drawing pass in the given rect.
     func startDraw(in rect: CGRect) {
-        guard let context else { return }
+        print("🎨 Canvas.startDraw: rect=(\(rect.origin.x), \(rect.origin.y), \(rect.width), \(rect.height)), context=\(context != nil ? "YES" : "NO"), clearAtStartDraw=\(clearAtStartDraw)")
+        guard let context else { 
+            print("❌ Canvas.startDraw: No context")
+            return 
+        }
 
         if clearAtStartDraw {
             context.clear(rect)
+            print("🎨 Canvas.startDraw: Cleared rect")
         }
 
         applyTextMatrix()
@@ -93,11 +98,13 @@ final class Canvas: NSObject, IINKICanvas {
     }
 
     func setStrokeColor(_ color: UInt32) {
+        print("🎨 Canvas.setStrokeColor: 0x\(String(format: "%08X", color))")
         style.strokeColor = color
         context?.setStrokeColor(cgColor(from: color))
     }
 
     func setStrokeWidth(_ width: Float) {
+        print("🎨 Canvas.setStrokeWidth: \(width)")
         style.strokeWidth = width
         context?.setLineWidth(CGFloat(width))
     }
@@ -185,7 +192,7 @@ final class Canvas: NSObject, IINKICanvas {
         self.style.fontSize = fontSize
         self.style.fontStyle = fontStyle
         self.style.fontVariant = variant
-        self.style.fontWeight = weight
+        self.style.fontWeight = Int(weight)
 
         // Build a font that is as close as possible using UIKit.
         var font: UIFont
@@ -255,23 +262,36 @@ final class Canvas: NSObject, IINKICanvas {
     }
 
     func draw(_ path: any IINKIPath) {
-        guard let context else { return }
-        guard let p = path as? Path else { return }
+        print("🎨 Canvas.draw(path): context=\(context != nil ? "YES" : "NO")")
+        guard let context else { 
+            print("❌ Canvas.draw: No context")
+            return 
+        }
+        guard let p = path as? Path else { 
+            print("❌ Canvas.draw: Path is not Path type")
+            return 
+        }
 
         // Fill when fill alpha is non-zero.
         let fillAlpha = CGFloat(style.fillColor & 0xFF) / 255.0
+        print("🎨 Canvas.draw: fillAlpha=\(fillAlpha), fillColor=0x\(String(format: "%08X", style.fillColor))")
         if fillAlpha > 0 {
-            context.addPath(p.cgPath)
+            context.addPath(p.bezierPath.cgPath)
             context.setFillColor(cgColor(from: style.fillColor))
             context.fillPath(using: cgFillRule)
+            print("✅ Canvas.draw: Filled path")
         }
 
         // Stroke when stroke alpha is non-zero.
         let strokeAlpha = CGFloat(style.strokeColor & 0xFF) / 255.0
+        print("🎨 Canvas.draw: strokeAlpha=\(strokeAlpha), strokeColor=0x\(String(format: "%08X", style.strokeColor)), strokeWidth=\(style.strokeWidth)")
         if strokeAlpha > 0 {
-            context.addPath(p.cgPath)
+            context.addPath(p.bezierPath.cgPath)
             context.setStrokeColor(cgColor(from: style.strokeColor))
             context.strokePath()
+            print("✅ Canvas.draw: Stroked path")
+        } else {
+            print("⚠️ Canvas.draw: Stroke alpha is 0, skipping stroke")
         }
     }
 
@@ -294,12 +314,17 @@ final class Canvas: NSObject, IINKICanvas {
     }
 
     func drawLine(_ from: CGPoint, to: CGPoint) {
-        guard let context else { return }
+        print("🎨 Canvas.drawLine: from=(\(from.x), \(from.y)), to=(\(to.x), \(to.y))")
+        guard let context else { 
+            print("❌ Canvas.drawLine: No context")
+            return 
+        }
 
         context.beginPath()
         context.move(to: from)
         context.addLine(to: to)
         context.strokePath()
+        print("✅ Canvas.drawLine: Line drawn")
     }
 
     func drawObject(_ url: String, mimeType: String, region rect: CGRect) {

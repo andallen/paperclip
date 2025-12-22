@@ -44,7 +44,10 @@ final class EngineProvider {
             throw EngineProviderError.emptyCertificate
         }
 
-        let bytes = myCertificate.bytes.assumingMemoryBound(to: UInt8.self)
+        // Convert C string pointer to Data.
+        // myCertificate.bytes is const char*, which is UnsafePointer<Int8>
+        // We need to convert it to UnsafePointer<UInt8> for Data initialization.
+        let bytes = UnsafeRawPointer(myCertificate.bytes).bindMemory(to: UInt8.self, capacity: myCertificate.length)
         let certificateData = Data(bytes: bytes, count: myCertificate.length)
 
         // Create the engine off the main thread.
@@ -87,9 +90,11 @@ final class EngineProvider {
         try config.set(string: tempDir.path, forKey: "content-package.temp-folder")
 
         // Set conservative defaults for drop shadow.
+        // All values are set to 0 to disable drop shadow rendering.
         try config.set(number: 0.0, forKey: "renderer.drop-shadow.x-offset")
         try config.set(number: 0.0, forKey: "renderer.drop-shadow.y-offset")
         try config.set(number: 0.0, forKey: "renderer.drop-shadow.radius")
-        try config.set(string: "#00000000", forKey: "renderer.drop-shadow.color")
+        // Color is set as a number (ARGB format), not a string. 0x00000000 = transparent black.
+        try config.set(number: 0x00000000, forKey: "renderer.drop-shadow.color")
     }
 }

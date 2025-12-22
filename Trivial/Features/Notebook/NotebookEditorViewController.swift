@@ -69,7 +69,13 @@ final class NotebookEditorViewController: UIViewController {
         // Treats invalidation rectangles as pixel rectangles.
         let scale = view.contentScaleFactor
         let sizePx = CGSize(width: view.bounds.width * scale, height: view.bounds.height * scale)
-        displayViewModel.editor?.viewSize = sizePx
+        print("📐 NotebookEditorViewController.viewDidLayoutSubviews: size=(\(sizePx.width), \(sizePx.height)), scale=\(scale)")
+        do {
+            try displayViewModel.editor?.set(viewSize: sizePx)
+            print("✅ NotebookEditorViewController: View size set successfully")
+        } catch {
+            print("❌ NotebookEditorViewController: Failed to set view size: \(error)")
+        }
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -86,64 +92,132 @@ final class NotebookEditorViewController: UIViewController {
 
         // Attempts to persist the package on exit.
         // Ignores errors here to keep navigation responsive.
-        do {
-            try documentHandle.save()
-        } catch {
+        Task {
+            do {
+                try await documentHandle.savePackage()
+            } catch {
+                // Ignore save errors during navigation.
+            }
         }
     }
 
+    override var preferredScreenEdgesDeferringSystemGestures: UIRectEdge {
+        // Defers all system edge gestures to the app so touch events are delivered immediately.
+        // This prevents iOS from holding touches at the gesture gate, which causes invisible ink
+        // when the initial touchesBegan events arrive too late for stroke construction.
+        return .all
+    }
+
     private func setupMyScript() {
-        do {
-            // Creates or reuses a shared engine instance.
-            let provider = try EngineProvider.shared()
-            engineProvider = provider
+        print("🔧 NotebookEditorViewController.setupMyScript: Starting")
+        Task {
+            do {
+                // Creates or reuses a shared engine instance.
+                let provider = EngineProvider.shared
+                if provider.engine == nil {
+                    print("🔧 NotebookEditorViewController: Initializing engine")
+                    try await provider.initializeEngine()
+                } else {
+                    print("🔧 NotebookEditorViewController: Using existing engine")
+                }
+                engineProvider = provider
 
-            // Creates a renderer bound to the display view model render target.
-            let dpi = Helper.scaledDpi()
-            let renderer = try provider.engine.createRenderer(dpiX: dpi, dpiY: dpi, target: displayViewModel)
-            displayViewModel.renderer = renderer
+                guard let engine = provider.engine else {
+                    print("❌ NotebookEditorViewController: Engine is nil after initialization")
+                    return
+                }
+                print("✅ NotebookEditorViewController: Engine available")
 
-            // Creates an editor linked to the renderer.
-            let editor = try provider.engine.createEditor(renderer: renderer)
-            displayViewModel.editor = editor
+                // Creates a renderer bound to the display view model render target.
+                let dpi = Helper.scaledDpi()
+                print("🔧 NotebookEditorViewController: Creating renderer with DPI=\(dpi)")
+                let renderer = try engine.createRenderer(dpiX: dpi, dpiY: dpi, target: displayViewModel)
+                displayViewModel.renderer = renderer
+                print("✅ NotebookEditorViewController: Renderer created")
 
-            // Assigns a font metrics provider for text layout.
-            editor.textFontMetricsProvider = provider.fontMetricsProvider
+                // Creates a tool controller for gesture and tool behavior.
+                // Must be created before the editor.
+                let toolController = engine.createToolController()
+                inputViewOverlay.toolController = toolController
+                print("✅ NotebookEditorViewController: Tool controller created")
 
-            // Connects touch input to the editor.
-            inputViewOverlay.editor = editor
+                // Creates an editor linked to the renderer and tool controller.
+                guard let editor = engine.createEditor(renderer: renderer, toolController: toolController) else {
+                    print("❌ NotebookEditorViewController: Failed to create editor")
+                    return
+                }
+                displayViewModel.editor = editor
+                print("✅ NotebookEditorViewController: Editor created")
+                print("📐 NotebookEditorViewController: Editor viewSize=(\(editor.viewSize.width), \(editor.viewSize.height))")
+                print("📄 NotebookEditorViewController: Editor part=\(editor.part != nil ? "YES" : "NO")")
+                if let part = editor.part {
+                    print("📄 NotebookEditorViewController: Editor part type=\(part.type)")
+                }
 
-            // Creates a tool controller for gesture and tool behavior.
-            // Stores it for later extensions even if unused for raw input.
-            let toolController = try provider.engine.createToolController(editor: editor)
-            inputViewOverlay.toolController = toolController
+                // Creates a font metrics provider for text layout.
+                let fontProvider = FontMetricsProvider()
+                editor.set(fontMetricsProvider: fontProvider)
+                print("✅ NotebookEditorViewController: Font metrics provider set")
 
-            // Forces an initial redraw after wiring core objects.
-            displayViewModel.refreshDisplay()
-        } catch {
-            // Leaves the screen empty if engine setup fails.
+                // Connects touch input to the editor.
+                inputViewOverlay.editor = editor
+                print("✅ NotebookEditorViewController: Editor connected to input view")
+
+                // Forces an initial redraw after wiring core objects.
+                displayViewModel.refreshDisplay()
+                print("✅ NotebookEditorViewController: Initial display refresh called")
+            } catch {
+                print("❌ NotebookEditorViewController.setupMyScript failed: \(error)")
+            }
         }
     }
 
     private func loadDocument() {
-        guard let provider = engineProvider, let editor = displayViewModel.editor else {
+        print("📄 NotebookEditorViewController.loadDocument: Starting")
+        guard let editor = displayViewModel.editor else {
+            print("❌ NotebookEditorViewController.loadDocument: No editor available")
             return
         }
 
-        do {
-            // Opens or creates the backing package file.
-            let package = try documentHandle.openOrCreatePackage(with: provider.engine)
+        Task {
+            do {
+                // Gets the package from the document handle.
+                guard let package = await documentHandle.getPackage() else {
+                    print("❌ NotebookEditorViewController.loadDocument: No package available")
+                    return
+                }
+                print("✅ NotebookEditorViewController.loadDocument: Package loaded")
 
-            // Opens the first part or creates one if the package is empty.
-            let part = try documentHandle.openOrCreateFirstPart(in: package)
+                // Gets the first part or creates one if the package is empty.
+                let partCount = await documentHandle.getPartCount()
+                print("📄 NotebookEditorViewController.loadDocument: Part count=\(partCount)")
+                let part: IINKContentPart?
+                if partCount > 0 {
+                    part = await documentHandle.getPart(at: 0)
+                    print("✅ NotebookEditorViewController.loadDocument: Loaded existing part")
+                } else {
+                    // Creates a new text part if the package is empty.
+                    part = try package.createPart(with: "Text Document")
+                    print("✅ NotebookEditorViewController.loadDocument: Created new part")
+                }
 
-            // Connects the editor to the loaded part.
-            editor.part = part
-
-            // Requests a full redraw after part assignment.
-            displayViewModel.refreshDisplay()
-        } catch {
-            // Leaves the screen empty if the package cannot be opened.
+                // Connects the editor to the loaded part.
+                await MainActor.run {
+                    print("📄 NotebookEditorViewController: Setting editor.part, current part=\(editor.part != nil ? "YES" : "NO"), new part=\(part != nil ? "YES" : "NO")")
+                    if let part = part {
+                        print("📄 NotebookEditorViewController: Part type=\(part.type), partCount=\(part.package.partCount())")
+                    }
+                    editor.part = part
+                    print("✅ NotebookEditorViewController.loadDocument: Part assigned to editor, part=\(editor.part != nil ? "YES" : "NO")")
+                    if let currentPart = editor.part {
+                        print("📄 NotebookEditorViewController: Current part type=\(currentPart.type)")
+                    }
+                    // Requests a full redraw after part assignment.
+                    displayViewModel.refreshDisplay()
+                }
+            } catch {
+                print("❌ NotebookEditorViewController.loadDocument failed: \(error)")
+            }
         }
     }
 }

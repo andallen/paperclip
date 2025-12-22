@@ -40,9 +40,15 @@ final class DisplayViewModel: NSObject, ObservableObject {
     }
 
     func refreshDisplay() {
+        print("🔄 DisplayViewModel.refreshDisplay: model=\(model != nil ? "YES" : "NO")")
         // Invalidates both layers for a full redraw.
-        model?.modelRenderView.setNeedsDisplay()
-        model?.captureRenderView.setNeedsDisplay()
+        if let model = model {
+            print("🔄 DisplayViewModel: Invalidating both layers")
+            model.modelRenderView.setNeedsDisplay()
+            model.captureRenderView.setNeedsDisplay()
+        } else {
+            print("❌ DisplayViewModel.refreshDisplay: No model available")
+        }
     }
 }
 
@@ -53,31 +59,43 @@ extension DisplayViewModel: IINKIRenderTarget {
     }
 
     func invalidate(_ renderer: IINKRenderer, layers: IINKLayerType) {
+        print("🔄 DisplayViewModel.invalidate: layers=\(layers), model=\(model != nil ? "YES" : "NO")")
         // Schedules invalidation on the main thread for UIKit.
         DispatchQueue.main.async { [weak self] in
-            guard let self, let model = self.model else { return }
+            guard let self, let model = self.model else { 
+                print("❌ DisplayViewModel.invalidate: No model available")
+                return 
+            }
 
             // Invalidates only the layers that changed.
             if layers.contains(.model) {
+                print("🔄 DisplayViewModel: Invalidating model layer")
                 model.modelRenderView.setNeedsDisplay()
             }
             if layers.contains(.capture) {
+                print("🔄 DisplayViewModel: Invalidating capture layer")
                 model.captureRenderView.setNeedsDisplay()
             }
         }
     }
 
     func invalidate(_ renderer: IINKRenderer, area: CGRect, layers: IINKLayerType) {
+        print("🔄 DisplayViewModel.invalidate(area): area=(\(area.origin.x), \(area.origin.y), \(area.width), \(area.height)), layers=\(layers)")
         // Schedules invalidation on the main thread for UIKit.
         // Uses pixel coordinates as specified by the SDK headers.
         DispatchQueue.main.async { [weak self] in
-            guard let self, let model = self.model else { return }
+            guard let self, let model = self.model else { 
+                print("❌ DisplayViewModel.invalidate(area): No model available")
+                return 
+            }
 
             // Invalidates only the touched pixel area.
             if layers.contains(.model) {
+                print("🔄 DisplayViewModel: Invalidating model layer area")
                 model.modelRenderView.setNeedsDisplay(areaPx: area)
             }
             if layers.contains(.capture) {
+                print("🔄 DisplayViewModel: Invalidating capture layer area")
                 model.captureRenderView.setNeedsDisplay(areaPx: area)
             }
         }
