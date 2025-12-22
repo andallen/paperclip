@@ -4,7 +4,7 @@ import CoreGraphics
 // Canvas implementation that bridges Core Graphics to MyScript's IINKICanvas protocol.
 // This is a simplified version based on the MyScript reference implementation.
 @objcMembers
-final class Canvas: NSObject, IINKICanvas {
+class Canvas: NSObject, IINKICanvas {
     var context: CGContext?
     var size: CGSize = .zero
     var clearAtStartDraw: Bool = true
@@ -294,20 +294,18 @@ final class Canvas: NSObject, IINKICanvas {
     
     // Blend an offscreen surface back into the main context.
     // This is called by the MyScript renderer when compositing cached tiles.
-    // The explicit selector annotation ensures Objective-C runtime can find this method.
-    @objc(blendOffscreen:src:dest:color:)
-    dynamic func blendOffscreen(_ surfaceId: UInt32, src: CGRect, dest: CGRect, color: UInt32) {
+    @objc func blendOffscreen(_ surfaceId: UInt32, src: CGRect, dest: CGRect, color: UInt32) {
         guard let context = self.context else { return }
         guard let surfaces = offscreenRenderSurfaces else { return }
-        guard let layer = surfaces.getSurfaceBuffer(surfaceId) else { return }
+        guard let layer = surfaces.getSurface(surfaceId) else { return }
         
-        // Save graphics state (reference pattern: local save/restore inside blendOffscreen).
+        // Save graphics state.
         context.saveGState()
         
         // Clip to destination rectangle.
         context.clip(to: dest)
         
-        // Extract alpha from color (RRGGBBAA format, alpha in low byte, matching sample code).
+        // Extract alpha from color (RRGGBBAA format, alpha in low byte).
         let alpha = CGFloat(color & 0xFF) / 255.0
         
         // Apply alpha if not fully opaque.
@@ -315,14 +313,9 @@ final class Canvas: NSObject, IINKICanvas {
             context.setAlpha(alpha)
         }
         
-        // Apply scale factor from OffscreenRenderSurfaces for correct point/pixel mapping.
-        // The reference blends cached tiles by pulling a CGLayer, applying scale factor,
-        // then drawing into main context inside clipped destination rect.
-        let scale = surfaces.scale
-        
-        // Calculate the scale factor between source and destination, accounting for surface scale.
-        let scaleX = (dest.width / src.width) * scale
-        let scaleY = (dest.height / src.height) * scale
+        // Calculate the scale factor between source and destination.
+        let scaleX = dest.width / src.width
+        let scaleY = dest.height / src.height
         
         // Create transform to map from source rect in layer to dest rect in context.
         var transform = CGAffineTransform.identity
