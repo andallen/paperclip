@@ -107,12 +107,19 @@ final class EditorWorker: NSObject, ObservableObject {
         self.documentHandle = handle
         guard let part = await handle.getPart(at: 0) else { return }
         
-        // Set the part synchronously if editor exists, otherwise store it for later.
-        // This prevents the race where loadPart is called before attach completes.
+        // Set the part if editor exists and view size is valid, otherwise store it for later.
+        // The MyScript API requires a nonzero view size before attaching a part.
         await MainActor.run {
             if let e = editor {
-                e.part = part
+                // Only attach part if view size has been set (width > 0 && height > 0).
+                if e.viewSize.width > 0 && e.viewSize.height > 0 {
+                    e.part = part
+                } else {
+                    // View size not set yet, store part for later.
+                    pendingPart = part
+                }
             } else {
+                // Editor doesn't exist yet, store part for later.
                 pendingPart = part
             }
         }

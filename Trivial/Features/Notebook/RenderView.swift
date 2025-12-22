@@ -48,6 +48,10 @@ class RenderView: UIView, IINKIRenderTarget {
     }
     
     func createOffscreenRenderSurface(width: Int32, height: Int32, alphaMask: Bool) -> UInt32 {
+        // Ensure scale is set from RenderView's contentScaleFactor.
+        // This scale is used in blendOffscreen for correct point/pixel mapping.
+        offscreenSurfaces.scale = self.contentScaleFactor
+        
         // Get the current graphics context to create a CGLayer.
         // CGLayer must be created from a context that will be used for drawing.
         // If we're not in a drawing context, we need to get the context from the main canvas.
@@ -71,10 +75,20 @@ class RenderView: UIView, IINKIRenderTarget {
             ) else {
                 return 0
             }
-            return offscreenSurfaces.createSurface(width: width, height: height, context: tempContext, alphaMask: alphaMask)
+            // Create CGLayer and add to surfaces.
+            let size = CGSize(width: CGFloat(width), height: CGFloat(height))
+            guard let layer = CGLayer(tempContext, size: size, auxiliaryInfo: nil) else {
+                return 0
+            }
+            return offscreenSurfaces.addSurface(with: layer)
         }
         
-        return offscreenSurfaces.createSurface(width: width, height: height, context: context, alphaMask: alphaMask)
+        // Create CGLayer and add to surfaces.
+        let size = CGSize(width: CGFloat(width), height: CGFloat(height))
+        guard let layer = CGLayer(context, size: size, auxiliaryInfo: nil) else {
+            return 0
+        }
+        return offscreenSurfaces.addSurface(with: layer)
     }
     
     func releaseOffscreenRenderSurface(_ surfaceId: UInt32) {
@@ -89,18 +103,27 @@ class RenderView: UIView, IINKIRenderTarget {
             canvas.context = context
         }
         
+        // Set canvas size from offscreen surface dimensions.
+        // This is critical because Canvas text matrix calculations depend on size.height.
+        // The reference text matrix depends on size.height for both onscreen and offscreen draws.
+        if let layer = offscreenSurfaces.getSurfaceBuffer(surfaceId) {
+            let layerSize = layer.size
+            canvas.size = layerSize
+        }
+        
         // Link the canvas to the offscreen surfaces manager for blending.
         canvas.offscreenRenderSurfaces = offscreenSurfaces
+        
+        // Note: Canvas.startDraw()/endDraw() will handle save/restore pairing.
+        // Do not add extra saveGState here - Canvas owns that responsibility.
         
         return canvas
     }
     
     func releaseOffscreenRenderCanvas(_ canvas: IINKICanvas) {
-        // Restore graphics state if needed.
-        // The canvas may have modified the context state during drawing.
-        if let canvas = canvas as? Canvas {
-            canvas.context?.restoreGState()
-        }
+        // Canvas already handles save/restore pairing in startDraw/endDraw.
+        // Do not call restoreGState() here - Canvas owns that responsibility.
+        // Only detach/cleanup if needed (not required).
     }
 
     // MARK: - Drawing
