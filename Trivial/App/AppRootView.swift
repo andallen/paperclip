@@ -90,14 +90,14 @@ struct EngineErrorView: View {
   }
 }
 
-#Preview("Normal") {
-  AppRootView()
+#if DEBUG
+struct AppRootView_Previews: PreviewProvider {
+  static var previews: some View {
+    Group {
+      AppRootView()
+      EngineLoadingView()
+      EngineErrorView(errorMessage: "Invalid certificate or application identifier mismatch.")
+    }
+  }
 }
-
-#Preview("Loading") {
-  EngineLoadingView()
-}
-
-#Preview("Engine Error") {
-  EngineErrorView(errorMessage: "Invalid certificate or application identifier mismatch.")
-}
+#endif

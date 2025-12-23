@@ -262,9 +262,12 @@ private struct OpenedNotebook: Identifiable, Hashable {
   }
 }
 
-#Preview {
-  NavigationStack {
-    DashboardView()
+#if DEBUG
+struct DashboardView_Previews: PreviewProvider {
+  static var previews: some View {
+    NavigationStack {
+      DashboardView()
+    }
   }
 }
-
+#endif

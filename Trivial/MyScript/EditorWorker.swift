@@ -10,9 +10,11 @@ final class EditorWorker: NSObject, ObservableObject {
     private var toolController: IINKToolController?
 
     func attach(engine: IINKEngine, renderer: IINKRenderer) {
+        print("🧭 EditorWorker.attach start")
         // Create a tool controller for the editor.
         let tc = engine.createToolController()
         toolController = tc
+        print("🧭 EditorWorker.attach toolController ready=\(tc != nil)")
         
         // Create the editor with the tool controller.
         // The tool controller must be passed at creation time.
@@ -20,6 +22,7 @@ final class EditorWorker: NSObject, ObservableObject {
             print("❌ EditorWorker: Failed to create editor")
             return
         }
+        print("🧭 EditorWorker.attach editor created")
         
         // Assign the delegate immediately.
         e.delegate = self
@@ -53,10 +56,12 @@ final class EditorWorker: NSObject, ObservableObject {
         
         // Set font metrics provider.
         e.set(fontMetricsProvider: FontMetricsProvider())
+        print("🧭 EditorWorker.attach fontMetricsProvider set")
         
         // Apply pending view size if it was set before the editor was ready.
         // The SDK requires viewSize to be set before attaching a part.
         if let size = pendingViewSize, size.width > 0 && size.height > 0 {
+            print("🧭 EditorWorker.attach applying pending viewSize=\(size)")
             do {
                 try e.set(viewSize: size)
                 // Defer clearing pendingViewSize to avoid publishing during view updates.
@@ -74,6 +79,7 @@ final class EditorWorker: NSObject, ObservableObject {
             // Verify view size is set before attaching part.
             // If not set yet, keep part pending until view size is available.
             if e.viewSize.width > 0 && e.viewSize.height > 0 {
+                print("🧭 EditorWorker.attach applying pending part")
                 e.part = part
                 DispatchQueue.main.async { [weak self] in
                     self?.pendingPart = nil
@@ -85,17 +91,20 @@ final class EditorWorker: NSObject, ObservableObject {
         // This ensures the assignment happens after the current view update cycle completes.
         DispatchQueue.main.async { [weak self] in
             self?.editor = e
+            print("🧭 EditorWorker.attach published editor")
         }
     }
     
     // Set the view size. Must be called before attaching a part.
     func setViewSize(_ size: CGSize) {
+        print("🧭 EditorWorker.setViewSize size=\(size) editorReady=\(editor != nil)")
         if let e = editor {
             // Editor exists, set size immediately.
             do {
                 try e.set(viewSize: size)
                 // If we have a pending part and view size is now valid, apply it.
                 if let part = pendingPart, size.width > 0 && size.height > 0 {
+                    print("🧭 EditorWorker.setViewSize applying pending part")
                     e.part = part
                     DispatchQueue.main.async { [weak self] in
                         self?.pendingPart = nil
@@ -107,12 +116,14 @@ final class EditorWorker: NSObject, ObservableObject {
         } else {
             // Editor doesn't exist yet, store size for later.
             if size.width > 0 && size.height > 0 {
+                print("🧭 EditorWorker.setViewSize stored pending size")
                 pendingViewSize = size
             }
         }
     }
 
     func loadPart(from handle: DocumentHandle) async {
+        print("🧭 EditorWorker.loadPart start")
         self.documentHandle = handle
         guard let part = await handle.getPart(at: 0) else { return }
         
@@ -120,18 +131,22 @@ final class EditorWorker: NSObject, ObservableObject {
         // This prevents the race where loadPart is called before attach completes.
         await MainActor.run {
             if let e = editor {
+                print("🧭 EditorWorker.loadPart attaching to editor")
                 e.part = part
             } else {
+                print("🧭 EditorWorker.loadPart storing pending part")
                 pendingPart = part
             }
         }
     }
 
     func clear() {
+        print("🧭 EditorWorker.clear")
         try? self.editor?.clear()
     }
 
     func close() {
+        print("🧭 EditorWorker.close")
         // Defer the @Published update to avoid publishing during view updates.
         // This is called from onDisappear which might be during a view update.
         Task { @MainActor in
@@ -154,6 +169,7 @@ extension EditorWorker: IINKEditorDelegate {
     func partChanged(_ editor: IINKEditor) {
         // Called when the part changes.
         // This is a required protocol method.
+        print("🧭 EditorWorker.partChanged")
     }
     
     func contentChanged(_ editor: IINKEditor, blockIds: [String]) {

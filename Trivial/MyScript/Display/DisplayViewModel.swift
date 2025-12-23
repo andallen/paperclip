@@ -20,7 +20,10 @@ final class DisplayViewModel: NSObject, ObservableObject {
 
     func setupModel() {
         // Creates the model only once per screen instance.
-        guard !didSetup else { return }
+        guard !didSetup else {
+            print("🧭 DisplayViewModel.setupModel skipped (already setup)")
+            return
+        }
         didSetup = true
 
         // Builds the model and wires shared dependencies into the views.
@@ -32,26 +35,35 @@ final class DisplayViewModel: NSObject, ObservableObject {
 
         // Publishes the model so the controller can install the views.
         model = m
+        print("🧭 DisplayViewModel.setupModel completed modelReady=\(model != nil)")
     }
 
     func setOffScreenRendererSurfacesScale(scale: CGFloat) {
         // Matches offscreen buffers to the screen scale.
+        print("🧭 DisplayViewModel.setOffScreenRendererSurfacesScale scale=\(scale)")
         offscreenRenderSurfaces.scale = scale
     }
 
     func refreshDisplay() {
         // Invalidates both layers for a full redraw.
         if let model = model {
+            print("🧭 DisplayViewModel.refreshDisplay invalidate model+capture")
             model.modelRenderView.setNeedsDisplay()
             model.captureRenderView.setNeedsDisplay()
+        } else {
+            print("🧭 DisplayViewModel.refreshDisplay skipped (no model)")
         }
     }
 
     func updateRenderer() {
         // Updates renderer on existing RenderViews when it becomes available.
-        guard let renderer = renderer, let model = model else { return }
+        guard let renderer = renderer, let model = model else {
+            print("🧭 DisplayViewModel.updateRenderer skipped renderer=\(renderer != nil) model=\(model != nil)")
+            return
+        }
         model.modelRenderView.renderer = renderer
         model.captureRenderView.renderer = renderer
+        print("🧭 DisplayViewModel.updateRenderer applied renderer")
     }
 }
 
@@ -93,27 +105,35 @@ extension DisplayViewModel: IINKIRenderTarget {
     }
 
     func createOffscreenRenderSurface(width: Int32, height: Int32, alphaMask: Bool) -> UInt32 {
+        print("🧭 DisplayViewModel.createOffscreenRenderSurface \(width)x\(height) alphaMask=\(alphaMask)")
         let sizePx = CGSize(width: CGFloat(width), height: CGFloat(height))
         UIGraphicsBeginImageContextWithOptions(sizePx, false, 1)
         defer { UIGraphicsEndImageContext() }
 
-        guard let context = UIGraphicsGetCurrentContext() else { return 0 }
+        guard let context = UIGraphicsGetCurrentContext() else {
+            print("❌ DisplayViewModel.createOffscreenRenderSurface missing context")
+            return 0
+        }
 
-        return offscreenRenderSurfaces.createSurface(
+        let surfaceId = offscreenRenderSurfaces.createSurface(
             width: width,
             height: height,
             context: context,
             alphaMask: alphaMask
         )
+        print("🧭 DisplayViewModel.createOffscreenRenderSurface id=\(surfaceId)")
+        return surfaceId
     }
 
     func releaseOffscreenRenderSurface(_ surfaceId: UInt32) {
         // Releases an offscreen buffer when the renderer is done with it.
+        print("🧭 DisplayViewModel.releaseOffscreenRenderSurface id=\(surfaceId)")
         offscreenRenderSurfaces.releaseSurface(surfaceId)
     }
 
     func createOffscreenRenderCanvas(_ surfaceId: UInt32) -> IINKICanvas {
         // Wraps the offscreen context in a canvas object.
+        print("🧭 DisplayViewModel.createOffscreenRenderCanvas id=\(surfaceId)")
         let canvas = Canvas()
         canvas.offscreenRenderSurfaces = offscreenRenderSurfaces
 
@@ -136,6 +156,7 @@ extension DisplayViewModel: IINKIRenderTarget {
 
     func releaseOffscreenRenderCanvas(_ canvas: IINKICanvas) {
         // Restores the graphics state saved when the canvas was created.
+        print("🧭 DisplayViewModel.releaseOffscreenRenderCanvas")
         (canvas as? Canvas)?.context?.restoreGState()
     }
 }

@@ -34,6 +34,7 @@ final class RenderView: UIView {
             return
         }
         guard let renderer else {
+            print("⚠️ RenderView.draw: renderer not set")
             return
         }
 
