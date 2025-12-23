@@ -27,10 +27,27 @@ final class DisplayViewController: UIViewController {
         bindViewModel()
 
         // Sets the scale used by offscreen surfaces.
-        viewModel.setOffScreenRendererSurfacesScale(scale: view.contentScaleFactor)
+        // `view.contentScaleFactor` is often `1.0` in `loadView` (before the view is in a window),
+        // but the SDK expects view coordinates in pixels.
+        let scale = UIScreen.main.scale
+        view.contentScaleFactor = scale
+        viewModel.setOffScreenRendererSurfacesScale(scale: scale)
 
         // Builds the display model if it does not exist.
         viewModel.setupModel()
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+
+        // Ensure the scale matches the actual screen once attached to a window.
+        let scale = view.window?.screen.scale ?? UIScreen.main.scale
+        view.contentScaleFactor = scale
+        viewModel.setOffScreenRendererSurfacesScale(scale: scale)
+        if let model = viewModel.model {
+            model.modelRenderView.contentScaleFactor = scale
+            model.captureRenderView.contentScaleFactor = scale
+        }
     }
 
     private func bindViewModel() {

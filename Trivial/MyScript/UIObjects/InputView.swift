@@ -34,29 +34,25 @@ final class InputView: UIView {
     }
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        print("🖐 InputView.touchesBegan: \(touches.count) touch(es), editor=\(editor != nil ? "YES" : "NO")")
         // Sends pointer down events for new touches.
         forward(touches: touches, with: event, eventType: .down)
     }
 
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
-        print("🖐 InputView.touchesMoved: \(touches.count) touch(es)")
+        // Intentionally quiet; detailed logging is in forward(...).
         // Sends pointer move events for touch updates.
         forward(touches: touches, with: event, eventType: .move)
     }
 
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-        print("🖐 InputView.touchesEnded: \(touches.count) touch(es)")
         // Sends pointer up events when touches end.
         forward(touches: touches, with: event, eventType: .up)
     }
 
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
-        print("🖐 InputView.touchesCancelled: \(touches.count) touch(es)")
         // Cancels the current pointer sequence in the editor.
         do { 
             try editor?.pointerCancel(0)
-            print("✅ InputView: pointerCancel succeeded")
         } catch {
             print("❌ InputView: pointerCancel failed: \(error)")
         }
@@ -65,20 +61,20 @@ final class InputView: UIView {
     private func forward(touches: Set<UITouch>, with event: UIEvent?, eventType: IINKPointerEventType) {
         // Requires a live editor instance.
         guard let editor else { 
-            print("❌ InputView.forward: No editor available, dropping \(eventType) event")
             return 
         }
 
-        print("📤 InputView.forward: eventType=\(eventType), touches=\(touches.count)")
+        let scale = window?.screen.scale ?? UIScreen.main.scale
+        if contentScaleFactor != scale {
+            contentScaleFactor = scale
+        }
 
         // Prefers coalesced touches for smoother ink.
         let allTouches: [UITouch]
         if let event, let first = touches.first, let coalesced = event.coalescedTouches(for: first) {
             allTouches = coalesced
-            print("📤 InputView: Using \(coalesced.count) coalesced touches")
         } else {
             allTouches = Array(touches)
-            print("📤 InputView: Using \(touches.count) regular touches")
         }
 
         // Builds a contiguous pointer event buffer for the editor call.
@@ -87,7 +83,9 @@ final class InputView: UIView {
 
         for t in allTouches {
             // Converts a touch location into view coordinates.
-            let p = t.location(in: self)
+            let pPt = t.location(in: self)
+            // MyScript expects view coordinates in pixels.
+            let pPx = CGPoint(x: pPt.x * scale, y: pPt.y * scale)
 
             // Maps the UIKit touch into a MyScript pointer type.
             let type = mapPointerType(t)
@@ -102,24 +100,19 @@ final class InputView: UIView {
             // Sets pressure only for pencil touches.
             let pressure = Float(t.type == .pencil ? max(0.001, t.force) : 0.0)
 
-            print("📤 InputView: Creating pointer event - type=\(type), point=(\(p.x), \(p.y)), pressure=\(pressure), id=\(pointerId)")
-
             // Creates the pointer event struct expected by the SDK.
-            let pe = IINKPointerEventMake(eventType, p, timestampMs, pressure, type, pointerId)
+            let pe = IINKPointerEventMake(eventType, pPx, timestampMs, pressure, type, pointerId)
             events.append(pe)
         }
-
-        print("📤 InputView: Sending \(events.count) pointer events to editor")
 
         // Sends the pointer event batch into the editor.
         do {
             try events.withUnsafeMutableBufferPointer { buf in
                 guard let base = buf.baseAddress else { 
-                    print("❌ InputView: No buffer base address")
                     return 
                 }
                 let result = try editor.pointerEvents(base, count: Int(buf.count), doProcessGestures: true)
-                print("✅ InputView: pointerEvents succeeded, result=\(result)")
+                _ = result
             }
         } catch {
             print("❌ InputView: pointerEvents failed: \(error)")
@@ -137,7 +130,6 @@ final class InputView: UIView {
         case .auto:
             type = (touch.type == .pencil) ? .pen : .touch
         }
-        print("🖐 InputView.mapPointerType: touch.type=\(touch.type), inputMode=\(inputMode), mapped=\(type)")
         return type
     }
 }

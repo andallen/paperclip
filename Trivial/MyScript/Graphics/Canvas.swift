@@ -37,13 +37,20 @@ final class Canvas: NSObject, IINKICanvas {
     private var strokeDashPattern: [CGFloat] = []
     private var strokeDashOffset: CGFloat = 0
 
-    // Convert MyScript RGBA color (0xRRGGBBAA) to CGColor.
+    var debugLayer: String?
+
+    // MyScript iOS reference implementation treats packed colors as RGBA (0xRRGGBBAA).
+    // `blendOffscreen(..., color:)` alpha is documented/implemented as `color & 0xFF`.
     private func cgColor(from rgba: UInt32) -> CGColor {
         let r = CGFloat((rgba >> 24) & 0xFF) / 255.0
         let g = CGFloat((rgba >> 16) & 0xFF) / 255.0
         let b = CGFloat((rgba >> 8) & 0xFF) / 255.0
         let a = CGFloat(rgba & 0xFF) / 255.0
         return CGColor(red: r, green: g, blue: b, alpha: a)
+    }
+
+    private func alpha(from rgba: UInt32) -> CGFloat {
+        CGFloat(rgba & 0xFF) / 255.0
     }
 
     // Apply the current dash pattern and offset to the context.
@@ -55,22 +62,31 @@ final class Canvas: NSObject, IINKICanvas {
     // Update the Core Graphics text matrix so CoreText draws in UIKit coordinates.
     private func applyTextMatrix() {
         guard let context else { return }
-        context.textMatrix = CGAffineTransform(a: 1, b: 0, c: 0, d: -1, tx: 0, ty: size.height)
+        let matrix = CGAffineTransform(a: 1, b: 0, c: 0, d: -1, tx: 0, ty: size.height)
+        context.textMatrix = matrix
     }
 
     // MARK: - Optional draw lifecycle
 
     // Begin a drawing pass in the given rect.
     func startDraw(in rect: CGRect) {
-        print("🎨 Canvas.startDraw: rect=(\(rect.origin.x), \(rect.origin.y), \(rect.width), \(rect.height)), context=\(context != nil ? "YES" : "NO"), clearAtStartDraw=\(clearAtStartDraw)")
-        guard let context else { 
-            print("❌ Canvas.startDraw: No context")
-            return 
-        }
+        guard let context else { return }
+
+        // Start a fresh draw session like the reference implementation:
+        // - save/restore gstate per session
+        // - reset our transform tracking
+        // - enforce style defaults so the renderer isn't depending on stale CG state
+        context.saveGState()
+        transform = .identity
+        style.setAllChangeFlags()
+        style.apply(to: self)
+        style.clearChangeFlags()
+
+        // Clip to the session rect (this is what the MyScript ref impl does).
+        context.clip(to: rect)
 
         if clearAtStartDraw {
             context.clear(rect)
-            print("🎨 Canvas.startDraw: Cleared rect")
         }
 
         applyTextMatrix()
@@ -78,7 +94,8 @@ final class Canvas: NSObject, IINKICanvas {
 
     // End a drawing pass.
     func endDraw() {
-        // Keep context ownership outside so the caller can manage UIGraphics stack.
+        // Matches startDraw's saveGState() to prevent clip/CTM leaking across draw sessions.
+        context?.restoreGState()
     }
 
     // MARK: - Required protocol methods
@@ -98,13 +115,11 @@ final class Canvas: NSObject, IINKICanvas {
     }
 
     func setStrokeColor(_ color: UInt32) {
-        print("🎨 Canvas.setStrokeColor: 0x\(String(format: "%08X", color))")
         style.strokeColor = color
         context?.setStrokeColor(cgColor(from: color))
     }
 
     func setStrokeWidth(_ width: Float) {
-        print("🎨 Canvas.setStrokeWidth: \(width)")
         style.strokeWidth = width
         context?.setLineWidth(CGFloat(width))
     }
@@ -262,50 +277,37 @@ final class Canvas: NSObject, IINKICanvas {
     }
 
     func draw(_ path: any IINKIPath) {
-        print("🎨 Canvas.draw(path): context=\(context != nil ? "YES" : "NO")")
-        guard let context else { 
-            print("❌ Canvas.draw: No context")
-            return 
-        }
-        guard let p = path as? Path else { 
-            print("❌ Canvas.draw: Path is not Path type")
-            return 
-        }
+        guard let context else { return }
+        guard let p = path as? Path else { return }
 
         // Fill when fill alpha is non-zero.
-        let fillAlpha = CGFloat(style.fillColor & 0xFF) / 255.0
-        print("🎨 Canvas.draw: fillAlpha=\(fillAlpha), fillColor=0x\(String(format: "%08X", style.fillColor))")
+        let fillAlpha = alpha(from: style.fillColor)
         if fillAlpha > 0 {
             context.addPath(p.bezierPath.cgPath)
             context.setFillColor(cgColor(from: style.fillColor))
             context.fillPath(using: cgFillRule)
-            print("✅ Canvas.draw: Filled path")
         }
 
         // Stroke when stroke alpha is non-zero.
-        let strokeAlpha = CGFloat(style.strokeColor & 0xFF) / 255.0
-        print("🎨 Canvas.draw: strokeAlpha=\(strokeAlpha), strokeColor=0x\(String(format: "%08X", style.strokeColor)), strokeWidth=\(style.strokeWidth)")
+        let strokeAlpha = alpha(from: style.strokeColor)
         if strokeAlpha > 0 {
             context.addPath(p.bezierPath.cgPath)
             context.setStrokeColor(cgColor(from: style.strokeColor))
             context.strokePath()
-            print("✅ Canvas.draw: Stroked path")
-        } else {
-            print("⚠️ Canvas.draw: Stroke alpha is 0, skipping stroke")
         }
     }
 
     func drawRectangle(_ rect: CGRect) {
         guard let context else { return }
 
-        let fillAlpha = CGFloat(style.fillColor & 0xFF) / 255.0
+        let fillAlpha = alpha(from: style.fillColor)
         if fillAlpha > 0 {
             context.addRect(rect)
             context.setFillColor(cgColor(from: style.fillColor))
             context.fillPath(using: cgFillRule)
         }
 
-        let strokeAlpha = CGFloat(style.strokeColor & 0xFF) / 255.0
+        let strokeAlpha = alpha(from: style.strokeColor)
         if strokeAlpha > 0 {
             context.addRect(rect)
             context.setStrokeColor(cgColor(from: style.strokeColor))
@@ -314,17 +316,12 @@ final class Canvas: NSObject, IINKICanvas {
     }
 
     func drawLine(_ from: CGPoint, to: CGPoint) {
-        print("🎨 Canvas.drawLine: from=(\(from.x), \(from.y)), to=(\(to.x), \(to.y))")
-        guard let context else { 
-            print("❌ Canvas.drawLine: No context")
-            return 
-        }
+        guard let context else { return }
 
         context.beginPath()
         context.move(to: from)
         context.addLine(to: to)
         context.strokePath()
-        print("✅ Canvas.drawLine: Line drawn")
     }
 
     func drawObject(_ url: String, mimeType: String, region rect: CGRect) {
@@ -359,13 +356,29 @@ final class Canvas: NSObject, IINKICanvas {
     // MARK: - Optional protocol method
 
     func blendOffscreen(_ surfaceId: UInt32, src: CGRect, dest: CGRect, color: UInt32) {
-        guard let context else { return }
-        guard let surfaces = offscreenRenderSurfaces else { return }
-        guard let layer = surfaces.getSurface(surfaceId) else { return }
+        guard let context else { 
+            print("❌ Canvas.blendOffscreen: No context")
+            return 
+        }
+        guard let surfaces = offscreenRenderSurfaces else { 
+            print("❌ Canvas.blendOffscreen: No offscreen surfaces")
+            return 
+        }
+        guard let layer = surfaces.getSurface(surfaceId) else { 
+            print("❌ Canvas.blendOffscreen: No surface for id=\(surfaceId)")
+            return 
+        }
+
+        // Keep blend logging minimal; only emit diagnostics when alpha/clipping look suspicious.
+        let destInBounds = dest.minX >= 0 && dest.minY >= 0 && dest.maxX <= size.width && dest.maxY <= size.height
 
         context.saveGState()
-        context.clip(to: dest)
-
+        // Clip in main canvas coordinate space where dest is defined
+        // Save current CTM, reset to identity, clip, then restore CTM
+        let savedCTM = context.ctm
+        context.concatenate(savedCTM.inverted())  // Reset to identity
+        context.clip(to: dest)  // Clip in main canvas space (dest is in pixel coordinates)
+        context.concatenate(savedCTM)  // Restore original CTM
         let alpha = CGFloat(color & 0xFF) / 255.0
         if alpha < 1.0 {
             context.setAlpha(alpha)
@@ -379,7 +392,12 @@ final class Canvas: NSObject, IINKICanvas {
         t = t.scaledBy(x: scaleX, y: scaleY)
 
         context.concatenate(t)
+        
         context.draw(layer, in: src)
         context.restoreGState()
+        if !destInBounds {
+            print("⚠️ Canvas.blendOffscreen: dest out of bounds. surfaceId=\(surfaceId) dest=\(dest) canvas.size=\(size)")
+        }
     }
+
 }
