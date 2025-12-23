@@ -27,15 +27,15 @@ class NotebookLibrary: ObservableObject {
   // This should be called when the Dashboard appears to refresh the list.
   // Errors are silently ignored to keep the app usable.
   func loadBundles() async {
-    print("🧭 NotebookLibrary.loadBundles start")
+    appLog("🧭 NotebookLibrary.loadBundles start")
     do {
       let bundles = try await bundleManager.listBundles()
       notebooks = bundles
-      print("🧭 NotebookLibrary.loadBundles end count=\(bundles.count)")
+      appLog("🧭 NotebookLibrary.loadBundles end count=\(bundles.count)")
     } catch {
       // Silently ignore errors to keep the app usable.
       // Later on, should show error message to the user.
-      print("❌ NotebookLibrary.loadBundles failed error=\(error)")
+      appLog("❌ NotebookLibrary.loadBundles failed error=\(error)")
     }
   }
 
@@ -44,16 +44,16 @@ class NotebookLibrary: ObservableObject {
   // Uses a default display name if none is provided.
   // Errors are silently ignored to keep the app usable.
   func createNotebook(displayName: String = "Untitled Notebook") async {
-    print("🧭 NotebookLibrary.createNotebook start displayName=\(displayName)")
+    appLog("🧭 NotebookLibrary.createNotebook start displayName=\(displayName)")
     do {
       _ = try await bundleManager.createBundle(displayName: displayName)
       // Refresh the list to include the newly created Notebook.
       await loadBundles()
-      print("🧭 NotebookLibrary.createNotebook end")
+      appLog("🧭 NotebookLibrary.createNotebook end")
     } catch {
       // Silently ignore errors to keep the app usable.
       // Later on, should show error message to the user.
-      print("❌ NotebookLibrary.createNotebook failed error=\(error)")
+      appLog("❌ NotebookLibrary.createNotebook failed error=\(error)")
     }
   }
 
@@ -61,16 +61,16 @@ class NotebookLibrary: ObservableObject {
   // After renaming, refreshes the list of Notebooks to show the updated name.
   // Errors are silently ignored to keep the app usable.
   func renameNotebook(notebookID: String, newDisplayName: String) async {
-    print("🧭 NotebookLibrary.renameNotebook start notebookID=\(notebookID)")
+    appLog("🧭 NotebookLibrary.renameNotebook start notebookID=\(notebookID)")
     do {
       try await bundleManager.renameBundle(notebookID: notebookID, newDisplayName: newDisplayName)
       // Refresh the list to show the updated name.
       await loadBundles()
-      print("🧭 NotebookLibrary.renameNotebook end notebookID=\(notebookID)")
+      appLog("🧭 NotebookLibrary.renameNotebook end notebookID=\(notebookID)")
     } catch {
       // Silently ignore errors to keep the app usable.
       // Later on, should show error message to the user.
-      print("❌ NotebookLibrary.renameNotebook failed notebookID=\(notebookID) error=\(error)")
+      appLog("❌ NotebookLibrary.renameNotebook failed notebookID=\(notebookID) error=\(error)")
     }
   }
 
@@ -78,16 +78,16 @@ class NotebookLibrary: ObservableObject {
   // After deletion, refreshes the list of Notebooks to remove the deleted one.
   // Errors are silently ignored to keep the app usable.
   func deleteNotebook(notebookID: String) async {
-    print("🧭 NotebookLibrary.deleteNotebook start notebookID=\(notebookID)")
+    appLog("🧭 NotebookLibrary.deleteNotebook start notebookID=\(notebookID)")
     do {
       try await bundleManager.deleteBundle(notebookID: notebookID)
       // Refresh the list to remove the deleted Notebook.
       await loadBundles()
-      print("🧭 NotebookLibrary.deleteNotebook end notebookID=\(notebookID)")
+      appLog("🧭 NotebookLibrary.deleteNotebook end notebookID=\(notebookID)")
     } catch {
       // Silently ignore errors to keep the app usable.
       // Later on, should show error message to the user.
-      print("❌ NotebookLibrary.deleteNotebook failed notebookID=\(notebookID) error=\(error)")
+      appLog("❌ NotebookLibrary.deleteNotebook failed notebookID=\(notebookID) error=\(error)")
     }
   }
 
@@ -95,7 +95,7 @@ class NotebookLibrary: ObservableObject {
   // Returns a DocumentHandle that the editor can use for safe operations.
   // Throws if the Notebook cannot be opened.
   func openNotebook(notebookID: String) async throws -> DocumentHandle {
-    print("🧭 NotebookLibrary.openNotebook start notebookID=\(notebookID)")
+    appLog("🧭 NotebookLibrary.openNotebook start notebookID=\(notebookID)")
     return try await bundleManager.openNotebook(id: notebookID)
   }
 }

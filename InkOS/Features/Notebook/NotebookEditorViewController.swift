@@ -34,14 +34,14 @@ final class NotebookEditorViewController: UIViewController {
         }
 
         func onError(_ editor: IINKEditor, blockId: String, message: String) {
-            print("❌ MyScript Editor Error [BlockId: \(blockId)]: \(message)")
+            appLog("❌ MyScript Editor Error [BlockId: \(blockId)]: \(message)")
         }
 
         func partChanged(_ editor: IINKEditor) {}
 
         func contentChanged(_ editor: IINKEditor, blockIds: [String]) {
             Task { @MainActor in
-                print("📈 NotebookEditorViewController.contentChanged blockIds=\(blockIds)")
+                appLog("📈 NotebookEditorViewController.contentChanged blockIds=\(blockIds)")
                 if !didLogStyle {
                     didLogStyle = true
                     onFirstContentChange(editor, blockIds)
@@ -63,7 +63,7 @@ final class NotebookEditorViewController: UIViewController {
             do {
                 try await documentHandle.savePackageToTemp()
             } catch {
-                print("❌ NotebookEditorViewController: Failed to save package to temp: \(error)")
+                appLog("❌ NotebookEditorViewController: Failed to save package to temp: \(error)")
             }
 
             // Debounce archive saves to avoid writing on every small change.
@@ -80,7 +80,7 @@ final class NotebookEditorViewController: UIViewController {
             do {
                 try await documentHandle.savePackage()
             } catch {
-                print("❌ NotebookEditorViewController: Failed to save package: \(error)")
+                appLog("❌ NotebookEditorViewController: Failed to save package: \(error)")
             }
         }
         },
@@ -139,7 +139,7 @@ final class NotebookEditorViewController: UIViewController {
         let scale = view.window?.screen.scale ?? UIScreen.main.scale
         view.contentScaleFactor = scale
         let sizePx = CGSize(width: view.bounds.width * scale, height: view.bounds.height * scale)
-        print("🧭 NotebookEditorViewController.viewDidLayoutSubviews sizePx=\(sizePx)")
+        appLog("🧭 NotebookEditorViewController.viewDidLayoutSubviews sizePx=\(sizePx)")
         do {
             try displayViewModel.editor?.set(viewSize: sizePx)
             if let renderer = displayViewModel.renderer {
@@ -147,10 +147,10 @@ final class NotebookEditorViewController: UIViewController {
                 let beforeOffset = renderer.viewOffset
                 renderer.viewScale = 1
                 renderer.viewOffset = .zero
-                print("🧭 NotebookEditorViewController.viewDidLayoutSubviews renderer viewScale \(beforeScale)→\(renderer.viewScale) viewOffset \(beforeOffset)→\(renderer.viewOffset)")
+                appLog("🧭 NotebookEditorViewController.viewDidLayoutSubviews renderer viewScale \(beforeScale)→\(renderer.viewScale) viewOffset \(beforeOffset)→\(renderer.viewOffset)")
             }
         } catch {
-            print("❌ NotebookEditorViewController: Failed to set view size: \(error)")
+            appLog("❌ NotebookEditorViewController: Failed to set view size: \(error)")
         }
     }
 
@@ -208,10 +208,10 @@ final class NotebookEditorViewController: UIViewController {
                 engineProvider = provider
 
                 guard let engine = provider.engine else {
-                    print("❌ NotebookEditorViewController: Engine is nil after initialization")
+                    appLog("❌ NotebookEditorViewController: Engine is nil after initialization")
                     return
                 }
-                print("🧭 NotebookEditorViewController.setupMyScript engine ready")
+                appLog("🧭 NotebookEditorViewController.setupMyScript engine ready")
 
                 // Creates a renderer bound to the display view model render target.
                 let dpi = Helper.scaledDpi()
@@ -229,12 +229,12 @@ final class NotebookEditorViewController: UIViewController {
 
                 // Creates an editor linked to the renderer and tool controller.
                 guard let editor = engine.createEditor(renderer: renderer, toolController: toolController) else {
-                    print("❌ NotebookEditorViewController: Failed to create editor")
+                    appLog("❌ NotebookEditorViewController: Failed to create editor")
                     return
                 }
                 displayViewModel.editor = editor
                 editor.addDelegate(editorDelegateProxy)
-                print("🧭 NotebookEditorViewController.setupMyScript editor ready")
+                appLog("🧭 NotebookEditorViewController.setupMyScript editor ready")
 
                 // Configure default ink behavior and style.
                 // If tool style is not set, the renderer may legitimately request fully transparent strokes (0x00000000).
@@ -242,18 +242,18 @@ final class NotebookEditorViewController: UIViewController {
                     // Reference implementation uses 6-digit hex colors (#RRGGBB), alpha handled internally.
                     try editor.set(theme: ".ink { color: #000000; -myscript-pen-width: 1.5; }")
                 } catch {
-                    print("❌ NotebookEditorViewController: Failed to set theme: \(error)")
+                    appLog("❌ NotebookEditorViewController: Failed to set theme: \(error)")
                 }
                 do {
                     try editor.toolController.set(tool: IINKPointerTool.toolPen, forType: IINKPointerType.touch)
                     try editor.toolController.set(tool: IINKPointerTool.toolPen, forType: IINKPointerType.pen)
                 } catch {
-                    print("❌ NotebookEditorViewController: Failed to map tools: \(error)")
+                    appLog("❌ NotebookEditorViewController: Failed to map tools: \(error)")
                 }
                 do {
                     try editor.toolController.set(style: "color:#000000;-myscript-pen-width:1.5", forTool: IINKPointerTool.toolPen)
                 } catch {
-                    print("❌ NotebookEditorViewController: Failed to set pen style: \(error)")
+                    appLog("❌ NotebookEditorViewController: Failed to set pen style: \(error)")
                 }
                 logEditorStyle(editor, context: "setupMyScript")
                 
@@ -269,13 +269,13 @@ final class NotebookEditorViewController: UIViewController {
                             let beforeOffset = renderer.viewOffset
                             renderer.viewScale = 1
                             renderer.viewOffset = .zero
-                            print("🧭 NotebookEditorViewController.setupMyScript renderer viewScale \(beforeScale)→\(renderer.viewScale) viewOffset \(beforeOffset)→\(renderer.viewOffset)")
+                            appLog("🧭 NotebookEditorViewController.setupMyScript renderer viewScale \(beforeScale)→\(renderer.viewScale) viewOffset \(beforeOffset)→\(renderer.viewOffset)")
                         } catch {
-                            print("❌ NotebookEditorViewController: Failed to set view size: \(error)")
+                            appLog("❌ NotebookEditorViewController: Failed to set view size: \(error)")
                         }
                     }
                 }
-                print("🧭 NotebookEditorViewController.setupMyScript viewSize set")
+                appLog("🧭 NotebookEditorViewController.setupMyScript viewSize set")
 
                 // Creates a font metrics provider for text layout.
                 let fontProvider = FontMetricsProvider()
@@ -285,12 +285,12 @@ final class NotebookEditorViewController: UIViewController {
                 inputViewOverlay.editor = editor
                 // Treat finger input as pen to avoid transparent touch strokes.
                 inputViewOverlay.inputMode = .forcePen
-                print("🧭 NotebookEditorViewController.setupMyScript inputViewOverlay connected")
+                appLog("🧭 NotebookEditorViewController.setupMyScript inputViewOverlay connected")
 
                 // Forces an initial redraw after wiring core objects.
                 displayViewModel.refreshDisplay()
             } catch {
-                print("❌ NotebookEditorViewController.setupMyScript failed: \(error)")
+                appLog("❌ NotebookEditorViewController.setupMyScript failed: \(error)")
             }
         }
     }
@@ -298,7 +298,7 @@ final class NotebookEditorViewController: UIViewController {
     private func loadDocument() {
         guard let editor = displayViewModel.editor else {
             // Retries after a short delay if editor is not yet available.
-            print("🧭 NotebookEditorViewController.loadDocument editor not ready, retrying")
+            appLog("🧭 NotebookEditorViewController.loadDocument editor not ready, retrying")
             Task {
                 try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
                 loadDocument()
@@ -310,7 +310,7 @@ final class NotebookEditorViewController: UIViewController {
             do {
                 // Gets the package from the document handle.
                 guard let package = await documentHandle.getPackage() else {
-                    print("❌ NotebookEditorViewController.loadDocument: No package available")
+                    appLog("❌ NotebookEditorViewController.loadDocument: No package available")
                     return
                 }
 
@@ -325,7 +325,7 @@ final class NotebookEditorViewController: UIViewController {
                 }
                 let partType = part?.type ?? "nil"
                 let partId = part?.identifier ?? "nil"
-                print("🧭 NotebookEditorViewController.loadDocument partCount=\(partCount) partReady=\(part != nil) partType=\(partType) partId=\(partId)")
+                appLog("🧭 NotebookEditorViewController.loadDocument partCount=\(partCount) partReady=\(part != nil) partType=\(partType) partId=\(partId)")
 
                 // Connects the editor to the loaded part.
                 await MainActor.run {
@@ -334,20 +334,20 @@ final class NotebookEditorViewController: UIViewController {
                     do {
                         try editor.set(theme: ".ink { color: #000000; -myscript-pen-width: 1.5; }")
                     } catch {
-                        print("❌ NotebookEditorViewController: Failed to set theme after part: \(error)")
+                        appLog("❌ NotebookEditorViewController: Failed to set theme after part: \(error)")
                     }
                     do {
                         try editor.toolController.set(style: "color:#000000;-myscript-pen-width:1.5", forTool: IINKPointerTool.toolPen)
                     } catch {
-                        print("❌ NotebookEditorViewController: Failed to set pen style after part: \(error)")
+                        appLog("❌ NotebookEditorViewController: Failed to set pen style after part: \(error)")
                     }
                     logEditorStyle(editor, context: "afterPart")
                     // Requests a full redraw after part assignment.
                     displayViewModel.refreshDisplay()
-                    print("🧭 NotebookEditorViewController.loadDocument assigned part and refreshed")
+                    appLog("🧭 NotebookEditorViewController.loadDocument assigned part and refreshed")
                 }
             } catch {
-                print("❌ NotebookEditorViewController.loadDocument failed: \(error)")
+                appLog("❌ NotebookEditorViewController.loadDocument failed: \(error)")
             }
         }
     }
@@ -355,13 +355,13 @@ final class NotebookEditorViewController: UIViewController {
     private func logEditorStyle(_ editor: IINKEditor, context: String) {
         let themePreview = editor.theme.replacingOccurrences(of: "\n", with: " ")
         let preview = String(themePreview.prefix(120))
-        print("🧭 EditorStyle \(context) themeLen=\(editor.theme.count) themePreview=\"\(preview)\"")
+        appLog("🧭 EditorStyle \(context) themeLen=\(editor.theme.count) themePreview=\"\(preview)\"")
 
         do {
             let penStyle = try editor.toolController.style(forTool: IINKPointerTool.toolPen)
-            print("🧭 EditorStyle \(context) penStyle=\(penStyle)")
+            appLog("🧭 EditorStyle \(context) penStyle=\(penStyle)")
         } catch {
-            print("❌ EditorStyle \(context) penStyle failed: \(error)")
+            appLog("❌ EditorStyle \(context) penStyle failed: \(error)")
         }
 
     }
@@ -370,7 +370,7 @@ final class NotebookEditorViewController: UIViewController {
         let isEmpty = editor.isEmpty(nil)
         let rootId = editor.rootBlock?.identifier ?? "nil"
         let childCount = editor.rootBlock?.children.count ?? 0
-        print("🧭 EditorContent \(context) empty=\(isEmpty) rootId=\(rootId) children=\(childCount)")
+        appLog("🧭 EditorContent \(context) empty=\(isEmpty) rootId=\(rootId) children=\(childCount)")
     }
 
 
@@ -394,7 +394,7 @@ final class NotebookEditorViewController: UIViewController {
         let watchdog = Task.detached { [start] in
             try await Task.sleep(nanoseconds: 2_000_000_000)
             let elapsed = Date().timeIntervalSince(start)
-            print("⚠️ NotebookEditorViewController.waitForIdle still running context=\(context) elapsed=\(String(format: "%.2f", elapsed))")
+            appLog("⚠️ NotebookEditorViewController.waitForIdle still running context=\(context) elapsed=\(String(format: "%.2f", elapsed))")
         }
 
         await withCheckedContinuation { continuation in

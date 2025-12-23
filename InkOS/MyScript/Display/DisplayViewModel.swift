@@ -34,7 +34,7 @@ final class DisplayViewModel: NSObject, ObservableObject {
 
         // Publishes the model so the controller can install the views.
         model = m
-        print("🧭 DisplayViewModel.setupModel completed modelReady=\(model != nil)")
+        appLog("🧭 DisplayViewModel.setupModel completed modelReady=\(model != nil)")
     }
 
     func setOffScreenRendererSurfacesScale(scale: CGFloat) {
@@ -56,7 +56,7 @@ final class DisplayViewModel: NSObject, ObservableObject {
         }
         model.modelRenderView.renderer = renderer
         model.captureRenderView.renderer = renderer
-        print("🧭 DisplayViewModel.updateRenderer applied renderer")
+        appLog("🧭 DisplayViewModel.updateRenderer applied renderer")
     }
 }
 

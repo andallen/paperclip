@@ -64,11 +64,11 @@ final class InputView: UIView {
         super.touchesCancelled(touches, with: event)
         guard let editor else { return }
         do {
-            print("🧭 InputView.touchesCancelled")
+            appLog("🧭 InputView.touchesCancelled")
             // Cancel all active pointer traces.
             try editor.pointerCancel(-1)
         } catch {
-            print("❌ InputView: pointerCancel failed: \(error)")
+            appLog("❌ InputView: pointerCancel failed: \(error)")
         }
     }
 
@@ -106,9 +106,9 @@ final class InputView: UIView {
                 let touchTool = try editor.toolController.tool(forType: IINKPointerType.touch).value
                 let penTool = try editor.toolController.tool(forType: IINKPointerType.pen).value
                 let penStyle = try editor.toolController.style(forTool: IINKPointerTool.toolPen)
-                print("🧭 InputView.toolState touchTool=\(touchTool) penTool=\(penTool) penStyle=\(penStyle)")
+                appLog("🧭 InputView.toolState touchTool=\(touchTool) penTool=\(penTool) penStyle=\(penStyle)")
             } catch {
-                print("❌ InputView: toolState failed: \(error)")
+                appLog("❌ InputView: toolState failed: \(error)")
             }
         }
         let e = pointerEvent(from: touch, eventType: .down)
@@ -121,7 +121,7 @@ final class InputView: UIView {
                 pointerId: Int(e.pointerId)
             )
         } catch {
-            print("❌ InputView: pointerDown failed: \(error)")
+            appLog("❌ InputView: pointerDown failed: \(error)")
         }
     }
 
@@ -136,7 +136,7 @@ final class InputView: UIView {
                     _ = try editor.pointerEvents(base, count: buf.count, doProcessGestures: true)
                 }
             } catch {
-                print("❌ InputView: pointerEvents(move) failed: \(error)")
+                appLog("❌ InputView: pointerEvents(move) failed: \(error)")
             }
             return
         }
@@ -151,7 +151,7 @@ final class InputView: UIView {
                 pointerId: Int(e.pointerId)
             )
         } catch {
-            print("❌ InputView: pointerMove failed: \(error)")
+            appLog("❌ InputView: pointerMove failed: \(error)")
         }
     }
 
@@ -167,7 +167,7 @@ final class InputView: UIView {
                 pointerId: Int(e.pointerId)
             )
         } catch {
-            print("❌ InputView: pointerUp failed: \(error)")
+            appLog("❌ InputView: pointerUp failed: \(error)")
         }
     }
 

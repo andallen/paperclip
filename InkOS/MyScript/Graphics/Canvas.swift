@@ -134,7 +134,8 @@ final class Canvas: NSObject, IINKICanvas {
             resolvedColor = 0x000000FF
             if !loggedForcedOpaque {
                 loggedForcedOpaque = true
-                print("⚠️ Canvas.setStrokeColor forced opaque color=0x000000FF for layer=\(debugLayer ?? \"unknown\")")
+                let layerName = debugLayer ?? "unknown"
+                appLog("⚠️ Canvas.setStrokeColor forced opaque color=0x000000FF for layer=\(layerName)")
             }
         }
         style.strokeColor = resolvedColor
@@ -142,19 +143,19 @@ final class Canvas: NSObject, IINKICanvas {
             let alpha = self.alpha(from: resolvedColor)
             if resolvedColor != 0, !loggedModelNonZeroStyle {
                 loggedModelNonZeroStyle = true
-                print("🧭 Canvas.setStrokeColor model nonzero color=0x\(String(format: "%08X", resolvedColor)) alpha=\(alpha)")
+                appLog("🧭 Canvas.setStrokeColor model nonzero color=0x\(String(format: "%08X", resolvedColor)) alpha=\(alpha)")
             } else if !loggedModelStyle {
                 loggedModelStyle = true
-                print("🧭 Canvas.setStrokeColor model color=0x\(String(format: "%08X", resolvedColor)) alpha=\(alpha)")
+                appLog("🧭 Canvas.setStrokeColor model color=0x\(String(format: "%08X", resolvedColor)) alpha=\(alpha)")
             }
         } else if debugLayer == "capture" {
             let alpha = self.alpha(from: resolvedColor)
             if resolvedColor != 0, !loggedCaptureNonZeroStyle {
                 loggedCaptureNonZeroStyle = true
-                print("🧭 Canvas.setStrokeColor capture nonzero color=0x\(String(format: "%08X", resolvedColor)) alpha=\(alpha)")
+                appLog("🧭 Canvas.setStrokeColor capture nonzero color=0x\(String(format: "%08X", resolvedColor)) alpha=\(alpha)")
             } else if !loggedCaptureStyle {
                 loggedCaptureStyle = true
-                print("🧭 Canvas.setStrokeColor capture color=0x\(String(format: "%08X", resolvedColor)) alpha=\(alpha)")
+                appLog("🧭 Canvas.setStrokeColor capture color=0x\(String(format: "%08X", resolvedColor)) alpha=\(alpha)")
             }
         }
         context?.setStrokeColor(cgColor(from: resolvedColor))
@@ -164,7 +165,7 @@ final class Canvas: NSObject, IINKICanvas {
         style.strokeWidth = width
         if debugLayer == "model", !loggedModelStyle {
             loggedModelStyle = true
-            print("🧭 Canvas.setStrokeWidth model width=\(width)")
+            appLog("🧭 Canvas.setStrokeWidth model width=\(width)")
         }
         context?.setLineWidth(CGFloat(width))
     }
@@ -337,7 +338,7 @@ final class Canvas: NSObject, IINKICanvas {
         let strokeAlpha = alpha(from: style.strokeColor)
         if debugLayer == "model", !loggedModelStroke {
             loggedModelStroke = true
-            print("🧭 Canvas.modelStroke color=0x\(String(format: "%08X", style.strokeColor)) alpha=\(strokeAlpha) width=\(style.strokeWidth)")
+            appLog("🧭 Canvas.modelStroke color=0x\(String(format: "%08X", style.strokeColor)) alpha=\(strokeAlpha) width=\(style.strokeWidth)")
         }
         if strokeAlpha > 0 {
             context.addPath(p.bezierPath.cgPath)
@@ -406,15 +407,15 @@ final class Canvas: NSObject, IINKICanvas {
 
     func blendOffscreen(_ surfaceId: UInt32, src: CGRect, dest: CGRect, color: UInt32) {
         guard let context else { 
-            print("❌ Canvas.blendOffscreen: No context")
+            appLog("❌ Canvas.blendOffscreen: No context")
             return 
         }
         guard let surfaces = offscreenRenderSurfaces else { 
-            print("❌ Canvas.blendOffscreen: No offscreen surfaces")
+            appLog("❌ Canvas.blendOffscreen: No offscreen surfaces")
             return 
         }
         guard let layer = surfaces.getSurface(surfaceId) else { 
-            print("❌ Canvas.blendOffscreen: No surface for id=\(surfaceId)")
+            appLog("❌ Canvas.blendOffscreen: No surface for id=\(surfaceId)")
             return 
         }
 
@@ -431,7 +432,7 @@ final class Canvas: NSObject, IINKICanvas {
         let alpha = CGFloat(color & 0xFF) / 255.0
         if debugLayer == "model", !loggedModelBlend, (alpha < 1.0 || color != 0xFFFFFFFF) {
             loggedModelBlend = true
-            print("🧭 Canvas.blendOffscreen model surfaceId=\(surfaceId) color=0x\(String(format: "%08X", color)) alpha=\(alpha) src=\(src) dest=\(dest)")
+            appLog("🧭 Canvas.blendOffscreen model surfaceId=\(surfaceId) color=0x\(String(format: "%08X", color)) alpha=\(alpha) src=\(src) dest=\(dest)")
         }
         if alpha < 1.0 {
             context.setAlpha(alpha)
@@ -449,7 +450,7 @@ final class Canvas: NSObject, IINKICanvas {
         context.draw(layer, in: src)
         context.restoreGState()
         if !destInBounds {
-            print("⚠️ Canvas.blendOffscreen: dest out of bounds. surfaceId=\(surfaceId) dest=\(dest) canvas.size=\(size)")
+            appLog("⚠️ Canvas.blendOffscreen: dest out of bounds. surfaceId=\(surfaceId) dest=\(dest) canvas.size=\(size)")
         }
     }
 

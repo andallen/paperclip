@@ -29,7 +29,7 @@ actor BundleManager {
   // Returns an array of NotebookMetadata for each Bundle that has a valid Manifest.
   // Skips Bundles that don't have a Manifest or have invalid Manifests.
   func listBundles() async throws -> [NotebookMetadata] {
-    print("🧭 BundleManager.listBundles start")
+    appLog("🧭 BundleManager.listBundles start")
     // Get the directory where Bundles are stored.
     let bundlesDirectory = try await BundleStorage.bundlesDirectory()
 
@@ -71,7 +71,7 @@ actor BundleManager {
       }
     }
 
-    print("🧭 BundleManager.listBundles end count=\(notebooks.count)")
+    appLog("🧭 BundleManager.listBundles end count=\(notebooks.count)")
     return notebooks
   }
 
@@ -79,7 +79,7 @@ actor BundleManager {
   // Generates a new UUID for the Notebook ID.
   // Returns the NotebookMetadata for the newly created Bundle.
   func createBundle(displayName: String) async throws -> NotebookMetadata {
-    print("🧭 BundleManager.createBundle start displayName=\(displayName)")
+    appLog("🧭 BundleManager.createBundle start displayName=\(displayName)")
     // Generate a unique identifier for this Notebook.
     let notebookID = UUID().uuidString
 
@@ -117,7 +117,7 @@ actor BundleManager {
         let package = try engine.createPackage(iinkPath)
         // Create an initial "Drawing" part in the package.
         let part = try package.createPart(with: "Drawing")
-        print("🧭 BundleManager.createBundle partType=\(part.type) partId=\(part.identifier)")
+        appLog("🧭 BundleManager.createBundle partType=\(part.type) partId=\(part.identifier)")
         // Save the package to persist it to disk.
         try package.save()
         return true
@@ -127,11 +127,11 @@ actor BundleManager {
     }
 
     guard packageCreated else {
-      print("❌ BundleManager.createBundle package creation failed notebookID=\(notebookID)")
+      appLog("❌ BundleManager.createBundle package creation failed notebookID=\(notebookID)")
       throw BundleError.packageCreationFailed(notebookID: notebookID)
     }
 
-    print("✅ BundleManager.createBundle success notebookID=\(notebookID)")
+    appLog("✅ BundleManager.createBundle success notebookID=\(notebookID)")
     return NotebookMetadata(id: notebookID, displayName: displayName)
   }
 
@@ -139,7 +139,7 @@ actor BundleManager {
   // Also updates the modifiedAt timestamp.
   // Throws if the Bundle doesn't exist or the Manifest cannot be read or written.
   func renameBundle(notebookID: String, newDisplayName: String) async throws {
-    print("🧭 BundleManager.renameBundle start notebookID=\(notebookID) newDisplayName=\(newDisplayName)")
+    appLog("🧭 BundleManager.renameBundle start notebookID=\(notebookID) newDisplayName=\(newDisplayName)")
     // Get the directory where Bundles are stored.
     let bundlesDirectory = try await BundleStorage.bundlesDirectory()
 
@@ -170,13 +170,13 @@ actor BundleManager {
 
     // Write the updated Manifest back to disk using atomic write.
     try writeManifest(manifest, to: manifestURL)
-    print("✅ BundleManager.renameBundle success notebookID=\(notebookID)")
+    appLog("✅ BundleManager.renameBundle success notebookID=\(notebookID)")
   }
 
   // Deletes a Bundle folder and all its contents including the iink package.
   // Throws if the Bundle doesn't exist or cannot be deleted.
   func deleteBundle(notebookID: String) async throws {
-    print("🧭 BundleManager.deleteBundle start notebookID=\(notebookID)")
+    appLog("🧭 BundleManager.deleteBundle start notebookID=\(notebookID)")
     // Get the directory where Bundles are stored.
     let bundlesDirectory = try await BundleStorage.bundlesDirectory()
 
@@ -214,7 +214,7 @@ actor BundleManager {
 
     // Delete the entire Bundle folder.
     try fileManager.removeItem(at: bundleURL)
-    print("✅ BundleManager.deleteBundle success notebookID=\(notebookID)")
+    appLog("✅ BundleManager.deleteBundle success notebookID=\(notebookID)")
   }
 
   // Opens a Notebook and returns a DocumentHandle for safe access.
@@ -222,7 +222,7 @@ actor BundleManager {
   // the version is supported, and required fields are present.
   // Throws if any validation fails.
   func openNotebook(id notebookID: String) async throws -> DocumentHandle {
-    print("🧭 BundleManager.openNotebook start notebookID=\(notebookID)")
+    appLog("🧭 BundleManager.openNotebook start notebookID=\(notebookID)")
     // Get the directory where Bundles are stored.
     let bundlesDirectory = try await BundleStorage.bundlesDirectory()
 
@@ -285,14 +285,14 @@ actor BundleManager {
       manifest: manifest,
       packagePath: packagePath
     )
-    print("✅ BundleManager.openNotebook success notebookID=\(notebookID)")
+    appLog("✅ BundleManager.openNotebook success notebookID=\(notebookID)")
     return handle
   }
 
   // Returns the file path to the iink package for a given notebook ID.
   // This is a helper method for constructing package paths.
   func iinkPackagePath(forNotebookID notebookID: String) async throws -> String {
-    print("🧭 BundleManager.iinkPackagePath notebookID=\(notebookID)")
+    appLog("🧭 BundleManager.iinkPackagePath notebookID=\(notebookID)")
     let bundlesDirectory = try await BundleStorage.bundlesDirectory()
     let bundleURL = bundlesDirectory.appendingPathComponent(notebookID, isDirectory: true)
     return bundleURL
@@ -305,7 +305,7 @@ actor BundleManager {
   // Writes to a temporary file first, then replaces the target file.
   // This prevents corruption if the write is interrupted.
   private func writeManifest(_ manifest: Manifest, to url: URL) throws {
-    print("🧭 BundleManager.writeManifest start url=\(url.lastPathComponent)")
+    appLog("🧭 BundleManager.writeManifest start url=\(url.lastPathComponent)")
     // Encode the Manifest to JSON data.
     let encoder = JSONEncoder()
     encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
@@ -324,7 +324,7 @@ actor BundleManager {
       try fileManager.removeItem(at: url)
     }
     try fileManager.moveItem(at: tempURL, to: url)
-    print("✅ BundleManager.writeManifest success url=\(url.lastPathComponent)")
+    appLog("✅ BundleManager.writeManifest success url=\(url.lastPathComponent)")
   }
 }
 

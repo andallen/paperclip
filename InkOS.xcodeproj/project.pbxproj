@@ -7,45 +7,53 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		41A37C58D9454AC24022BC08 /* libPods-InkOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FAE72E6CE6B665ECB4F183CE /* libPods-InkOS.a */; };
+		AE1AC11F2EFB584300E6E4BA /* Logging.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE1AC11E2EFB584300E6E4BA /* Logging.swift */; };
+		AE1AC1202EFB584300E6E4BA /* Logging.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE1AC11E2EFB584300E6E4BA /* Logging.swift */; };
 		AE4C26BF2EF84C9A0089CC3C /* me.andy.allen.Trivial.c in Sources */ = {isa = PBXBuildFile; fileRef = AE4C26BE2EF84C9A0089CC3C /* me.andy.allen.Trivial.c */; };
-		C4B8257FA31BED22370271D6 /* libPods-Trivial.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8C6004BA06274FD2310574B0 /* libPods-Trivial.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		AE70E8BC2EFB317C000ECCF1 /* PBXContainerItemProxy */ = {
+		AE1AC1132EFB3B9E00E6E4BA /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = AEAFC2312EF4B85B00811728 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = AEAFC2382EF4B85B00811728;
-			remoteInfo = Trivial;
+			remoteInfo = InkOS;
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		0FA740AD3C1724826C80E68D /* Pods-Trivial.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Trivial.debug.xcconfig"; path = "Target Support Files/Pods-Trivial/Pods-Trivial.debug.xcconfig"; sourceTree = "<group>"; };
-		7AEECD521EFF89C6373D9C02 /* Pods-Trivial.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Trivial.release.xcconfig"; path = "Target Support Files/Pods-Trivial/Pods-Trivial.release.xcconfig"; sourceTree = "<group>"; };
-		8C6004BA06274FD2310574B0 /* libPods-Trivial.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Trivial.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		3C72F6D8DDA74BAAB09FB025 /* Pods-InkOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-InkOS.release.xcconfig"; path = "Target Support Files/Pods-InkOS/Pods-InkOS.release.xcconfig"; sourceTree = "<group>"; };
+		AE1AC10D2EFB3B9E00E6E4BA /* InkOSUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = InkOSUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		AE1AC11E2EFB584300E6E4BA /* Logging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logging.swift; sourceTree = "<group>"; };
 		AE4C26BE2EF84C9A0089CC3C /* me.andy.allen.Trivial.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = me.andy.allen.Trivial.c; path = /Users/andrewallen/Downloads/me.andy.allen.Trivial.c; sourceTree = "<absolute>"; };
-		AE70E8B62EFB317C000ECCF1 /* InkOSUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = InkOSUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AEAB2C832EF7BD3300424068 /* MyCertificate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MyCertificate.h; sourceTree = "<group>"; };
-		AEAFC2392EF4B85B00811728 /* Trivial.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Trivial.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AEAFC2392EF4B85B00811728 /* InkOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = InkOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B95CC48760412B82842147D7 /* Pods-InkOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-InkOS.debug.xcconfig"; path = "Target Support Files/Pods-InkOS/Pods-InkOS.debug.xcconfig"; sourceTree = "<group>"; };
+		FAE72E6CE6B665ECB4F183CE /* libPods-InkOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-InkOS.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		AE1AC10E2EFB3B9E00E6E4BA /* InkOSUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = InkOSUITests;
+			sourceTree = "<group>";
+		};
 		AEA6BC452EF8643800D18138 /* recognition-assets */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = "recognition-assets";
 			sourceTree = "<group>";
 		};
-		AEAFC23B2EF4B85B00811728 /* Trivial */ = {
+		AEAFC23B2EF4B85B00811728 /* InkOS */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = Trivial;
+			path = InkOS;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		AE70E8B32EFB317C000ECCF1 /* Frameworks */ = {
+		AE1AC10A2EFB3B9E00E6E4BA /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -56,26 +64,18 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C4B8257FA31BED22370271D6 /* libPods-Trivial.a in Frameworks */,
+				41A37C58D9454AC24022BC08 /* libPods-InkOS.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		1CD3FB676B945362DF406464 /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				8C6004BA06274FD2310574B0 /* libPods-Trivial.a */,
-			);
-			name = Frameworks;
-			sourceTree = "<group>";
-		};
 		7D21902157F5C13C106A1960 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				0FA740AD3C1724826C80E68D /* Pods-Trivial.debug.xcconfig */,
-				7AEECD521EFF89C6373D9C02 /* Pods-Trivial.release.xcconfig */,
+				B95CC48760412B82842147D7 /* Pods-InkOS.debug.xcconfig */,
+				3C72F6D8DDA74BAAB09FB025 /* Pods-InkOS.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -92,51 +92,65 @@
 		AEAFC2302EF4B85B00811728 = {
 			isa = PBXGroup;
 			children = (
+				AE1AC11E2EFB584300E6E4BA /* Logging.swift */,
 				AEAB2C852EF7BD3300424068 /* MyScriptCertificate */,
-				AEAFC23B2EF4B85B00811728 /* Trivial */,
+				AEAFC23B2EF4B85B00811728 /* InkOS */,
+				AE1AC10E2EFB3B9E00E6E4BA /* InkOSUITests */,
 				AEAFC23A2EF4B85B00811728 /* Products */,
 				7D21902157F5C13C106A1960 /* Pods */,
-				1CD3FB676B945362DF406464 /* Frameworks */,
 				AEA6BC452EF8643800D18138 /* recognition-assets */,
+				F2E3911B917C595F2660348C /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
 		AEAFC23A2EF4B85B00811728 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				AEAFC2392EF4B85B00811728 /* Trivial.app */,
-				AE70E8B62EFB317C000ECCF1 /* InkOSUITests.xctest */,
+				AEAFC2392EF4B85B00811728 /* InkOS.app */,
+				AE1AC10D2EFB3B9E00E6E4BA /* InkOSUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		F2E3911B917C595F2660348C /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				FAE72E6CE6B665ECB4F183CE /* libPods-InkOS.a */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		AE70E8B52EFB317C000ECCF1 /* InkOSUITests */ = {
+		AE1AC10C2EFB3B9E00E6E4BA /* InkOSUITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = AE70E8C02EFB317C000ECCF1 /* Build configuration list for PBXNativeTarget "InkOSUITests" */;
+			buildConfigurationList = AE1AC1152EFB3B9E00E6E4BA /* Build configuration list for PBXNativeTarget "InkOSUITests" */;
 			buildPhases = (
-				AE70E8B22EFB317C000ECCF1 /* Sources */,
-				AE70E8B32EFB317C000ECCF1 /* Frameworks */,
-				AE70E8B42EFB317C000ECCF1 /* Resources */,
+				AE1AC1092EFB3B9E00E6E4BA /* Sources */,
+				AE1AC10A2EFB3B9E00E6E4BA /* Frameworks */,
+				AE1AC10B2EFB3B9E00E6E4BA /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				AE70E8BD2EFB317C000ECCF1 /* PBXTargetDependency */,
+				AE1AC1142EFB3B9E00E6E4BA /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				AE1AC10E2EFB3B9E00E6E4BA /* InkOSUITests */,
 			);
 			name = InkOSUITests;
 			packageProductDependencies = (
 			);
 			productName = InkOSUITests;
-			productReference = AE70E8B62EFB317C000ECCF1 /* InkOSUITests.xctest */;
+			productReference = AE1AC10D2EFB3B9E00E6E4BA /* InkOSUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
-		AEAFC2382EF4B85B00811728 /* Trivial */ = {
+		AEAFC2382EF4B85B00811728 /* InkOS */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = AEAFC2442EF4B85D00811728 /* Build configuration list for PBXNativeTarget "Trivial" */;
+			buildConfigurationList = AEAFC2442EF4B85D00811728 /* Build configuration list for PBXNativeTarget "InkOS" */;
 			buildPhases = (
+				89BBA18F5E78F49FCF8CC369 /* [CP] Check Pods Manifest.lock */,
 				AEAFC2352EF4B85B00811728 /* Sources */,
 				AEAFC2362EF4B85B00811728 /* Frameworks */,
 				AEAFC2372EF4B85B00811728 /* Resources */,
@@ -147,11 +161,11 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				AEAFC23B2EF4B85B00811728 /* Trivial */,
+				AEAFC23B2EF4B85B00811728 /* InkOS */,
 			);
-			name = Trivial;
+			name = InkOS;
 			productName = Trivial;
-			productReference = AEAFC2392EF4B85B00811728 /* Trivial.app */;
+			productReference = AEAFC2392EF4B85B00811728 /* InkOS.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -164,7 +178,7 @@
 				LastSwiftUpdateCheck = 2620;
 				LastUpgradeCheck = 2620;
 				TargetAttributes = {
-					AE70E8B52EFB317C000ECCF1 = {
+					AE1AC10C2EFB3B9E00E6E4BA = {
 						CreatedOnToolsVersion = 26.2;
 						TestTargetID = AEAFC2382EF4B85B00811728;
 					};
@@ -187,14 +201,14 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				AEAFC2382EF4B85B00811728 /* Trivial */,
-				AE70E8B52EFB317C000ECCF1 /* InkOSUITests */,
+				AEAFC2382EF4B85B00811728 /* InkOS */,
+				AE1AC10C2EFB3B9E00E6E4BA /* InkOSUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		AE70E8B42EFB317C000ECCF1 /* Resources */ = {
+		AE1AC10B2EFB3B9E00E6E4BA /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -211,6 +225,28 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		89BBA18F5E78F49FCF8CC369 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-InkOS-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
 		AEA6BC5A2EF8654800D18138 /* Copy Recognition Assets */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
@@ -233,10 +269,11 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		AE70E8B22EFB317C000ECCF1 /* Sources */ = {
+		AE1AC1092EFB3B9E00E6E4BA /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AE1AC1202EFB584300E6E4BA /* Logging.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -245,25 +282,27 @@
 			buildActionMask = 2147483647;
 			files = (
 				AE4C26BF2EF84C9A0089CC3C /* me.andy.allen.Trivial.c in Sources */,
+				AE1AC11F2EFB584300E6E4BA /* Logging.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		AE70E8BD2EFB317C000ECCF1 /* PBXTargetDependency */ = {
+		AE1AC1142EFB3B9E00E6E4BA /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = AEAFC2382EF4B85B00811728 /* Trivial */;
-			targetProxy = AE70E8BC2EFB317C000ECCF1 /* PBXContainerItemProxy */;
+			target = AEAFC2382EF4B85B00811728 /* InkOS */;
+			targetProxy = AE1AC1132EFB3B9E00E6E4BA /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		AE70E8BE2EFB317C000ECCF1 /* Debug */ = {
+		AE1AC1162EFB3B9E00E6E4BA /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8LSA357AU5;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = me.andy.allen.InkOSUITests;
@@ -274,15 +313,16 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = Trivial;
+				TEST_TARGET_NAME = InkOS;
 			};
 			name = Debug;
 		};
-		AE70E8BF2EFB317C000ECCF1 /* Release */ = {
+		AE1AC1172EFB3B9E00E6E4BA /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8LSA357AU5;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = me.andy.allen.InkOSUITests;
@@ -293,7 +333,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = Trivial;
+				TEST_TARGET_NAME = InkOS;
 			};
 			name = Release;
 		};
@@ -420,7 +460,7 @@
 		};
 		AEAFC2452EF4B85D00811728 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 0FA740AD3C1724826C80E68D /* Pods-Trivial.debug.xcconfig */;
+			baseConfigurationReference = B95CC48760412B82842147D7 /* Pods-InkOS.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -453,7 +493,7 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				"SWIFT_OBJC_BRIDGING_HEADER[arch=*]" = "Trivial/Trivial-Bridging-Header.h";
+				"SWIFT_OBJC_BRIDGING_HEADER[arch=*]" = "InkOS/InkOS-Bridging-Header.h";
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -463,7 +503,7 @@
 		};
 		AEAFC2462EF4B85D00811728 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 7AEECD521EFF89C6373D9C02 /* Pods-Trivial.release.xcconfig */;
+			baseConfigurationReference = 3C72F6D8DDA74BAAB09FB025 /* Pods-InkOS.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -496,7 +536,7 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				"SWIFT_OBJC_BRIDGING_HEADER[arch=*]" = "Trivial/Trivial-Bridging-Header.h";
+				"SWIFT_OBJC_BRIDGING_HEADER[arch=*]" = "InkOS/InkOS-Bridging-Header.h";
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -507,11 +547,11 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		AE70E8C02EFB317C000ECCF1 /* Build configuration list for PBXNativeTarget "InkOSUITests" */ = {
+		AE1AC1152EFB3B9E00E6E4BA /* Build configuration list for PBXNativeTarget "InkOSUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				AE70E8BE2EFB317C000ECCF1 /* Debug */,
-				AE70E8BF2EFB317C000ECCF1 /* Release */,
+				AE1AC1162EFB3B9E00E6E4BA /* Debug */,
+				AE1AC1172EFB3B9E00E6E4BA /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -525,7 +565,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		AEAFC2442EF4B85D00811728 /* Build configuration list for PBXNativeTarget "Trivial" */ = {
+		AEAFC2442EF4B85D00811728 /* Build configuration list for PBXNativeTarget "InkOS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				AEAFC2452EF4B85D00811728 /* Debug */,

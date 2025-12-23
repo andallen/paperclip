@@ -33,7 +33,7 @@ actor DocumentHandle {
 
     self.package = await MainActor.run {
       guard let engine = EngineProvider.shared.engine else {
-        print("❌ DocumentHandle.init engine unavailable notebookID=\(notebookID)")
+        appLog("❌ DocumentHandle.init engine unavailable notebookID=\(notebookID)")
         return nil
       }
       do {
@@ -42,7 +42,7 @@ actor DocumentHandle {
         let openedPackage = try engine.openPackage(packagePath, openOption: .create)
         return openedPackage
       } catch {
-        print("❌ DocumentHandle.init failed open package notebookID=\(notebookID) error=\(error)")
+        appLog("❌ DocumentHandle.init failed open package notebookID=\(notebookID) error=\(error)")
         return nil
       }
     }
@@ -87,7 +87,7 @@ actor DocumentHandle {
         let part = try capturedPackage.part(at: index)
         return part
       } catch {
-        print("❌ DocumentHandle.getPart failed notebookID=\(notebookID) index=\(index) error=\(error)")
+        appLog("❌ DocumentHandle.getPart failed notebookID=\(notebookID) index=\(index) error=\(error)")
         return nil
       }
     }
@@ -96,7 +96,7 @@ actor DocumentHandle {
   // Saves the package into the compressed archive.
   func savePackage() async throws {
     guard let capturedPackage = self.package else {
-      print("❌ DocumentHandle.savePackage missing package notebookID=\(notebookID)")
+      appLog("❌ DocumentHandle.savePackage missing package notebookID=\(notebookID)")
       throw DocumentHandleError.packageNotAvailable
     }
     try await MainActor.run {
@@ -107,7 +107,7 @@ actor DocumentHandle {
   // Saves current in-memory changes to the temp folder.
   func savePackageToTemp() async throws {
     guard let capturedPackage = self.package else {
-      print("❌ DocumentHandle.savePackageToTemp missing package notebookID=\(notebookID)")
+      appLog("❌ DocumentHandle.savePackageToTemp missing package notebookID=\(notebookID)")
       throw DocumentHandleError.packageNotAvailable
     }
     try await MainActor.run {
@@ -120,7 +120,7 @@ actor DocumentHandle {
     do {
       try await savePackage()
     } catch {
-      print("⚠️ DocumentHandle.close save failed notebookID=\(notebookID) error=\(error)")
+      appLog("⚠️ DocumentHandle.close save failed notebookID=\(notebookID) error=\(error)")
       // Ignore save errors during close.
     }
 

@@ -30,18 +30,18 @@ final class RenderView: UIView {
     override func draw(_ rect: CGRect) {
         // Skips drawing if the renderer is not ready.
         guard let ctx = UIGraphicsGetCurrentContext() else {
-            print("❌ RenderView.draw: No graphics context")
+            appLog("❌ RenderView.draw: No graphics context")
             return
         }
         guard let renderer else {
-            print("⚠️ RenderView.draw: renderer not set")
+            appLog("⚠️ RenderView.draw: renderer not set")
             return
         }
 
         let scale = contentScaleFactor
         let pixelSize = CGSize(width: bounds.width * scale, height: bounds.height * scale)
         if layerType == .model {
-            print("🧭 RenderView.draw layer=\(layerType) rectPt=\(rect) scale=\(scale)")
+            appLog("🧭 RenderView.draw layer=\(layerType) rectPt=\(rect) scale=\(scale)")
         }
 
         let originalCTM = ctx.ctm
@@ -82,23 +82,23 @@ final class RenderView: UIView {
         if layerType == .model {
             let result = renderer.drawModel(regionPx, canvas: canvas)
             if !result {
-                print("❌ RenderView.draw: drawModel returned false")
+                appLog("❌ RenderView.draw: drawModel returned false")
             }
         } else if layerType == .capture {
             let result = renderer.drawCaptureStrokes(regionPx, canvas: canvas)
             if !result {
-                print("❌ RenderView.draw: drawCaptureStrokes returned false")
+                appLog("❌ RenderView.draw: drawCaptureStrokes returned false")
             }
         }
 
         ctx.restoreGState()
 
         if ctx.ctm != originalCTM || ctx.boundingBoxOfClipPath != originalClip {
-            print("⚠️ RenderView.draw: CGContext state leaked across draw")
-            print("   original CTM=\(originalCTM)")
-            print("   restored CTM=\(ctx.ctm)")
-            print("   original clip=\(originalClip)")
-            print("   restored clip=\(ctx.boundingBoxOfClipPath)")
+            appLog("⚠️ RenderView.draw: CGContext state leaked across draw")
+            appLog("   original CTM=\(originalCTM)")
+            appLog("   restored CTM=\(ctx.ctm)")
+            appLog("   original clip=\(originalClip)")
+            appLog("   restored clip=\(ctx.boundingBoxOfClipPath)")
         }
     }
 
