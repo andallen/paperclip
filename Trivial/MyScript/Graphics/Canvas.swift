@@ -38,6 +38,12 @@ final class Canvas: NSObject, IINKICanvas {
     private var strokeDashOffset: CGFloat = 0
 
     var debugLayer: String?
+    private var loggedModelStroke = false
+    private var loggedModelStyle = false
+    private var loggedModelNonZeroStyle = false
+    private var loggedModelBlend = false
+    private var loggedCaptureStyle = false
+    private var loggedCaptureNonZeroStyle = false
 
     // MyScript iOS reference implementation treats packed colors as RGBA (0xRRGGBBAA).
     // `blendOffscreen(..., color:)` alpha is documented/implemented as `color & 0xFF`.
@@ -81,7 +87,10 @@ final class Canvas: NSObject, IINKICanvas {
         style.setAllChangeFlags()
         style.apply(to: self)
         style.clearChangeFlags()
-
+        loggedModelStroke = false
+        loggedModelStyle = false
+        loggedModelNonZeroStyle = false
+        loggedModelBlend = false
         // Clip to the session rect (this is what the MyScript ref impl does).
         context.clip(to: rect)
 
@@ -96,6 +105,10 @@ final class Canvas: NSObject, IINKICanvas {
     func endDraw() {
         // Matches startDraw's saveGState() to prevent clip/CTM leaking across draw sessions.
         context?.restoreGState()
+        loggedModelStroke = false
+        loggedModelStyle = false
+        loggedModelNonZeroStyle = false
+        loggedModelBlend = false
     }
 
     // MARK: - Required protocol methods
@@ -116,11 +129,34 @@ final class Canvas: NSObject, IINKICanvas {
 
     func setStrokeColor(_ color: UInt32) {
         style.strokeColor = color
+        if debugLayer == "model" {
+            let alpha = self.alpha(from: color)
+            if color != 0, !loggedModelNonZeroStyle {
+                loggedModelNonZeroStyle = true
+                print("🧭 Canvas.setStrokeColor model nonzero color=0x\(String(format: "%08X", color)) alpha=\(alpha)")
+            } else if !loggedModelStyle {
+                loggedModelStyle = true
+                print("🧭 Canvas.setStrokeColor model color=0x\(String(format: "%08X", color)) alpha=\(alpha)")
+            }
+        } else if debugLayer == "capture" {
+            let alpha = self.alpha(from: color)
+            if color != 0, !loggedCaptureNonZeroStyle {
+                loggedCaptureNonZeroStyle = true
+                print("🧭 Canvas.setStrokeColor capture nonzero color=0x\(String(format: "%08X", color)) alpha=\(alpha)")
+            } else if !loggedCaptureStyle {
+                loggedCaptureStyle = true
+                print("🧭 Canvas.setStrokeColor capture color=0x\(String(format: "%08X", color)) alpha=\(alpha)")
+            }
+        }
         context?.setStrokeColor(cgColor(from: color))
     }
 
     func setStrokeWidth(_ width: Float) {
         style.strokeWidth = width
+        if debugLayer == "model", !loggedModelStyle {
+            loggedModelStyle = true
+            print("🧭 Canvas.setStrokeWidth model width=\(width)")
+        }
         context?.setLineWidth(CGFloat(width))
     }
 
@@ -290,6 +326,10 @@ final class Canvas: NSObject, IINKICanvas {
 
         // Stroke when stroke alpha is non-zero.
         let strokeAlpha = alpha(from: style.strokeColor)
+        if debugLayer == "model", !loggedModelStroke {
+            loggedModelStroke = true
+            print("🧭 Canvas.modelStroke color=0x\(String(format: "%08X", style.strokeColor)) alpha=\(strokeAlpha) width=\(style.strokeWidth)")
+        }
         if strokeAlpha > 0 {
             context.addPath(p.bezierPath.cgPath)
             context.setStrokeColor(cgColor(from: style.strokeColor))
@@ -380,6 +420,10 @@ final class Canvas: NSObject, IINKICanvas {
         context.clip(to: dest)  // Clip in main canvas space (dest is in pixel coordinates)
         context.concatenate(savedCTM)  // Restore original CTM
         let alpha = CGFloat(color & 0xFF) / 255.0
+        if debugLayer == "model", !loggedModelBlend, (alpha < 1.0 || color != 0xFFFFFFFF) {
+            loggedModelBlend = true
+            print("🧭 Canvas.blendOffscreen model surfaceId=\(surfaceId) color=0x\(String(format: "%08X", color)) alpha=\(alpha) src=\(src) dest=\(dest)")
+        }
         if alpha < 1.0 {
             context.setAlpha(alpha)
         }

@@ -20,6 +20,7 @@ final class InputView: UIView {
 
     // Offset to convert UITouch.timestamp (system uptime) into Unix epoch time.
     private var eventTimeOffset: TimeInterval = 0
+    private var loggedToolState = false
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -99,9 +100,19 @@ final class InputView: UIView {
 
     private func sendPointerDown(for touch: UITouch) {
         guard let editor else { return }
+        if !loggedToolState {
+            loggedToolState = true
+            do {
+                let touchTool = try editor.toolController.tool(forType: IINKPointerType.touch).value
+                let penTool = try editor.toolController.tool(forType: IINKPointerType.pen).value
+                let penStyle = try editor.toolController.style(forTool: IINKPointerTool.toolPen)
+                print("🧭 InputView.toolState touchTool=\(touchTool) penTool=\(penTool) penStyle=\(penStyle)")
+            } catch {
+                print("❌ InputView: toolState failed: \(error)")
+            }
+        }
         let e = pointerEvent(from: touch, eventType: .down)
         do {
-            print("🧭 InputView.pointerDown type=\(e.pointerType) pointPx=(\(e.x),\(e.y)) force=\(e.f) t=\(e.t)")
             try editor.pointerDown(
                 point: CGPoint(x: CGFloat(e.x), y: CGFloat(e.y)),
                 timestamp: e.t,
@@ -148,7 +159,6 @@ final class InputView: UIView {
         guard let editor else { return }
         let e = pointerEvent(from: touch, eventType: .up)
         do {
-            print("🧭 InputView.pointerUp type=\(e.pointerType) pointPx=(\(e.x),\(e.y)) force=\(e.f) t=\(e.t)")
             try editor.pointerUp(
                 point: CGPoint(x: CGFloat(e.x), y: CGFloat(e.y)),
                 timestamp: e.t,

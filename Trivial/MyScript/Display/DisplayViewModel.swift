@@ -70,10 +70,6 @@ extension DisplayViewModel: IINKIRenderTarget {
         // Schedules invalidation on the main thread for UIKit.
         DispatchQueue.main.async { [weak self] in
             guard let self, let model = self.model else { return }
-            if layers.contains(.model) {
-                print("🧭 DisplayViewModel.invalidate layers=\(layers)")
-            }
-
             // Invalidates only the layers that changed.
             if layers.contains(.model) {
                 model.modelRenderView.setNeedsDisplay()
@@ -89,10 +85,6 @@ extension DisplayViewModel: IINKIRenderTarget {
         // Uses pixel coordinates as specified by the SDK headers.
         DispatchQueue.main.async { [weak self] in
             guard let self, let model = self.model else { return }
-            if layers.contains(.model) {
-                print("🧭 DisplayViewModel.invalidate areaPx=\(area) layers=\(layers)")
-            }
-
             // Invalidates only the touched pixel area.
             if layers.contains(.model) {
                 model.modelRenderView.setNeedsDisplay(areaPx: area)
@@ -104,17 +96,22 @@ extension DisplayViewModel: IINKIRenderTarget {
     }
 
     func createOffscreenRenderSurface(width: Int32, height: Int32, alphaMask: Bool) -> UInt32 {
-        let sizePx = CGSize(width: CGFloat(width), height: CGFloat(height))
+        // The SDK provides sizes in pixels; build the CGLayer at pixel density.
+        let scale = offscreenRenderSurfaces.scale
+        let sizePx = CGSize(width: CGFloat(width) * scale, height: CGFloat(height) * scale)
         UIGraphicsBeginImageContextWithOptions(sizePx, false, 1)
         defer { UIGraphicsEndImageContext() }
 
         guard let context = UIGraphicsGetCurrentContext() else {
             return 0
         }
+        context.scaleBy(x: sizePx.width, y: sizePx.height)
 
+        let scaledWidth = Int32(sizePx.width.rounded())
+        let scaledHeight = Int32(sizePx.height.rounded())
         let surfaceId = offscreenRenderSurfaces.createSurface(
-            width: width,
-            height: height,
+            width: scaledWidth,
+            height: scaledHeight,
             context: context,
             alphaMask: alphaMask
         )

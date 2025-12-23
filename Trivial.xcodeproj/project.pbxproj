@@ -100,15 +100,14 @@
 			buildPhases = (
 				AEAFC2352EF4B85B00811728 /* Sources */,
 				AEAFC2362EF4B85B00811728 /* Frameworks */,
-				AEA6BC5A2EF8654800D18138 /* Copy Recognition Assets */,
 				AEAFC2372EF4B85B00811728 /* Resources */,
+				AEA6BC5A2EF8654800D18138 /* Copy Recognition Assets */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				AEA6BC452EF8643800D18138 /* recognition-assets */,
 				AEAFC23B2EF4B85B00811728 /* Trivial */,
 			);
 			name = Trivial;
@@ -178,7 +177,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "SOURCE_DIR=\"${SRCROOT}/recognition-assets\"\nDEST_DIR=\"${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.app/recognition-assets\"\nAPP_DIR=\"${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.app\"\n\nif [ -d \"$SOURCE_DIR\" ]; then\n    echo \"Copying recognition-assets to bundle...\"\n    rm -rf \"$DEST_DIR\"\n    cp -R \"$SOURCE_DIR\" \"$DEST_DIR\"\n    /usr/bin/xattr -cr \"$DEST_DIR\"\n    echo \"Done copying recognition-assets\"\nelse\n    echo \"Warning: recognition-assets not found at $SOURCE_DIR\"\nfi\n\n/usr/bin/xattr -cr \"$APP_DIR\"\n";
+			shellScript = "SOURCE_DIR=\"${SRCROOT}/recognition-assets\"\nDEST_DIR=\"${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.app/recognition-assets\"\nAPP_DIR=\"${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.app\"\n\nif [ -d \"$SOURCE_DIR\" ]; then\n    echo \"Copying recognition-assets to bundle...\"\n    rm -rf \"$DEST_DIR\"\n    cp -R \"$SOURCE_DIR\" \"$DEST_DIR\"\n    /usr/bin/xattr -cr \"$DEST_DIR\"\n    echo \"Done copying recognition-assets\"\nelse\n    echo \"Warning: recognition-assets not found at $SOURCE_DIR\"\nfi\n\nif [ -d \"$APP_DIR\" ]; then\n    /usr/bin/xattr -cr \"$APP_DIR\"\n    /usr/bin/find \"$APP_DIR\" -name '._*' -delete\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 

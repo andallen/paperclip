@@ -28,9 +28,8 @@ final class EditorWorker: NSObject, ObservableObject {
         e.delegate = self
         
         // Apply theme using the editor's theme API (not configuration.set).
-        // Use 8-digit color format (#000000FF) to ensure alpha is included.
         do {
-            try e.set(theme: ".ink { color: #000000FF; -myscript-pen-width: 1.5; }")
+            try e.set(theme: ".ink { color: #000000; -myscript-pen-width: 1.5; }")
         } catch {
             print("❌ EditorWorker: Failed to set theme: \(error)")
         }
@@ -49,7 +48,7 @@ final class EditorWorker: NSObject, ObservableObject {
         // Set tool style through the editor's tool controller (not configuration).
         // This ensures the pen tool has an explicit opaque color.
         do {
-            try e.toolController.set(style: "color: #000000FF; -myscript-pen-width: 1.5", forTool: IINKPointerTool.toolPen)
+            try e.toolController.set(style: "color: #000000; -myscript-pen-width: 1.5", forTool: IINKPointerTool.toolPen)
         } catch {
             print("❌ EditorWorker: Failed to set tool style: \(error)")
         }

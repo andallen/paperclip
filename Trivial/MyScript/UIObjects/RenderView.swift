@@ -40,7 +40,9 @@ final class RenderView: UIView {
 
         let scale = contentScaleFactor
         let pixelSize = CGSize(width: bounds.width * scale, height: bounds.height * scale)
-        print("🧭 RenderView.draw layer=\(layerType) rectPt=\(rect) scale=\(scale)")
+        if layerType == .model {
+            print("🧭 RenderView.draw layer=\(layerType) rectPt=\(rect) scale=\(scale)")
+        }
 
         let originalCTM = ctx.ctm
         let originalClip = ctx.boundingBoxOfClipPath
@@ -55,7 +57,13 @@ final class RenderView: UIView {
         // Creates a canvas that wraps the current Core Graphics context.
         let canvas = Canvas()
         canvas.context = ctx
-        canvas.debugLayer = String(describing: layerType)
+        if layerType == .model {
+            canvas.debugLayer = "model"
+        } else if layerType == .capture {
+            canvas.debugLayer = "capture"
+        } else {
+            canvas.debugLayer = String(describing: layerType)
+        }
         // Sets canvas size in pixels to match renderer coordinate system.
         canvas.size = pixelSize
         canvas.offscreenRenderSurfaces = offscreenRenderSurfaces

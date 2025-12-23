@@ -22,9 +22,15 @@ final class NotebookEditorViewController: UIViewController {
 
     private final class EditorDelegateProxy: NSObject, IINKEditorDelegate {
         private let onContentChanged: @MainActor () -> Void
+        private let onFirstContentChange: @MainActor (IINKEditor, [String]) -> Void
+        private var didLogStyle = false
 
-        init(onContentChanged: @escaping @MainActor () -> Void) {
+        init(
+            onContentChanged: @escaping @MainActor () -> Void,
+            onFirstContentChange: @escaping @MainActor (IINKEditor, [String]) -> Void
+        ) {
             self.onContentChanged = onContentChanged
+            self.onFirstContentChange = onFirstContentChange
         }
 
         func onError(_ editor: IINKEditor, blockId: String, message: String) {
@@ -36,6 +42,10 @@ final class NotebookEditorViewController: UIViewController {
         func contentChanged(_ editor: IINKEditor, blockIds: [String]) {
             Task { @MainActor in
                 print("📈 NotebookEditorViewController.contentChanged blockIds=\(blockIds)")
+                if !didLogStyle {
+                    didLogStyle = true
+                    onFirstContentChange(editor, blockIds)
+                }
                 onContentChanged()
             }
         }
@@ -43,7 +53,8 @@ final class NotebookEditorViewController: UIViewController {
 
     private var pendingSaveTask: Task<Void, Never>?
 
-    private lazy var editorDelegateProxy = EditorDelegateProxy { [weak self] in
+    private lazy var editorDelegateProxy = EditorDelegateProxy(
+        onContentChanged: { [weak self] in
         guard let self else { return }
         pendingSaveTask?.cancel()
         pendingSaveTask = Task { [documentHandle, weak self] in
@@ -72,7 +83,11 @@ final class NotebookEditorViewController: UIViewController {
                 print("❌ NotebookEditorViewController: Failed to save package: \(error)")
             }
         }
-    }
+        },
+        onFirstContentChange: { [weak self] editor, blockIds in
+            self?.logEditorContentState(editor, context: "contentChanged")
+        }
+    )
 
     init(documentHandle: DocumentHandle) {
         self.documentHandle = documentHandle
@@ -233,6 +248,7 @@ final class NotebookEditorViewController: UIViewController {
                 } catch {
                     print("❌ NotebookEditorViewController: Failed to set pen style: \(error)")
                 }
+                logEditorStyle(editor, context: "setupMyScript")
                 
                 // Sets the editor view size if the view has valid bounds.
                 await MainActor.run {
@@ -300,6 +316,18 @@ final class NotebookEditorViewController: UIViewController {
                 // Connects the editor to the loaded part.
                 await MainActor.run {
                     editor.part = part
+                    // Re-apply theme/tool style after part assignment to avoid transparent ink.
+                    do {
+                        try editor.set(theme: ".ink { color: #000000; -myscript-pen-width: 1.5; }")
+                    } catch {
+                        print("❌ NotebookEditorViewController: Failed to set theme after part: \(error)")
+                    }
+                    do {
+                        try editor.toolController.set(style: "color:#000000;-myscript-pen-width:1.5", forTool: IINKPointerTool.toolPen)
+                    } catch {
+                        print("❌ NotebookEditorViewController: Failed to set pen style after part: \(error)")
+                    }
+                    logEditorStyle(editor, context: "afterPart")
                     // Requests a full redraw after part assignment.
                     displayViewModel.refreshDisplay()
                     print("🧭 NotebookEditorViewController.loadDocument assigned part and refreshed")
@@ -309,6 +337,28 @@ final class NotebookEditorViewController: UIViewController {
             }
         }
     }
+
+    private func logEditorStyle(_ editor: IINKEditor, context: String) {
+        let themePreview = editor.theme.replacingOccurrences(of: "\n", with: " ")
+        let preview = String(themePreview.prefix(120))
+        print("🧭 EditorStyle \(context) themeLen=\(editor.theme.count) themePreview=\"\(preview)\"")
+
+        do {
+            let penStyle = try editor.toolController.style(forTool: IINKPointerTool.toolPen)
+            print("🧭 EditorStyle \(context) penStyle=\(penStyle)")
+        } catch {
+            print("❌ EditorStyle \(context) penStyle failed: \(error)")
+        }
+
+    }
+
+    private func logEditorContentState(_ editor: IINKEditor, context: String) {
+        let isEmpty = editor.isEmpty(nil)
+        let rootId = editor.rootBlock?.identifier ?? "nil"
+        let childCount = editor.rootBlock?.children.count ?? 0
+        print("🧭 EditorContent \(context) empty=\(isEmpty) rootId=\(rootId) children=\(childCount)")
+    }
+
 
     private func waitForEditorIdle(context: String) async {
         let editor = await MainActor.run { displayViewModel.editor }
