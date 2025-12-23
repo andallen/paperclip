@@ -40,6 +40,7 @@ final class RenderView: UIView {
 
         let scale = contentScaleFactor
         let pixelSize = CGSize(width: bounds.width * scale, height: bounds.height * scale)
+        print("🧭 RenderView.draw layer=\(layerType) rectPt=\(rect) scale=\(scale)")
 
         let originalCTM = ctx.ctm
         let originalClip = ctx.boundingBoxOfClipPath

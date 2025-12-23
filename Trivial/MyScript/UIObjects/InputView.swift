@@ -63,6 +63,7 @@ final class InputView: UIView {
         super.touchesCancelled(touches, with: event)
         guard let editor else { return }
         do {
+            print("🧭 InputView.touchesCancelled")
             // Cancel all active pointer traces.
             try editor.pointerCancel(-1)
         } catch {
@@ -100,6 +101,7 @@ final class InputView: UIView {
         guard let editor else { return }
         let e = pointerEvent(from: touch, eventType: .down)
         do {
+            print("🧭 InputView.pointerDown type=\(e.pointerType) pointPx=(\(e.x),\(e.y)) force=\(e.f) t=\(e.t)")
             try editor.pointerDown(
                 point: CGPoint(x: CGFloat(e.x), y: CGFloat(e.y)),
                 timestamp: e.t,
@@ -146,6 +148,7 @@ final class InputView: UIView {
         guard let editor else { return }
         let e = pointerEvent(from: touch, eventType: .up)
         do {
+            print("🧭 InputView.pointerUp type=\(e.pointerType) pointPx=(\(e.x),\(e.y)) force=\(e.f) t=\(e.t)")
             try editor.pointerUp(
                 point: CGPoint(x: CGFloat(e.x), y: CGFloat(e.y)),
                 timestamp: e.t,

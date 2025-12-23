@@ -23,7 +23,6 @@ final class DisplayViewController: UIViewController {
         view = UIView(frame: .zero)
         view.backgroundColor = .clear
 
-        print("🧭 DisplayViewController.loadView")
         // Binds to the model so render views are added once created.
         bindViewModel()
 
@@ -41,7 +40,6 @@ final class DisplayViewController: UIViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
 
-        print("🧭 DisplayViewController.viewDidAppear")
         // Ensure the scale matches the actual screen once attached to a window.
         let scale = view.window?.screen.scale ?? UIScreen.main.scale
         view.contentScaleFactor = scale
@@ -57,7 +55,6 @@ final class DisplayViewController: UIViewController {
         viewModel.$model.sink { [weak self] model in
             guard let self, let model else { return }
 
-            print("🧭 DisplayViewController.bindViewModel model ready")
             // Installs the model layer view.
             self.configure(renderView: model.modelRenderView)
 
@@ -72,11 +69,9 @@ final class DisplayViewController: UIViewController {
     private func configure(renderView: RenderView) {
         // Avoids re-adding a view that is already installed.
         if renderView.superview != nil {
-            print("🧭 DisplayViewController.configure skipped (already installed)")
             return
         }
 
-        print("🧭 DisplayViewController.configure renderView layer=\(renderView)")
         // Makes the render view fill the container.
         view.addSubview(renderView)
         renderView.translatesAutoresizingMaskIntoConstraints = false

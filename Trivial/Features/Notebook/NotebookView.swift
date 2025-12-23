@@ -18,18 +18,11 @@ struct NotebookView: View {
             .navigationTitle(model.displayName)
             // Keeps the title compact for a writing surface.
             .navigationBarTitleDisplayMode(.inline)
-            .onAppear {
-                print("🧭 NotebookView.onAppear notebookID=\(model.notebookID) title=\(model.displayName)")
-            }
-            .onDisappear {
-                print("🧭 NotebookView.onDisappear notebookID=\(model.notebookID)")
-            }
             // Disable the system back button (this also disables the swipe-back gesture).
             .navigationBarBackButtonHidden(true)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button {
-                        print("🧭 NotebookView.back tapped notebookID=\(model.notebookID)")
                         dismiss()
                     } label: {
                         HStack(spacing: 5) {

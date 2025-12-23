@@ -21,7 +21,6 @@ final class DisplayViewModel: NSObject, ObservableObject {
     func setupModel() {
         // Creates the model only once per screen instance.
         guard !didSetup else {
-            print("🧭 DisplayViewModel.setupModel skipped (already setup)")
             return
         }
         didSetup = true
@@ -39,26 +38,20 @@ final class DisplayViewModel: NSObject, ObservableObject {
     }
 
     func setOffScreenRendererSurfacesScale(scale: CGFloat) {
-        // Matches offscreen buffers to the screen scale.
-        print("🧭 DisplayViewModel.setOffScreenRendererSurfacesScale scale=\(scale)")
         offscreenRenderSurfaces.scale = scale
     }
 
     func refreshDisplay() {
         // Invalidates both layers for a full redraw.
         if let model = model {
-            print("🧭 DisplayViewModel.refreshDisplay invalidate model+capture")
             model.modelRenderView.setNeedsDisplay()
             model.captureRenderView.setNeedsDisplay()
-        } else {
-            print("🧭 DisplayViewModel.refreshDisplay skipped (no model)")
         }
     }
 
     func updateRenderer() {
         // Updates renderer on existing RenderViews when it becomes available.
         guard let renderer = renderer, let model = model else {
-            print("🧭 DisplayViewModel.updateRenderer skipped renderer=\(renderer != nil) model=\(model != nil)")
             return
         }
         model.modelRenderView.renderer = renderer
@@ -77,6 +70,9 @@ extension DisplayViewModel: IINKIRenderTarget {
         // Schedules invalidation on the main thread for UIKit.
         DispatchQueue.main.async { [weak self] in
             guard let self, let model = self.model else { return }
+            if layers.contains(.model) {
+                print("🧭 DisplayViewModel.invalidate layers=\(layers)")
+            }
 
             // Invalidates only the layers that changed.
             if layers.contains(.model) {
@@ -93,6 +89,9 @@ extension DisplayViewModel: IINKIRenderTarget {
         // Uses pixel coordinates as specified by the SDK headers.
         DispatchQueue.main.async { [weak self] in
             guard let self, let model = self.model else { return }
+            if layers.contains(.model) {
+                print("🧭 DisplayViewModel.invalidate areaPx=\(area) layers=\(layers)")
+            }
 
             // Invalidates only the touched pixel area.
             if layers.contains(.model) {
@@ -105,13 +104,11 @@ extension DisplayViewModel: IINKIRenderTarget {
     }
 
     func createOffscreenRenderSurface(width: Int32, height: Int32, alphaMask: Bool) -> UInt32 {
-        print("🧭 DisplayViewModel.createOffscreenRenderSurface \(width)x\(height) alphaMask=\(alphaMask)")
         let sizePx = CGSize(width: CGFloat(width), height: CGFloat(height))
         UIGraphicsBeginImageContextWithOptions(sizePx, false, 1)
         defer { UIGraphicsEndImageContext() }
 
         guard let context = UIGraphicsGetCurrentContext() else {
-            print("❌ DisplayViewModel.createOffscreenRenderSurface missing context")
             return 0
         }
 
@@ -121,19 +118,14 @@ extension DisplayViewModel: IINKIRenderTarget {
             context: context,
             alphaMask: alphaMask
         )
-        print("🧭 DisplayViewModel.createOffscreenRenderSurface id=\(surfaceId)")
         return surfaceId
     }
 
     func releaseOffscreenRenderSurface(_ surfaceId: UInt32) {
-        // Releases an offscreen buffer when the renderer is done with it.
-        print("🧭 DisplayViewModel.releaseOffscreenRenderSurface id=\(surfaceId)")
         offscreenRenderSurfaces.releaseSurface(surfaceId)
     }
 
     func createOffscreenRenderCanvas(_ surfaceId: UInt32) -> IINKICanvas {
-        // Wraps the offscreen context in a canvas object.
-        print("🧭 DisplayViewModel.createOffscreenRenderCanvas id=\(surfaceId)")
         let canvas = Canvas()
         canvas.offscreenRenderSurfaces = offscreenRenderSurfaces
 
@@ -155,8 +147,6 @@ extension DisplayViewModel: IINKIRenderTarget {
     }
 
     func releaseOffscreenRenderCanvas(_ canvas: IINKICanvas) {
-        // Restores the graphics state saved when the canvas was created.
-        print("🧭 DisplayViewModel.releaseOffscreenRenderCanvas")
         (canvas as? Canvas)?.context?.restoreGState()
     }
 }

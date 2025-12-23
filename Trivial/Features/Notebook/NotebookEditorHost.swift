@@ -8,13 +8,11 @@ struct NotebookEditorHost: UIViewControllerRepresentable {
 
     func makeUIViewController(context: Context) -> NotebookEditorViewController {
         // Creates the controller once for the lifetime of the SwiftUI view.
-        print("🧭 NotebookEditorHost.makeUIViewController")
         return NotebookEditorViewController(documentHandle: documentHandle)
     }
 
     func updateUIViewController(_ uiViewController: NotebookEditorViewController, context: Context) {
         // Skips streaming state updates into the controller.
         // Lets the controller own the editor lifecycle for the opened document.
-        print("🧭 NotebookEditorHost.updateUIViewController")
     }
 }

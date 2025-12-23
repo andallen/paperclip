@@ -31,11 +31,6 @@
 			path = Trivial;
 			sourceTree = "<group>";
 		};
-		AED5AD602EF747D900F4FA67 /* .cursor */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = .cursor;
-			sourceTree = "<group>";
-		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -82,7 +77,6 @@
 				AEAB2C852EF7BD3300424068 /* MyScriptCertificate */,
 				AEAFC23B2EF4B85B00811728 /* Trivial */,
 				AEAFC23A2EF4B85B00811728 /* Products */,
-				AED5AD602EF747D900F4FA67 /* .cursor */,
 				7D21902157F5C13C106A1960 /* Pods */,
 				1CD3FB676B945362DF406464 /* Frameworks */,
 				AEA6BC452EF8643800D18138 /* recognition-assets */,
@@ -116,7 +110,6 @@
 			fileSystemSynchronizedGroups = (
 				AEA6BC452EF8643800D18138 /* recognition-assets */,
 				AEAFC23B2EF4B85B00811728 /* Trivial */,
-				AED5AD602EF747D900F4FA67 /* .cursor */,
 			);
 			name = Trivial;
 			productName = Trivial;
@@ -185,7 +178,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "SOURCE_DIR=\"${SRCROOT}/recognition-assets\"\nDEST_DIR=\"${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.app/recognition-assets\"\n\nif [ -d \"$SOURCE_DIR\" ]; then\n    echo \"Copying recognition-assets to bundle...\"\n    rm -rf \"$DEST_DIR\"\n    cp -R \"$SOURCE_DIR\" \"$DEST_DIR\"\n    echo \"Done copying recognition-assets\"\nelse\n    echo \"Warning: recognition-assets not found at $SOURCE_DIR\"\nfi\n";
+			shellScript = "SOURCE_DIR=\"${SRCROOT}/recognition-assets\"\nDEST_DIR=\"${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.app/recognition-assets\"\nAPP_DIR=\"${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.app\"\n\nif [ -d \"$SOURCE_DIR\" ]; then\n    echo \"Copying recognition-assets to bundle...\"\n    rm -rf \"$DEST_DIR\"\n    cp -R \"$SOURCE_DIR\" \"$DEST_DIR\"\n    /usr/bin/xattr -cr \"$DEST_DIR\"\n    echo \"Done copying recognition-assets\"\nelse\n    echo \"Warning: recognition-assets not found at $SOURCE_DIR\"\nfi\n\n/usr/bin/xattr -cr \"$APP_DIR\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
