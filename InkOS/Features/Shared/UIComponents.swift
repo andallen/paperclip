@@ -9,18 +9,18 @@ struct BackgroundWhite: View {
       Color.white
 
       RadialGradient(
-        colors: [
-          Color.black.opacity(0.06),
-          Color.clear,
-        ], center: .topTrailing, startRadius: 40, endRadius: 520
+        colors: [Color.black.opacity(0.06), Color.clear],
+        center: .topTrailing,
+        startRadius: 40,
+        endRadius: 520
       )
       .blendMode(.multiply)
 
       RadialGradient(
-        colors: [
-          Color.black.opacity(0.04),
-          Color.clear,
-        ], center: .bottomLeading, startRadius: 60, endRadius: 620
+        colors: [Color.black.opacity(0.04), Color.clear],
+        center: .bottomLeading,
+        startRadius: 60,
+        endRadius: 620
       )
       .blendMode(.multiply)
     }

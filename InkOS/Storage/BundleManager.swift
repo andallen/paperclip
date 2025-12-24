@@ -9,11 +9,6 @@ struct NotebookMetadata: Identifiable, Sendable {
 
   // Display name shown to the user.
   let displayName: String
-
-  init(id: String, displayName: String) {
-    self.id = id
-    self.displayName = displayName
-  }
 }
 
 // The Bundle Manager is the only code allowed to perform direct file operations on Bundles.
@@ -110,7 +105,7 @@ actor BundleManager {
 
     // Access the engine on the main actor to create the package.
     let packageCreated = await MainActor.run {
-      guard let engine = EngineProvider.shared.engine else {
+      guard let engine = EngineProvider.sharedInstance.engine else {
         return false
       }
       do {
@@ -205,7 +200,7 @@ actor BundleManager {
     if fileManager.fileExists(atPath: iinkPath) {
       // Access the engine on the main actor to delete the package.
       await MainActor.run {
-        guard let engine = EngineProvider.shared.engine else {
+        guard let engine = EngineProvider.sharedInstance.engine else {
           return
         }
         do {

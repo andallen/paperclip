@@ -10,28 +10,24 @@ import XCTest
 final class InkOSUITests: XCTestCase {
 
   override func setUpWithError() throws {
-    // Put setup code here. This method is called before the invocation of each test method in the class.
+    // Put setup code here before each test method runs.
 
     // In UI tests it is usually best to stop immediately when a failure occurs.
     continueAfterFailure = false
 
-    // In UI tests it’s important to set the initial state - such as interface orientation - required for your tests before they run. The setUp method is a good place to do this.
+    // Set the initial UI state required for tests before they run.
   }
 
   override func tearDownWithError() throws {
-    // Put teardown code here. This method is called after the invocation of each test method in the class.
+    // Put teardown code here after each test method finishes.
   }
 
   @MainActor
   func testExample() throws {
     let app = XCUIApplication()
     app.activate()
-    app.scrollViews /*@START_MENU_TOKEN@*/
-      .firstMatch /*[[".containing(.other, identifier: \"Vertical scroll bar, 1 page\").firstMatch",".containing(.other, identifier: nil).firstMatch",".firstMatch"],[[[-1,2],[-1,1],[-1,0]]],[0]]@END_MENU_TOKEN@*/
-      .tap()
-    app.windows /*@START_MENU_TOKEN@*/
-      .firstMatch /*[[".containing(.other, identifier: nil).firstMatch",".firstMatch"],[[[-1,1],[-1,0]]],[0]]@END_MENU_TOKEN@*/
-      .swipeDown()
+    app.scrollViews.firstMatch.tap()
+    app.windows.firstMatch.swipeDown()
   }
 
   // @MainActor

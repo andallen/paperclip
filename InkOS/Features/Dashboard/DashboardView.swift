@@ -15,6 +15,9 @@ struct DashboardView: View {
   // Tracks which notebook is being confirmed for deletion.
   @State private var deletingNotebook: NotebookMetadata?
 
+  // Presents the GetStarted editor when a notebook is tapped.
+  @State private var isPresentingGetStarted = false
+
   // Animation namespace for matched geometry transitions.
   @Namespace private var animation
 
@@ -57,10 +60,10 @@ struct DashboardView: View {
         renamingNotebook = nil
       }
       Button("Rename") {
-        if let notebook = renamingNotebook, !renameText.trimmingCharacters(in: .whitespaces).isEmpty
-        {
+        let trimmedName = renameText.trimmingCharacters(in: .whitespaces)
+        if let notebook = renamingNotebook, !trimmedName.isEmpty {
           Task {
-            await library.renameNotebook(notebookID: notebook.id, newDisplayName: renameText)
+            await library.renameNotebook(notebookID: notebook.id, newDisplayName: trimmedName)
           }
         }
         renamingNotebook = nil
@@ -90,6 +93,9 @@ struct DashboardView: View {
       if let notebook = deletingNotebook {
         Text("\"\(notebook.displayName)\" will be permanently deleted. This cannot be undone.")
       }
+    }
+    .fullScreenCover(isPresented: $isPresentingGetStarted) {
+      GetStartedHostView()
     }
   }
 
@@ -165,6 +171,10 @@ struct DashboardView: View {
       ) {
         ForEach(library.notebooks) { notebook in
           NotebookCard(notebook: notebook)
+            .contentShape(Rectangle())
+            .onTapGesture {
+              isPresentingGetStarted = true
+            }
             .contextMenu {
               Button {
                 renameText = notebook.displayName
@@ -195,16 +205,16 @@ private struct NotebookCard: View {
   let notebook: NotebookMetadata
 
   var body: some View {
+    let coverHighlight = Color(hue: 0.08, saturation: 0.06, brightness: 0.98)
+    let coverShadow = Color(hue: 0.08, saturation: 0.04, brightness: 0.94)
+
     VStack(alignment: .leading, spacing: 12) {
       // Notebook icon
       ZStack {
         RoundedRectangle(cornerRadius: 10, style: .continuous)
           .fill(
             LinearGradient(
-              colors: [
-                Color(hue: 0.08, saturation: 0.06, brightness: 0.98),
-                Color(hue: 0.08, saturation: 0.04, brightness: 0.94),
-              ],
+              colors: [coverHighlight, coverShadow],
               startPoint: .topLeading,
               endPoint: .bottomTrailing
             )

@@ -32,7 +32,7 @@ actor DocumentHandle {
     self.packagePath = packagePath
 
     self.package = await MainActor.run {
-      guard let engine = EngineProvider.shared.engine else {
+      guard let engine = EngineProvider.sharedInstance.engine else {
         appLog("❌ DocumentHandle.init engine unavailable notebookID=\(notebookID)")
         return nil
       }
