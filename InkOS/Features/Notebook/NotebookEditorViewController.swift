@@ -136,13 +136,13 @@ final class NotebookEditorViewController: UIViewController {
   override func viewDidLayoutSubviews() {
     super.viewDidLayoutSubviews()
 
-    // Sets the editor view size in points.
+    // Sets the editor view size in pixels.
     let scale = view.window?.screen.scale ?? UIScreen.main.scale
     view.contentScaleFactor = scale
-    let viewSize = view.bounds.size
-    appLog("🧭 NotebookEditorViewController.viewDidLayoutSubviews viewSize=\(viewSize)")
+    let sizePx = CGSize(width: view.bounds.width * scale, height: view.bounds.height * scale)
+    appLog("🧭 NotebookEditorViewController.viewDidLayoutSubviews sizePx=\(sizePx)")
     do {
-      try displayViewModel.editor?.set(viewSize: viewSize)
+      try displayViewModel.editor?.set(viewSize: sizePx)
       if let renderer = displayViewModel.renderer {
         let beforeScale = renderer.viewScale
         let beforeOffset = renderer.viewOffset
@@ -266,10 +266,10 @@ final class NotebookEditorViewController: UIViewController {
         await MainActor.run {
           let scale = view.window?.screen.scale ?? UIScreen.main.scale
           view.contentScaleFactor = scale
-          let viewSize = view.bounds.size
-          if viewSize.width > 0 && viewSize.height > 0 {
+          let sizePx = CGSize(width: view.bounds.width * scale, height: view.bounds.height * scale)
+          if sizePx.width > 0 && sizePx.height > 0 {
             do {
-              try editor.set(viewSize: viewSize)
+              try editor.set(viewSize: sizePx)
               let beforeScale = renderer.viewScale
               let beforeOffset = renderer.viewOffset
               renderer.viewScale = 1

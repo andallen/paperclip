@@ -83,9 +83,14 @@ final class InputView: UIView {
   private func pointerEvent(from touch: UITouch, eventType: IINKPointerEventType)
     -> IINKPointerEvent
   {
-    // Use view points for input coordinates to match the SDK reference implementation.
-    let point =
+    let scale = window?.screen.scale ?? UIScreen.main.scale
+    if contentScaleFactor != scale {
+      contentScaleFactor = scale
+    }
+
+    let pointPt =
       (touch.type == .pencil) ? touch.preciseLocation(in: self) : touch.location(in: self)
+    let pointPx = CGPoint(x: pointPt.x * scale, y: pointPt.y * scale)
 
     let pointerType = mapPointerType(touch)
     let force = normalizeForce(from: touch)
@@ -94,7 +99,7 @@ final class InputView: UIView {
     let timestampMs = Int64(1000.0 * (touch.timestamp + eventTimeOffset))
 
     // Reference implementation uses a constant pointer id when multi-touch is disabled.
-    return IINKPointerEventMake(eventType, point, timestampMs, force, pointerType, 0)
+    return IINKPointerEventMake(eventType, pointPx, timestampMs, force, pointerType, 0)
   }
 
   private func sendPointerDown(for touch: UITouch) {
@@ -116,7 +121,7 @@ final class InputView: UIView {
       didLogPointerSample = true
       let scale = window?.screen.scale ?? UIScreen.main.scale
       appLog(
-        "🧭 InputView.pointerSample point=\(CGPoint(x: CGFloat(e.x), y: CGFloat(e.y))) bounds=\(bounds.size) scale=\(scale)"
+        "🧭 InputView.pointerSample pointPx=\(CGPoint(x: CGFloat(e.x), y: CGFloat(e.y))) boundsPt=\(bounds.size) scale=\(scale)"
       )
     }
     do {
