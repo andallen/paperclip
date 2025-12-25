@@ -1,6 +1,7 @@
 .DS_Store
 build/
 DerivedData/
+.derivedData/
 *.xcuserdata/
 *.xcuserstate
 *.xccheckout
@@ -10,7 +11,8 @@ DerivedData/
 .cursor/
 *.moved-aside
 MyScriptCertificate/
-Resources/recognition-assets/
+Resources/
+recognition-assets/
 Pods/
 Docs/
 buildServer.json
@@ -20,3 +22,4 @@ AGENTS.md
 Logs/
 Scripts/
 Reference/
+.xcode-home/
