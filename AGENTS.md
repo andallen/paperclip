@@ -32,7 +32,6 @@
 
 - Make errors explicit. Do not use force unwraps (`!`), `try!`, or `fatalError` for expected runtime issues like a missing MyScript certificate or a failed file save.
 - Use `throws` and pass error messages back to the UI so the user can be notified.
-- Run `swift format --in-place --recursive .` and fix all SwiftLint violations after every change. If a rule disable is needed, avoid broad rule disables; keep any necessary exceptions narrow and include a short reason for the exception.
 - Always refer to the Documentation in Docs/. myscript_docs.md contains the general overview and description of various MyScript features, along with implementation examples. myscript_headers.txt contains all the headers for the various MyScript features and should be treated as the ultimate source of truth, as it is the most up-to-date. Reference/ contains fully functioning example implementations of some of MyScript's features. Use these as your guide.
 
 ## 6: Security & Configuration
