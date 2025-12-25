@@ -62,7 +62,8 @@ extension DisplayViewModel: IINKIRenderTarget {
 
   func invalidate(_ renderer: IINKRenderer, area: CGRect, layers: IINKLayerType) {
     DispatchQueue.main.async { [weak self] in
-      self?.model?.renderView.setNeedsDisplay(area)
+      // Force a full redraw to avoid live-capture striping artifacts.
+      self?.model?.renderView.setNeedsDisplay()
     }
   }
 
