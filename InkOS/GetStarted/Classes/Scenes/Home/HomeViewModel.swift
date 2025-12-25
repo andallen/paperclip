@@ -108,6 +108,33 @@ class HomeViewModel {
     self.editor?.redo()
   }
 
+  // Applies the requested tool selection to the editor.
+  func selectTool(_ selection: ToolPaletteView.ToolSelection) {
+    switch selection {
+    case .pen:
+      selectPenTool()
+    case .eraser:
+      selectEraserTool()
+    case .highlighter:
+      selectHighlighterTool()
+    }
+  }
+
+  // Switches the Notebook to pen mode.
+  func selectPenTool() {
+    model?.editorViewController?.selectPenTool()
+  }
+
+  // Switches the Notebook to eraser mode.
+  func selectEraserTool() {
+    model?.editorViewController?.selectEraserTool()
+  }
+
+  // Switches the Notebook to highlighter mode.
+  func selectHighlighterTool() {
+    model?.editorViewController?.selectHighlighterTool()
+  }
+
   func updateInputMode(newInputMode: InputMode) {
     self.model?.editorViewController?.updateInputMode(newInputMode: newInputMode)
   }
@@ -275,5 +302,27 @@ extension HomeViewModel: EditorDelegate {
 
   func onError(editor: IINKEditor, blockId: String, message: String) {
     createAlert(title: "Error", message: message)
+  }
+
+  // Applies the selected tool to the editor once the editor is available.
+  private func applyToolSelectionIfPossible() {
+    guard let editor = editor else {
+      return
+    }
+    let toolForSelection: IINKPointerTool
+    switch activeToolSelection {
+    case .pen:
+      toolForSelection = .toolPen
+    case .eraser:
+      toolForSelection = .eraser
+    case .highlighter:
+      toolForSelection = .toolHighlighter
+    }
+    do {
+      try editor.toolController.set(tool: toolForSelection, forType: .pen)
+      try editor.toolController.set(tool: toolForSelection, forType: .touch)
+    } catch {
+      appLog("❌ HomeViewModel.applyToolSelectionIfPossible failed selection=\(activeToolSelection) error=\(error)")
+    }
   }
 }
