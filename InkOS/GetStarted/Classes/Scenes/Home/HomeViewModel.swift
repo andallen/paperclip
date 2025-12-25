@@ -171,7 +171,7 @@ class HomeViewModel {
     }
   }
 
-  // Sets the active tool on the editor for both pen and touch inputs.
+  // Sets the active tool on the editor for pen input and updates touch to follow the current mode.
   private func applyTool(selection: ToolPaletteView.ToolSelection, editor: IINKEditor) {
     let tool = tool(for: selection)
     do {
