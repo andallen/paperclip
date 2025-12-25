@@ -41,10 +41,14 @@ final class ToolPaletteView: UIView {
   // Defines the list of preset colors shown in the palette menu.
   private let colorOptions: [ColorOption] = [
     ColorOption(name: "Black", hex: "#000000", color: .black),
-    ColorOption(name: "Blue", hex: "#0096FF", color: UIColor(red: 0, green: 0.59, blue: 1, alpha: 1)),
-    ColorOption(name: "Red", hex: "#FF3232", color: UIColor(red: 1, green: 0.2, blue: 0.2, alpha: 1)),
-    ColorOption(name: "Green", hex: "#00B26F", color: UIColor(red: 0, green: 0.7, blue: 0.44, alpha: 1)),
-    ColorOption(name: "Golden", hex: "#F5A623", color: UIColor(red: 0.96, green: 0.65, blue: 0.14, alpha: 1)),
+    ColorOption(
+      name: "Blue", hex: "#0096FF", color: UIColor(red: 0, green: 0.59, blue: 1, alpha: 1)),
+    ColorOption(
+      name: "Red", hex: "#FF3232", color: UIColor(red: 1, green: 0.2, blue: 0.2, alpha: 1)),
+    ColorOption(
+      name: "Green", hex: "#00B26F", color: UIColor(red: 0, green: 0.7, blue: 0.44, alpha: 1)),
+    ColorOption(
+      name: "Golden", hex: "#F5A623", color: UIColor(red: 0.96, green: 0.65, blue: 0.14, alpha: 1)),
   ]
   // Stores the toggle toolbar button.
   private lazy var toggleButton = makeToolButton(
@@ -300,7 +304,7 @@ final class ToolPaletteView: UIView {
   // Handles selection of the color button.
   @objc private func colorTapped() {
     colorButton.menu = buildColorMenu()
-    colorButton.showMenu()
+    colorButton.showsMenuAsPrimaryAction = true
   }
 
   // Creates the menu used to pick a preset ink color.
