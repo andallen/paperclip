@@ -11,15 +11,16 @@ class HomeViewController: UIViewController {
 
   // MARK: Outlets
 
-  @IBOutlet private weak var inputTypeSegmentedControl: UISegmentedControl!
   @IBOutlet private weak var editorContainerView: UIView!
 
   // MARK: Properties
 
+  private var inputTypeSegmentedControl: UISegmentedControl?
   private var viewModel: HomeViewModel = HomeViewModel()
   private var editorViewController: EditorViewController?
   private var cancellables: Set<AnyCancellable> = []
   private var documentHandle: DocumentHandle?
+  private let offBlack: UIColor = UIColor(red: 0.20, green: 0.20, blue: 0.20, alpha: 1.0)
 
   // MARK: - Life cycle
 
@@ -66,7 +67,6 @@ class HomeViewController: UIViewController {
         let editorViewController = model.editorViewController
       {
         self?.injectEditor(editor: editorViewController)
-        self?.title = model.title
       }
     }.store(in: &cancellables)
     self.viewModel.$alert.sink { [weak self] alert in
@@ -112,12 +112,82 @@ class HomeViewController: UIViewController {
 
   private func configureNavigationItems() {
     // Provide a clear way to return to the Dashboard.
-    self.navigationItem.leftBarButtonItem = UIBarButtonItem(
-      title: "Back",
+    let backImage = UIImage(systemName: "house")?.withRenderingMode(.alwaysTemplate)
+    let backItem = UIBarButtonItem(
+      image: backImage,
       style: .plain,
       target: self,
       action: #selector(backButtonTapped)
     )
+    backItem.accessibilityLabel = "Home"
+    backItem.tintColor = offBlack
+    if backImage == nil {
+      backItem.title = "Home"
+    }
+    self.navigationItem.leftBarButtonItem = backItem
+    // Center the pen and touch toggle in the navigation bar.
+    let segmentedControl = UISegmentedControl(items: ["Pen", "Touch"])
+    segmentedControl.selectedSegmentIndex = 0
+    segmentedControl.addTarget(
+      self,
+      action: #selector(inputTypeSegmentedControlValueChanged(_:)),
+      for: .valueChanged
+    )
+    let titleAttributes: [NSAttributedString.Key: Any] = [
+      .foregroundColor: offBlack
+    ]
+    segmentedControl.setTitleTextAttributes(titleAttributes, for: .normal)
+    segmentedControl.setTitleTextAttributes(titleAttributes, for: .selected)
+    segmentedControl.selectedSegmentTintColor = offBlack.withAlphaComponent(0.12)
+    self.inputTypeSegmentedControl = segmentedControl
+    self.navigationItem.titleView = segmentedControl
+    self.navigationItem.rightBarButtonItem = makeEditingBarButtonItem()
+  }
+
+  // Creates a single bar button item that hosts the undo, redo, and clear icons.
+  private func makeEditingBarButtonItem() -> UIBarButtonItem {
+    let undoButton = makeToolbarButton(
+      imageName: "Undo",
+      action: #selector(undoButtonWasTouchedUpInside(_:)),
+      accessibilityLabel: "Undo"
+    )
+    let redoButton = makeToolbarButton(
+      imageName: "Redo",
+      action: #selector(redoButtonWasTouchedUpInside(_:)),
+      accessibilityLabel: "Redo"
+    )
+    let clearButton = makeToolbarButton(
+      imageName: "Clear",
+      action: #selector(clearButtonWasTouchedUpInside(_:)),
+      accessibilityLabel: "Clear"
+    )
+    let stackView = UIStackView(arrangedSubviews: [undoButton, redoButton, clearButton])
+    stackView.axis = .horizontal
+    stackView.spacing = 12
+    stackView.alignment = .center
+    return UIBarButtonItem(customView: stackView)
+  }
+
+  // Ensures consistent sizing and tint for the toolbar icons.
+  private func makeToolbarButton(
+    imageName: String,
+    action: Selector,
+    accessibilityLabel: String
+  ) -> UIButton {
+    let button = UIButton(type: .system)
+    if let image = UIImage(named: imageName) {
+      button.setImage(image.withRenderingMode(.alwaysTemplate), for: .normal)
+    } else {
+      button.setTitle(imageName, for: .normal)
+    }
+    button.tintColor = offBlack
+    button.accessibilityLabel = accessibilityLabel
+    button.addTarget(self, action: action, for: .touchUpInside)
+    button.translatesAutoresizingMaskIntoConstraints = false
+    let widthConstraint = button.widthAnchor.constraint(equalToConstant: 28)
+    let heightConstraint = button.heightAnchor.constraint(equalToConstant: 28)
+    NSLayoutConstraint.activate([widthConstraint, heightConstraint])
+    return button
   }
 
   @objc private func backButtonTapped() {
