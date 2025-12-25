@@ -161,7 +161,7 @@ class HomeViewModel {
   private func applyInkColor(hex: String, editor: IINKEditor) {
     do {
       try editor.toolController.set(style: "color:\(hex)", forTool: .toolPen)
-      try editor.toolController.set(style: "color:\(hex)", forTool: .toolMarker)
+      try editor.toolController.set(style: "color:\(hex)", forTool: .toolHighlighter)
     } catch {
       appLog("❌ HomeViewModel.applyInkColor failed color=\(hex) error=\(error)")
     }
@@ -169,15 +169,7 @@ class HomeViewModel {
 
   // Sets the active tool on the editor for both pen and touch inputs.
   private func applyTool(selection: ToolPaletteView.ToolSelection, editor: IINKEditor) {
-    let tool: IINKPointerTool
-    switch selection {
-    case .pen:
-      tool = .toolPen
-    case .eraser:
-      tool = .toolEraser
-    case .highlighter:
-      tool = .toolMarker
-    }
+    let tool = tool(for: selection)
     do {
       try editor.toolController.set(tool: tool, forType: .pen)
       try editor.toolController.set(tool: tool, forType: .touch)
@@ -309,20 +301,25 @@ extension HomeViewModel: EditorDelegate {
     guard let editor = editor else {
       return
     }
-    let toolForSelection: IINKPointerTool
-    switch activeToolSelection {
-    case .pen:
-      toolForSelection = .toolPen
-    case .eraser:
-      toolForSelection = .eraser
-    case .highlighter:
-      toolForSelection = .toolHighlighter
-    }
     do {
-      try editor.toolController.set(tool: toolForSelection, forType: .pen)
-      try editor.toolController.set(tool: toolForSelection, forType: .touch)
+      try editor.toolController.set(tool: tool(for: selectedTool), forType: .pen)
+      try editor.toolController.set(tool: tool(for: selectedTool), forType: .touch)
     } catch {
-      appLog("❌ HomeViewModel.applyToolSelectionIfPossible failed selection=\(activeToolSelection) error=\(error)")
+      appLog(
+        "❌ HomeViewModel.applyToolSelectionIfPossible failed selection=\(selectedTool) error=\(error)"
+      )
+    }
+  }
+
+  // Maps palette selection to the SDK tool enum.
+  private func tool(for selection: ToolPaletteView.ToolSelection) -> IINKPointerTool {
+    switch selection {
+    case .pen:
+      return .toolPen
+    case .eraser:
+      return .eraser
+    case .highlighter:
+      return .toolHighlighter
     }
   }
 }
