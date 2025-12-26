@@ -12,6 +12,9 @@ struct DashboardView: View {
   // The new name being typed during rename.
   @State private var renameText: String = ""
 
+  // Matches the home button tint used in the notebook view.
+  private let homeButtonTint = Color(red: 0.20, green: 0.20, blue: 0.20)
+
   // Tracks which notebook is being confirmed for deletion.
   @State private var deletingNotebook: NotebookMetadata?
 
@@ -138,12 +141,12 @@ struct DashboardView: View {
         }
       } label: {
         Image(systemName: "plus")
-          .font(.system(size: 20, weight: .semibold))
-          .foregroundStyle(Color.ink)
+          .font(.system(size: 17, weight: .semibold))
+          .foregroundStyle(homeButtonTint)
+          .frame(width: 44, height: 44)
+          .contentShape(.circle)
       }
-      .buttonStyle(.bordered)
-      .buttonBorderShape(.circle)
-      .tint(Color.ink)
+      .buttonStyle(.plain)
     }
   }
 
