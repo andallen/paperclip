@@ -122,13 +122,19 @@ final class EditingToolbarView: UIView {
     let namedImage = UIImage(named: imageName)
     let systemImage = UIImage(systemName: systemImageName)
     let image = namedImage ?? systemImage
+    var configuration = UIButton.Configuration.plain()
+    configuration.image = image?.withRenderingMode(.alwaysTemplate)
+    configuration.imagePadding = 0
+    configuration.contentInsets = .zero
+    configuration.baseForegroundColor = accentColor
+
     let button = UIButton(type: .system)
     button.translatesAutoresizingMaskIntoConstraints = false
-    button.setImage(image?.withRenderingMode(.alwaysTemplate), for: .normal)
+    button.configuration = configuration
     button.tintColor = accentColor
     button.accessibilityLabel = accessibilityLabel
+    button.backgroundColor = .clear
     button.addTarget(self, action: action, for: .touchUpInside)
-    button.contentEdgeInsets = .zero
     button.adjustsImageWhenHighlighted = false
     return button
   }
