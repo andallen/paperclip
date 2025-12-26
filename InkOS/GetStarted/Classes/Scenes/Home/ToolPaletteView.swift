@@ -680,7 +680,7 @@ private final class ColorSelectorView: UIView {
 }
 
 // Presents a vertical slider that adjusts stroke thickness.
-private final class ThicknessSliderView: UIView {
+private final class ThicknessSliderView: UIView, UIGestureRecognizerDelegate {
 
   // Notifies when the slider value changes.
   var valueChanged: ((CGFloat) -> Void)?
@@ -690,22 +690,18 @@ private final class ThicknessSliderView: UIView {
   private let maxThickness: CGFloat
   // Tracks the current thickness value.
   private var currentThickness: CGFloat
-  // Sets the base sizing for the slider visuals.
-  private let minDotSize: CGFloat = 8
-  private let maxDotSize: CGFloat = 18
+  // Sets the sizing for the slider visuals.
+  private let thumbSize: CGFloat = 14
   private let trackWidth: CGFloat = 4
   private let expandedHeight: CGFloat = 152
-  private let trackSpacing: CGFloat = 10
   // Stores layout helpers.
+  private var isDraggingThumb = false
   private var isExpanded = false
   private var heightConstraint: NSLayoutConstraint?
   private var thumbCenterYConstraint: NSLayoutConstraint?
-  private var thumbSizeConstraints: (width: NSLayoutConstraint, height: NSLayoutConstraint)?
 
   private let trackView = UIView()
   private let thumbView = UIView()
-  private let topDotView = UIView()
-  private let bottomDotView = UIView()
 
   init(minThickness: CGFloat, maxThickness: CGFloat, initialThickness: CGFloat, color: UIColor) {
     self.minThickness = minThickness
@@ -733,8 +729,6 @@ private final class ThicknessSliderView: UIView {
   func updateColor(_ color: UIColor) {
     trackView.backgroundColor = color.withAlphaComponent(0.35)
     thumbView.backgroundColor = color
-    topDotView.backgroundColor = color
-    bottomDotView.backgroundColor = color
   }
 
   // Opens or closes the slider with a fade animation.
@@ -774,15 +768,25 @@ private final class ThicknessSliderView: UIView {
     }
   }
 
-  // Handles taps or drags on the slider to update the value.
+  // Handles drags on the thumb to update the value.
   @objc private func handlePan(_ recognizer: UIPanGestureRecognizer) {
-    let location = recognizer.location(in: trackView)
-    updateValue(with: location)
-  }
-
-  override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-    guard let point = touches.first?.location(in: trackView) else { return }
-    updateValue(with: point)
+    let locationInSelf = recognizer.location(in: self)
+    let locationInTrack = recognizer.location(in: trackView)
+    switch recognizer.state {
+    case .began:
+      let thumbFrameInSelf = thumbView.convert(thumbView.bounds, to: self)
+      isDraggingThumb = thumbFrameInSelf.insetBy(dx: -10, dy: -10).contains(locationInSelf)
+      if isDraggingThumb {
+        updateValue(with: locationInTrack)
+      }
+    case .changed:
+      guard isDraggingThumb else { return }
+      updateValue(with: locationInTrack)
+    case .ended, .cancelled, .failed:
+      isDraggingThumb = false
+    default:
+      break
+    }
   }
 
   // Configures the slider layout and gesture handling.
@@ -794,47 +798,26 @@ private final class ThicknessSliderView: UIView {
     heightConstraint?.isActive = true
     isHidden = true
 
-    topDotView.translatesAutoresizingMaskIntoConstraints = false
-    bottomDotView.translatesAutoresizingMaskIntoConstraints = false
     trackView.translatesAutoresizingMaskIntoConstraints = false
     thumbView.translatesAutoresizingMaskIntoConstraints = false
 
     addSubview(trackView)
-    addSubview(topDotView)
-    addSubview(bottomDotView)
     addSubview(thumbView)
 
     let panGesture = UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:)))
+    panGesture.delegate = self
     addGestureRecognizer(panGesture)
 
-    configureDots()
     configureTrack()
     configureThumb()
-  }
-
-  // Sets up the static dots that show the thickness range.
-  private func configureDots() {
-    topDotView.layer.cornerRadius = maxDotSize / 2
-    bottomDotView.layer.cornerRadius = minDotSize / 2
-
-    NSLayoutConstraint.activate([
-      topDotView.topAnchor.constraint(equalTo: topAnchor),
-      topDotView.centerXAnchor.constraint(equalTo: centerXAnchor),
-      topDotView.widthAnchor.constraint(equalToConstant: maxDotSize),
-      topDotView.heightAnchor.constraint(equalToConstant: maxDotSize),
-      bottomDotView.bottomAnchor.constraint(equalTo: bottomAnchor),
-      bottomDotView.centerXAnchor.constraint(equalTo: centerXAnchor),
-      bottomDotView.widthAnchor.constraint(equalToConstant: minDotSize),
-      bottomDotView.heightAnchor.constraint(equalToConstant: minDotSize),
-    ])
   }
 
   // Builds the vertical track for the slider.
   private func configureTrack() {
     NSLayoutConstraint.activate([
       trackView.centerXAnchor.constraint(equalTo: centerXAnchor),
-      trackView.topAnchor.constraint(equalTo: topDotView.bottomAnchor, constant: trackSpacing),
-      trackView.bottomAnchor.constraint(equalTo: bottomDotView.topAnchor, constant: -trackSpacing),
+      trackView.topAnchor.constraint(equalTo: topAnchor),
+      trackView.bottomAnchor.constraint(equalTo: bottomAnchor),
       trackView.widthAnchor.constraint(equalToConstant: trackWidth),
     ])
     trackView.layer.cornerRadius = trackWidth / 2
@@ -842,11 +825,10 @@ private final class ThicknessSliderView: UIView {
 
   // Builds the thumb that follows the slider value.
   private func configureThumb() {
-    thumbCenterYConstraint = thumbView.centerYAnchor.constraint(equalTo: trackView.bottomAnchor)
-    let widthConstraint = thumbView.widthAnchor.constraint(equalToConstant: minDotSize)
-    let heightConstraint = thumbView.heightAnchor.constraint(equalToConstant: minDotSize)
-    thumbSizeConstraints = (width: widthConstraint, height: heightConstraint)
-    thumbView.layer.cornerRadius = minDotSize / 2
+    thumbCenterYConstraint = thumbView.centerYAnchor.constraint(equalTo: trackView.topAnchor)
+    let widthConstraint = thumbView.widthAnchor.constraint(equalToConstant: thumbSize)
+    let heightConstraint = thumbView.heightAnchor.constraint(equalToConstant: thumbSize)
+    thumbView.layer.cornerRadius = thumbSize / 2
     NSLayoutConstraint.activate([
       thumbView.centerXAnchor.constraint(equalTo: trackView.centerXAnchor),
       thumbCenterYConstraint!,
@@ -865,17 +847,13 @@ private final class ThicknessSliderView: UIView {
     valueChanged?(thickness)
   }
 
-  // Moves the thumb and scales it to match the chosen thickness.
+  // Moves the thumb to match the chosen thickness.
   private func updateThumb(for thickness: CGFloat, animated: Bool) {
     layoutIfNeeded()
     let progress = normalizedThickness(thickness)
     let trackHeight = trackView.bounds.height
     let yOffset = trackHeight - (progress * trackHeight)
-    thumbCenterYConstraint?.constant = -yOffset
-    let size = minDotSize + ((maxDotSize - minDotSize) * progress)
-    thumbSizeConstraints?.width.constant = size
-    thumbSizeConstraints?.height.constant = size
-    thumbView.layer.cornerRadius = size / 2
+    thumbCenterYConstraint?.constant = yOffset
     let updates = { [weak self] in
       self?.layoutIfNeeded()
     }
