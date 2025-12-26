@@ -28,6 +28,15 @@ final class ToolPaletteView: UIView {
   private let horizontalPadding: CGFloat = 8
   // Matches the spacing used in the top bar stack of buttons.
   private let spacing: CGFloat = 12
+  // Wraps the toolbar and accessories in a soft white field.
+  private let backgroundView = UIView()
+  private let backgroundMaskLayer = CAGradientLayer()
+  private var backgroundLeadingConstraint: NSLayoutConstraint?
+  private var backgroundTopConstraint: NSLayoutConstraint?
+  private var backgroundWidthConstraint: NSLayoutConstraint?
+  private var backgroundHeightConstraint: NSLayoutConstraint?
+  private let backgroundPadding: CGFloat = 12
+  private let backgroundFadeWidth: CGFloat = 18
   // Defines the point size for the SF Symbols used by the palette.
   private let symbolPointSize: CGFloat = 18
   // Hosts the palette inside a real toolbar.
@@ -168,6 +177,7 @@ final class ToolPaletteView: UIView {
     toolbar.tintColor = accentColor
     toolbar.clipsToBounds = false
 
+    configureBackground()
     addSubview(toolbar)
 
     // Anchors the toolbar to fill the palette container.
@@ -189,6 +199,36 @@ final class ToolPaletteView: UIView {
     applySelection(.pen)
     setExpanded(false, animated: false)
     notifyVisibleAreaChanged()
+  }
+
+  // Adds a white backing that expands with the palette and accessories.
+  private func configureBackground() {
+    backgroundView.translatesAutoresizingMaskIntoConstraints = false
+    backgroundView.isUserInteractionEnabled = false
+    backgroundView.backgroundColor = .white
+    backgroundView.layer.masksToBounds = true
+    backgroundMaskLayer.type = .radial
+    backgroundMaskLayer.colors = [
+      UIColor.white.cgColor,
+      UIColor.white.cgColor,
+      UIColor.clear.cgColor,
+    ]
+    backgroundMaskLayer.locations = [0, 0.88, 1]
+    backgroundView.layer.mask = backgroundMaskLayer
+
+    insertSubview(backgroundView, at: 0)
+
+    backgroundLeadingConstraint = backgroundView.leadingAnchor.constraint(equalTo: leadingAnchor)
+    backgroundTopConstraint = backgroundView.topAnchor.constraint(equalTo: topAnchor)
+    backgroundWidthConstraint = backgroundView.widthAnchor.constraint(equalToConstant: 0)
+    backgroundHeightConstraint = backgroundView.heightAnchor.constraint(equalToConstant: 0)
+
+    NSLayoutConstraint.activate([
+      backgroundLeadingConstraint!,
+      backgroundTopConstraint!,
+      backgroundWidthConstraint!,
+      backgroundHeightConstraint!,
+    ])
   }
 
   // Builds the stack view so the tools read as one bar.
@@ -522,11 +562,27 @@ final class ToolPaletteView: UIView {
 
   override func layoutSubviews() {
     super.layoutSubviews()
+    layoutBackground()
     notifyVisibleAreaChanged()
   }
 
   private func notifyVisibleAreaChanged() {
     visibleAreaChanged?()
+  }
+
+  // Extends the white backing to cover the palette and expanded accessories.
+  private func layoutBackground() {
+    let hitFrame = visibleHitBounds().insetBy(dx: -backgroundPadding, dy: -backgroundPadding)
+    backgroundLeadingConstraint?.constant = hitFrame.minX
+    backgroundTopConstraint?.constant = hitFrame.minY
+    backgroundWidthConstraint?.constant = hitFrame.width
+    backgroundHeightConstraint?.constant = hitFrame.height
+
+    let maxDimension = max(hitFrame.width, hitFrame.height)
+    let fadeStart = max(0, min(1, (maxDimension - backgroundFadeWidth) / max(maxDimension, 1)))
+    backgroundMaskLayer.frame = CGRect(
+      origin: .zero, size: CGSize(width: hitFrame.width, height: hitFrame.height))
+    backgroundMaskLayer.locations = [0, NSNumber(value: fadeStart), 1]
   }
 }
 
