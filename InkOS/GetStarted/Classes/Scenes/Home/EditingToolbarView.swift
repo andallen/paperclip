@@ -16,28 +16,30 @@ final class EditingToolbarView: UIView {
   private let horizontalPadding: CGFloat = 12
   // Stores the measured width for the expanded toolbar so the constraint can be applied reliably.
   private var expandedWidth: CGFloat = 0
-  // Hosts the icons inside a real toolbar.
-  private let toolbar = UIToolbar()
+  // Hosts the pill background.
+  private let barBackgroundView = UIView()
+  // Holds the icon-only buttons inside the bar.
+  private let stackView = UIStackView()
   // Stores the width constraint so it can animate in and out.
   private var widthConstraint: NSLayoutConstraint?
   // Tracks whether the toolbar is collapsed.
   private var isCollapsed = false
-  // Stores the undo item.
-  private lazy var undoItem = makeBarButtonItem(
+  // Stores the undo button.
+  private lazy var undoButton = makeIconButton(
     imageName: "Undo",
     systemImageName: "arrow.uturn.backward",
     accessibilityLabel: "Undo",
     action: #selector(undoPressed)
   )
-  // Stores the redo item.
-  private lazy var redoItem = makeBarButtonItem(
+  // Stores the redo button.
+  private lazy var redoButton = makeIconButton(
     imageName: "Redo",
     systemImageName: "arrow.uturn.forward",
     accessibilityLabel: "Redo",
     action: #selector(redoPressed)
   )
-  // Stores the clear item.
-  private lazy var clearItem = makeBarButtonItem(
+  // Stores the clear button.
+  private lazy var clearButton = makeIconButton(
     imageName: "Clear",
     systemImageName: "trash",
     accessibilityLabel: "Clear",
@@ -64,23 +66,42 @@ final class EditingToolbarView: UIView {
     translatesAutoresizingMaskIntoConstraints = false
     backgroundColor = UIColor.clear
 
-    toolbar.translatesAutoresizingMaskIntoConstraints = false
-    toolbar.isTranslucent = false
-    toolbar.tintColor = accentColor
-    toolbar.barTintColor = UIColor.secondarySystemBackground
-    toolbar.clipsToBounds = true
-    toolbar.layer.cornerRadius = toolbarHeight / 2
-    toolbar.setShadowImage(UIImage(), forToolbarPosition: .any)
-    toolbar.items = makeToolbarItems()
+    barBackgroundView.translatesAutoresizingMaskIntoConstraints = false
+    barBackgroundView.backgroundColor = UIColor.secondarySystemBackground
+    barBackgroundView.layer.cornerRadius = toolbarHeight / 2
+    barBackgroundView.clipsToBounds = true
+
+    stackView.translatesAutoresizingMaskIntoConstraints = false
+    stackView.axis = .horizontal
+    stackView.spacing = 16
+    stackView.alignment = .center
+    stackView.distribution = .equalCentering
+    stackView.isLayoutMarginsRelativeArrangement = true
+    stackView.layoutMargins = UIEdgeInsets(
+      top: 0,
+      left: horizontalPadding,
+      bottom: 0,
+      right: horizontalPadding
+    )
+    stackView.addArrangedSubview(undoButton)
+    stackView.addArrangedSubview(redoButton)
+    stackView.addArrangedSubview(clearButton)
     expandedWidth = measuredToolbarWidth()
 
-    addSubview(toolbar)
+    addSubview(barBackgroundView)
+    barBackgroundView.addSubview(stackView)
 
-    // Anchors the toolbar to fill the container.
-    toolbar.leadingAnchor.constraint(equalTo: leadingAnchor).isActive = true
-    toolbar.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
-    toolbar.topAnchor.constraint(equalTo: topAnchor).isActive = true
-    toolbar.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
+    // Anchors the bar to fill the container.
+    barBackgroundView.leadingAnchor.constraint(equalTo: leadingAnchor).isActive = true
+    barBackgroundView.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
+    barBackgroundView.topAnchor.constraint(equalTo: topAnchor).isActive = true
+    barBackgroundView.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
+
+    // Anchors the stack to the pill background.
+    stackView.leadingAnchor.constraint(equalTo: barBackgroundView.leadingAnchor).isActive = true
+    stackView.trailingAnchor.constraint(equalTo: barBackgroundView.trailingAnchor).isActive = true
+    stackView.topAnchor.constraint(equalTo: barBackgroundView.topAnchor).isActive = true
+    stackView.bottomAnchor.constraint(equalTo: barBackgroundView.bottomAnchor).isActive = true
 
     // Locks the size to prevent clipping inside the navigation layout.
     heightAnchor.constraint(equalToConstant: toolbarHeight).isActive = true
@@ -91,31 +112,25 @@ final class EditingToolbarView: UIView {
     setCollapsed(false, animated: false)
   }
 
-  // Creates bar button items that mimic the top bar style.
-  private func makeBarButtonItem(
+  // Creates icon-only buttons that sit together inside the pill background.
+  private func makeIconButton(
     imageName: String,
     systemImageName: String,
     accessibilityLabel: String,
     action: Selector
-  ) -> UIBarButtonItem {
+  ) -> UIButton {
     let namedImage = UIImage(named: imageName)
     let systemImage = UIImage(systemName: systemImageName)
     let image = namedImage ?? systemImage
-    let barButtonItem = UIBarButtonItem(
-      image: image?.withRenderingMode(.alwaysTemplate),
-      style: .plain,
-      target: self,
-      action: action
-    )
-    barButtonItem.accessibilityLabel = accessibilityLabel
-    barButtonItem.tintColor = accentColor
-    return barButtonItem
-  }
-
-  // Builds the toolbar with standard Apple spacing between icons.
-  private func makeToolbarItems() -> [UIBarButtonItem] {
-    let spacer = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
-    return [spacer, undoItem, spacer, redoItem, spacer, clearItem, spacer]
+    let button = UIButton(type: .system)
+    button.translatesAutoresizingMaskIntoConstraints = false
+    button.setImage(image?.withRenderingMode(.alwaysTemplate), for: .normal)
+    button.tintColor = accentColor
+    button.accessibilityLabel = accessibilityLabel
+    button.addTarget(self, action: action, for: .touchUpInside)
+    button.contentEdgeInsets = .zero
+    button.adjustsImageWhenHighlighted = false
+    return button
   }
 
   // Expands or collapses the toolbar with optional animation.
@@ -134,13 +149,13 @@ final class EditingToolbarView: UIView {
     let animations = { [weak self] in
       guard let self = self else { return }
       self.superview?.layoutIfNeeded()
-      self.toolbar.alpha = targetAlpha
+      self.barBackgroundView.alpha = targetAlpha
     }
 
     let completion: (Bool) -> Void = { [weak self] _ in
       guard let self = self else { return }
       if collapsed {
-        self.toolbar.isHidden = true
+        self.barBackgroundView.isHidden = true
       }
     }
 
@@ -160,20 +175,16 @@ final class EditingToolbarView: UIView {
 
   // Enables taps and accessibility for the toolbar buttons when expanding.
   private func prepareForExpand() {
-    toolbar.isHidden = false
-    toolbar.alpha = 0
-    toolbar.items?.forEach { item in
-      item.isEnabled = true
-    }
-    toolbar.isUserInteractionEnabled = true
+    barBackgroundView.isHidden = false
+    barBackgroundView.alpha = 0
+    stackView.isUserInteractionEnabled = true
+    stackView.arrangedSubviews.forEach { $0.isUserInteractionEnabled = true }
   }
 
   // Disables taps and accessibility for the toolbar buttons when collapsing.
   private func prepareForCollapse() {
-    toolbar.items?.forEach { item in
-      item.isEnabled = false
-    }
-    toolbar.isUserInteractionEnabled = false
+    stackView.arrangedSubviews.forEach { $0.isUserInteractionEnabled = false }
+    stackView.isUserInteractionEnabled = false
   }
 
   // Updates the width constraint to match the collapsed or expanded state.
@@ -188,12 +199,13 @@ final class EditingToolbarView: UIView {
 
   // Measures the toolbar width based on its intrinsic content size while guarding against invalid results.
   private func measuredToolbarWidth() -> CGFloat {
-    let fittingSize = toolbar.sizeThatFits(
-      CGSize(width: UIView.noIntrinsicMetric, height: toolbarHeight))
-    let measuredWidth =
-      fittingSize.width.isFinite && fittingSize.width > 0
-      ? fittingSize.width : toolbarHeight * 3
-    let paddedWidth = measuredWidth + (horizontalPadding * 2)
+    let buttonWidths = stackView.arrangedSubviews.reduce(into: CGFloat(0)) { total, view in
+      total += view.intrinsicContentSize.width
+    }
+    let spacingWidth = stackView.spacing * CGFloat(max(stackView.arrangedSubviews.count - 1, 0))
+    let marginWidth = stackView.layoutMargins.left + stackView.layoutMargins.right
+    let measuredWidth = buttonWidths + spacingWidth + marginWidth
+    let paddedWidth = measuredWidth + (horizontalPadding / 2)
     return max(paddedWidth, toolbarHeight * 3)
   }
 
