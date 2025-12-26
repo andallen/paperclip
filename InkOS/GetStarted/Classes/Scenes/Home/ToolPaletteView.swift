@@ -11,6 +11,8 @@ final class ToolPaletteView: UIView {
   var selectionChanged: ((ToolSelection) -> Void)?
   // Notifies the host when a color is chosen for a specific tool.
   var colorSelectionChanged: ((ToolSelection, String) -> Void)?
+  // Notifies the host when the stroke thickness changes for a tool.
+  var thicknessChanged: ((ToolSelection, CGFloat) -> Void)?
   // Notifies the host when the palette expands or collapses.
   var expansionChanged: ((Bool) -> Void)?
 
@@ -42,6 +44,12 @@ final class ToolPaletteView: UIView {
   private var selectedHighlighterColor =
     ColorOption(
       name: "Lemon", hex: "#FFF176", color: UIColor(red: 1, green: 0.95, blue: 0.46, alpha: 1))
+  // Tracks the current pen thickness.
+  private var selectedPenThickness: CGFloat = 3.0
+  // Tracks the current highlighter thickness.
+  private var selectedHighlighterThickness: CGFloat = 10.0
+  // Sets the minimum and maximum thickness range shared by both sliders.
+  private let thicknessRange: (min: CGFloat, max: CGFloat) = (1.0, 16.0)
   // Defines the list of preset pen colors shown in the selector.
   private let penColorOptions: [ColorOption] = [
     ColorOption(name: "Black", hex: "#000000", color: .black),
@@ -77,6 +85,20 @@ final class ToolPaletteView: UIView {
   private lazy var highlighterColorSelector = ColorSelectorView(
     options: highlighterColorOptions,
     selectedHex: selectedHighlighterColor.hex
+  )
+  // Stores the pen thickness slider.
+  private lazy var penThicknessSlider = ThicknessSliderView(
+    minThickness: thicknessRange.min,
+    maxThickness: thicknessRange.max,
+    initialThickness: selectedPenThickness,
+    color: selectedPenColor.color
+  )
+  // Stores the highlighter thickness slider.
+  private lazy var highlighterThicknessSlider = ThicknessSliderView(
+    minThickness: thicknessRange.min,
+    maxThickness: thicknessRange.max,
+    initialThickness: selectedHighlighterThickness,
+    color: selectedHighlighterColor.color
   )
   // Stores the toggle toolbar button.
   private lazy var toggleButton = makeToolButton(
@@ -159,7 +181,7 @@ final class ToolPaletteView: UIView {
     self.widthConstraint = widthConstraint
 
     configureStackView()
-    configureColorSelectors()
+    configureToolAccessories()
     applySelection(.pen)
     setExpanded(false, animated: false)
   }
@@ -189,8 +211,8 @@ final class ToolPaletteView: UIView {
     stackView.addArrangedSubview(highlighterButton)
   }
 
-  // Attaches the vertical color selectors above their tools.
-  private func configureColorSelectors() {
+  // Attaches the vertical tool accessories above their tools.
+  private func configureToolAccessories() {
     penColorSelector.selectionChanged = { [weak self] option in
       self?.handleColorSelection(option, for: .pen)
     }
@@ -198,17 +220,50 @@ final class ToolPaletteView: UIView {
       self?.handleColorSelection(option, for: .highlighter)
     }
 
+    penThicknessSlider.valueChanged = { [weak self] thickness in
+      self?.handleThicknessChange(thickness, for: .pen)
+    }
+
+    highlighterThicknessSlider.valueChanged = { [weak self] thickness in
+      self?.handleThicknessChange(thickness, for: .highlighter)
+    }
+
     addSubview(penColorSelector)
     addSubview(highlighterColorSelector)
+    addSubview(penThicknessSlider)
+    addSubview(highlighterThicknessSlider)
 
-    penColorSelector.centerXAnchor.constraint(equalTo: penButton.centerXAnchor).isActive = true
+    penColorSelector.trailingAnchor.constraint(
+      equalTo: penButton.centerXAnchor,
+      constant: -4
+    ).isActive = true
     penColorSelector.bottomAnchor.constraint(equalTo: penButton.topAnchor, constant: -6).isActive =
       true
 
-    highlighterColorSelector.centerXAnchor.constraint(equalTo: highlighterButton.centerXAnchor)
-      .isActive = true
+    penThicknessSlider.leadingAnchor.constraint(
+      equalTo: penButton.centerXAnchor,
+      constant: 4
+    ).isActive = true
+    penThicknessSlider.bottomAnchor.constraint(equalTo: penButton.topAnchor, constant: -6)
+      .isActive =
+      true
+
+    highlighterColorSelector.trailingAnchor.constraint(
+      equalTo: highlighterButton.centerXAnchor,
+      constant: -4
+    ).isActive = true
     highlighterColorSelector.bottomAnchor.constraint(
       equalTo: highlighterButton.topAnchor, constant: -6
+    )
+    .isActive = true
+
+    highlighterThicknessSlider.leadingAnchor.constraint(
+      equalTo: highlighterButton.centerXAnchor,
+      constant: 4
+    ).isActive = true
+    highlighterThicknessSlider.bottomAnchor.constraint(
+      equalTo: highlighterButton.topAnchor,
+      constant: -6
     )
     .isActive = true
   }
@@ -340,10 +395,15 @@ final class ToolPaletteView: UIView {
   }
 
   override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
-    let expandedSelectorFrames = [penColorSelector, highlighterColorSelector]
-      .compactMap { selector in
-        selector.isHidden ? nil : selector.frame
-      }
+    let expandedSelectorFrames = [
+      penColorSelector,
+      highlighterColorSelector,
+      penThicknessSlider,
+      highlighterThicknessSlider,
+    ]
+    .compactMap { selector in
+      selector.isHidden ? nil : selector.frame
+    }
     let extendedBounds = expandedSelectorFrames.reduce(bounds) { current, frame in
       current.union(frame)
     }
@@ -373,33 +433,51 @@ final class ToolPaletteView: UIView {
     }
   }
 
-  // Shows the matching color selector for the current tool.
+  // Shows the matching accessories for the current tool.
   private func updateColorSelectors(for selection: ToolSelection, animated: Bool) {
     guard isExpanded else { return }
     switch selection {
     case .pen:
-      showColorSelector(penColorSelector, hiding: highlighterColorSelector, animated: animated)
+      showAccessories(
+        colorSelector: penColorSelector,
+        thicknessSlider: penThicknessSlider,
+        hidingSelector: highlighterColorSelector,
+        hidingSlider: highlighterThicknessSlider,
+        animated: animated
+      )
     case .highlighter:
-      showColorSelector(highlighterColorSelector, hiding: penColorSelector, animated: animated)
+      showAccessories(
+        colorSelector: highlighterColorSelector,
+        thicknessSlider: highlighterThicknessSlider,
+        hidingSelector: penColorSelector,
+        hidingSlider: penThicknessSlider,
+        animated: animated
+      )
     case .eraser:
       collapseColorSelectors(animated: animated)
     }
   }
 
-  // Expands the requested selector and hides the other one.
-  private func showColorSelector(
-    _ selector: ColorSelectorView,
-    hiding otherSelector: ColorSelectorView,
+  // Expands the requested accessories and hides the other set.
+  private func showAccessories(
+    colorSelector: ColorSelectorView,
+    thicknessSlider: ThicknessSliderView,
+    hidingSelector: ColorSelectorView,
+    hidingSlider: ThicknessSliderView,
     animated: Bool
   ) {
-    otherSelector.setExpanded(false, animated: animated)
-    selector.setExpanded(true, animated: animated)
+    hidingSelector.setExpanded(false, animated: animated)
+    hidingSlider.setExpanded(false, animated: animated)
+    thicknessSlider.setExpanded(true, animated: animated)
+    colorSelector.setExpanded(true, animated: animated)
   }
 
-  // Collapses both color selectors.
+  // Collapses all accessory views.
   private func collapseColorSelectors(animated: Bool) {
     penColorSelector.setExpanded(false, animated: animated)
     highlighterColorSelector.setExpanded(false, animated: animated)
+    penThicknessSlider.setExpanded(false, animated: animated)
+    highlighterThicknessSlider.setExpanded(false, animated: animated)
   }
 
   // Updates palette state when a color is chosen.
@@ -407,13 +485,28 @@ final class ToolPaletteView: UIView {
     switch tool {
     case .pen:
       selectedPenColor = option
+      penThicknessSlider.updateColor(option.color)
     case .highlighter:
       selectedHighlighterColor = option
+      highlighterThicknessSlider.updateColor(option.color)
     case .eraser:
       break
     }
     updateItemAppearance()
     colorSelectionChanged?(tool, option.hex)
+  }
+
+  // Updates palette state when a thickness is chosen.
+  private func handleThicknessChange(_ thickness: CGFloat, for tool: ToolSelection) {
+    switch tool {
+    case .pen:
+      selectedPenThickness = thickness
+    case .highlighter:
+      selectedHighlighterThickness = thickness
+    case .eraser:
+      break
+    }
+    thicknessChanged?(tool, thickness)
   }
 }
 
@@ -583,5 +676,222 @@ private final class ColorSelectorView: UIView {
     let count = CGFloat(options.count)
     let spacingTotal = spacing * (count - 1)
     return (count * selectedCircleSize) + spacingTotal
+  }
+}
+
+// Presents a vertical slider that adjusts stroke thickness.
+private final class ThicknessSliderView: UIView {
+
+  // Notifies when the slider value changes.
+  var valueChanged: ((CGFloat) -> Void)?
+
+  // Stores the allowed thickness range.
+  private let minThickness: CGFloat
+  private let maxThickness: CGFloat
+  // Tracks the current thickness value.
+  private var currentThickness: CGFloat
+  // Sets the base sizing for the slider visuals.
+  private let minDotSize: CGFloat = 8
+  private let maxDotSize: CGFloat = 18
+  private let trackWidth: CGFloat = 4
+  private let expandedHeight: CGFloat = 152
+  private let trackSpacing: CGFloat = 10
+  // Stores layout helpers.
+  private var isExpanded = false
+  private var heightConstraint: NSLayoutConstraint?
+  private var thumbCenterYConstraint: NSLayoutConstraint?
+  private var thumbSizeConstraints: (width: NSLayoutConstraint, height: NSLayoutConstraint)?
+
+  private let trackView = UIView()
+  private let thumbView = UIView()
+  private let topDotView = UIView()
+  private let bottomDotView = UIView()
+
+  init(minThickness: CGFloat, maxThickness: CGFloat, initialThickness: CGFloat, color: UIColor) {
+    self.minThickness = minThickness
+    self.maxThickness = maxThickness
+    self.currentThickness = initialThickness
+    super.init(frame: .zero)
+    configureView()
+    updateColor(color)
+    updateThumb(for: initialThickness, animated: false)
+  }
+
+  required init?(coder: NSCoder) {
+    self.minThickness = 0
+    self.maxThickness = 0
+    self.currentThickness = 0
+    super.init(coder: coder)
+  }
+
+  override func layoutSubviews() {
+    super.layoutSubviews()
+    updateThumb(for: currentThickness, animated: false)
+  }
+
+  // Updates the slider tint to match the selected tool color.
+  func updateColor(_ color: UIColor) {
+    trackView.backgroundColor = color.withAlphaComponent(0.35)
+    thumbView.backgroundColor = color
+    topDotView.backgroundColor = color
+    bottomDotView.backgroundColor = color
+  }
+
+  // Opens or closes the slider with a fade animation.
+  func setExpanded(_ expanded: Bool, animated: Bool) {
+    guard expanded != isExpanded else { return }
+    isExpanded = expanded
+    superview?.layoutIfNeeded()
+    if expanded {
+      isHidden = false
+      alpha = 0
+      heightConstraint?.constant = expandedHeight
+    } else {
+      heightConstraint?.constant = 0
+    }
+    let animations = { [weak self] in
+      guard let self = self else { return }
+      self.superview?.layoutIfNeeded()
+      self.alpha = expanded ? 1 : 0
+    }
+    let completion: (Bool) -> Void = { [weak self] _ in
+      guard let self = self else { return }
+      if expanded == false {
+        self.isHidden = true
+      }
+    }
+    if animated {
+      UIView.animate(
+        withDuration: 0.22,
+        delay: 0,
+        options: [.curveEaseInOut],
+        animations: animations,
+        completion: completion
+      )
+    } else {
+      animations()
+      completion(true)
+    }
+  }
+
+  // Handles taps or drags on the slider to update the value.
+  @objc private func handlePan(_ recognizer: UIPanGestureRecognizer) {
+    let location = recognizer.location(in: trackView)
+    updateValue(with: location)
+  }
+
+  override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+    guard let point = touches.first?.location(in: trackView) else { return }
+    updateValue(with: point)
+  }
+
+  // Configures the slider layout and gesture handling.
+  private func configureView() {
+    translatesAutoresizingMaskIntoConstraints = false
+    clipsToBounds = true
+    widthAnchor.constraint(equalToConstant: 36).isActive = true
+    heightConstraint = heightAnchor.constraint(equalToConstant: 0)
+    heightConstraint?.isActive = true
+    isHidden = true
+
+    topDotView.translatesAutoresizingMaskIntoConstraints = false
+    bottomDotView.translatesAutoresizingMaskIntoConstraints = false
+    trackView.translatesAutoresizingMaskIntoConstraints = false
+    thumbView.translatesAutoresizingMaskIntoConstraints = false
+
+    addSubview(trackView)
+    addSubview(topDotView)
+    addSubview(bottomDotView)
+    addSubview(thumbView)
+
+    let panGesture = UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:)))
+    addGestureRecognizer(panGesture)
+
+    configureDots()
+    configureTrack()
+    configureThumb()
+  }
+
+  // Sets up the static dots that show the thickness range.
+  private func configureDots() {
+    topDotView.layer.cornerRadius = maxDotSize / 2
+    bottomDotView.layer.cornerRadius = minDotSize / 2
+
+    NSLayoutConstraint.activate([
+      topDotView.topAnchor.constraint(equalTo: topAnchor),
+      topDotView.centerXAnchor.constraint(equalTo: centerXAnchor),
+      topDotView.widthAnchor.constraint(equalToConstant: maxDotSize),
+      topDotView.heightAnchor.constraint(equalToConstant: maxDotSize),
+      bottomDotView.bottomAnchor.constraint(equalTo: bottomAnchor),
+      bottomDotView.centerXAnchor.constraint(equalTo: centerXAnchor),
+      bottomDotView.widthAnchor.constraint(equalToConstant: minDotSize),
+      bottomDotView.heightAnchor.constraint(equalToConstant: minDotSize),
+    ])
+  }
+
+  // Builds the vertical track for the slider.
+  private func configureTrack() {
+    NSLayoutConstraint.activate([
+      trackView.centerXAnchor.constraint(equalTo: centerXAnchor),
+      trackView.topAnchor.constraint(equalTo: topDotView.bottomAnchor, constant: trackSpacing),
+      trackView.bottomAnchor.constraint(equalTo: bottomDotView.topAnchor, constant: -trackSpacing),
+      trackView.widthAnchor.constraint(equalToConstant: trackWidth),
+    ])
+    trackView.layer.cornerRadius = trackWidth / 2
+  }
+
+  // Builds the thumb that follows the slider value.
+  private func configureThumb() {
+    thumbCenterYConstraint = thumbView.centerYAnchor.constraint(equalTo: trackView.bottomAnchor)
+    let widthConstraint = thumbView.widthAnchor.constraint(equalToConstant: minDotSize)
+    let heightConstraint = thumbView.heightAnchor.constraint(equalToConstant: minDotSize)
+    thumbSizeConstraints = (width: widthConstraint, height: heightConstraint)
+    thumbView.layer.cornerRadius = minDotSize / 2
+    NSLayoutConstraint.activate([
+      thumbView.centerXAnchor.constraint(equalTo: trackView.centerXAnchor),
+      thumbCenterYConstraint!,
+      widthConstraint,
+      heightConstraint,
+    ])
+  }
+
+  // Updates the slider value using the tapped or dragged location.
+  private func updateValue(with location: CGPoint) {
+    let clampedY = max(0, min(location.y, trackView.bounds.height))
+    let progress = 1 - (clampedY / (trackView.bounds.height == 0 ? 1 : trackView.bounds.height))
+    let thickness = minThickness + (progress * (maxThickness - minThickness))
+    currentThickness = thickness
+    updateThumb(for: thickness, animated: true)
+    valueChanged?(thickness)
+  }
+
+  // Moves the thumb and scales it to match the chosen thickness.
+  private func updateThumb(for thickness: CGFloat, animated: Bool) {
+    layoutIfNeeded()
+    let progress = normalizedThickness(thickness)
+    let trackHeight = trackView.bounds.height
+    let yOffset = trackHeight - (progress * trackHeight)
+    thumbCenterYConstraint?.constant = -yOffset
+    let size = minDotSize + ((maxDotSize - minDotSize) * progress)
+    thumbSizeConstraints?.width.constant = size
+    thumbSizeConstraints?.height.constant = size
+    thumbView.layer.cornerRadius = size / 2
+    let updates = { [weak self] in
+      self?.layoutIfNeeded()
+    }
+    if animated {
+      UIView.animate(withDuration: 0.18, delay: 0, options: [.curveEaseInOut]) {
+        updates()
+      }
+    } else {
+      updates()
+    }
+  }
+
+  // Normalizes the thickness to a 0-1 range.
+  private func normalizedThickness(_ thickness: CGFloat) -> CGFloat {
+    guard maxThickness > minThickness else { return 0 }
+    let clamped = max(minThickness, min(maxThickness, thickness))
+    return (clamped - minThickness) / (maxThickness - minThickness)
   }
 }

@@ -2,6 +2,7 @@
 
 import Combine
 import Foundation
+import UIKit
 
 /// This class is the ViewModel of the HomeViewController. It handles all its business logic.
 
@@ -29,6 +30,10 @@ class HomeViewModel {
   private var selectedPenColorHex = "#000000"
   // Tracks the selected highlighter color so it can be applied when the editor is ready.
   private var selectedHighlighterColorHex = "#FFF176"
+  // Tracks the selected pen thickness so it can be applied when the editor is ready.
+  private var selectedPenThickness: CGFloat = 3
+  // Tracks the selected highlighter thickness so it can be applied when the editor is ready.
+  private var selectedHighlighterThickness: CGFloat = 10
   // Tracks the selected tool so it can be re-applied when the editor is available.
   private var selectedTool: ToolPaletteView.ToolSelection = .pen
   // Tracks the active input mode so touch tools can follow the toggle state.
@@ -159,24 +164,45 @@ class HomeViewModel {
     switch tool {
     case .pen:
       selectedPenColorHex = hex
-      applyInkColor(hex: hex, tool: .toolPen)
+      applyInkStyle(hex: selectedPenColorHex, thickness: selectedPenThickness, tool: .toolPen)
     case .highlighter:
       selectedHighlighterColorHex = hex
-      applyInkColor(hex: hex, tool: .toolHighlighter)
+      applyInkStyle(
+        hex: selectedHighlighterColorHex,
+        thickness: selectedHighlighterThickness,
+        tool: .toolHighlighter
+      )
     case .eraser:
       break
     }
   }
 
-  // Applies the selected ink color to the requested tool.
-  private func applyInkColor(hex: String, tool: IINKPointerTool) {
+  // Updates the selected thickness for the requested tool.
+  func updateInkThickness(_ thickness: CGFloat, for tool: ToolPaletteView.ToolSelection) {
+    switch tool {
+    case .pen:
+      selectedPenThickness = thickness
+      applyInkStyle(hex: selectedPenColorHex, thickness: thickness, tool: .toolPen)
+    case .highlighter:
+      selectedHighlighterThickness = thickness
+      applyInkStyle(hex: selectedHighlighterColorHex, thickness: thickness, tool: .toolHighlighter)
+    case .eraser:
+      break
+    }
+  }
+
+  // Applies the selected ink style to the requested tool.
+  private func applyInkStyle(hex: String, thickness: CGFloat, tool: IINKPointerTool) {
     guard let editor = editor else {
       return
     }
     do {
-      try editor.toolController.set(style: "color:\(hex)", forTool: tool)
+      let style = String(format: "color:%@; -myscript-pen-width:%.2f", hex, thickness)
+      try editor.toolController.set(style: style, forTool: tool)
     } catch {
-      appLog("❌ HomeViewModel.applyInkColor failed color=\(hex) tool=\(tool) error=\(error)")
+      appLog(
+        "❌ HomeViewModel.applyInkStyle failed color=\(hex) thickness=\(thickness) tool=\(tool) error=\(error)"
+      )
     }
   }
 
@@ -291,8 +317,16 @@ extension HomeViewModel: EditorDelegate {
   func didCreateEditor(editor: IINKEditor) {
     self.editor = editor
     applyTool(selection: selectedTool, editor: editor)
-    applyInkColor(hex: selectedPenColorHex, tool: .toolPen)
-    applyInkColor(hex: selectedHighlighterColorHex, tool: .toolHighlighter)
+    applyInkStyle(
+      hex: selectedPenColorHex,
+      thickness: selectedPenThickness,
+      tool: .toolPen
+    )
+    applyInkStyle(
+      hex: selectedHighlighterColorHex,
+      thickness: selectedHighlighterThickness,
+      tool: .toolHighlighter
+    )
     self.loadNotebookPartIfReady()
   }
 

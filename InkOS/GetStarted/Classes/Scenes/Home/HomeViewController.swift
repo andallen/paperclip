@@ -180,6 +180,9 @@ class HomeViewController: UIViewController {
     paletteView.colorSelectionChanged = { [weak self] tool, hex in
       self?.viewModel.updateInkColor(hex: hex, for: tool)
     }
+    paletteView.thicknessChanged = { [weak self] tool, thickness in
+      self?.viewModel.updateInkThickness(thickness, for: tool)
+    }
     view.addSubview(paletteView)
 
     paletteView.leadingAnchor.constraint(
