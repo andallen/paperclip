@@ -187,9 +187,9 @@ struct DashboardView: View {
     ScrollView {
       LazyVGrid(
         columns: [
-          GridItem(.adaptive(minimum: 160, maximum: 220), spacing: 16)
+          GridItem(.adaptive(minimum: 150, maximum: 170), spacing: 12)
         ],
-        spacing: 16
+        spacing: 12
       ) {
         ForEach(library.notebooks) { notebook in
           NotebookCard(notebook: notebook)
@@ -223,7 +223,7 @@ struct DashboardView: View {
             }
         }
       }
-      .padding(.horizontal, 24)
+      .padding(.horizontal, 16)
       .padding(.bottom, 24)
     }
   }
@@ -244,35 +244,24 @@ private struct NotebookCard: View {
   let notebook: NotebookMetadata
 
   var body: some View {
-    let coverHighlight = Color(hue: 0.08, saturation: 0.06, brightness: 0.98)
-    let coverShadow = Color(hue: 0.08, saturation: 0.04, brightness: 0.94)
+    let accentColor = Color(hue: 0.1, saturation: 0.2, brightness: 0.98)
 
-    VStack(alignment: .leading, spacing: 12) {
-      // Notebook icon
-      ZStack {
-        RoundedRectangle(cornerRadius: 10, style: .continuous)
-          .fill(
-            LinearGradient(
-              colors: [coverHighlight, coverShadow],
-              startPoint: .topLeading,
-              endPoint: .bottomTrailing
-            )
-          )
-          .frame(height: 100)
-
-        Image(systemName: "book.closed.fill")
-          .font(.system(size: 32, weight: .light))
-          .foregroundStyle(Color.inkFaint)
-      }
+    VStack(alignment: .leading, spacing: 14) {
+      // Accent stripe gives the card a vertical profile while keeping it minimal.
+      Capsule()
+        .fill(accentColor)
+        .frame(height: 8)
 
       // Notebook name
       Text(notebook.displayName)
-        .font(.system(size: 15, weight: .medium))
+        .font(.system(size: 16, weight: .semibold))
         .foregroundStyle(Color.ink)
-        .lineLimit(2)
+        .lineLimit(3)
         .multilineTextAlignment(.leading)
-        .frame(maxWidth: .infinity, alignment: .leading)
+
+      Spacer()
     }
+    .frame(maxWidth: .infinity, minHeight: 170, alignment: .topLeading)
     .padding(12)
     .glassBackground(cornerRadius: 16)
   }
