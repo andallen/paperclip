@@ -48,13 +48,15 @@ class EditorViewModel {
   private var toolController: IINKToolController?
   private(set) var originalViewOffset: CGPoint = CGPoint.zero
   // Keeps the zoom baseline so the canvas cannot be scaled smaller than the initial view width.
-  private var pinchStartScale: CGFloat = 1.0
-  private var minimumViewScale: CGFloat = 1.0
+  private var pinchStartScale: Float = 1.0
+  private var minimumViewScale: Float = 1.0
   private weak var editorDelegate: EditorDelegate?
   private var editorDelegateTrampoline: EditorDelegateTrampoline
   private weak var smartGuideDelegate: SmartGuideViewControllerDelegate?
   private var smartGuideDisabled: Bool = false
   private var didSetConstraints: Bool = false
+  // Stores the view scale to avoid using UIScreen.main during renderer setup.
+  var displayScale: CGFloat = 1.0
 
   init(
     engine: IINKEngine?,
@@ -74,6 +76,8 @@ class EditorViewModel {
   {
     let model = EditorModel()
     let displayViewModel = DisplayViewModel()
+    // Keeps renderer scale in sync with the current view trait collection.
+    displayViewModel.displayScale = displayScale
     self.initEditor(with: displayViewModel)
     model.displayViewController = DisplayViewController(viewModel: displayViewModel)
     if self.smartGuideDisabled == false {
@@ -177,7 +181,7 @@ class EditorViewModel {
     if state == UIGestureRecognizer.State.began {
       self.pinchStartScale = renderer.viewScale
     }
-    var newScale = self.pinchStartScale * scale
+    var newScale = self.pinchStartScale * Float(scale)
     // Keep the zoom level at or above the canvas width that matches the screen edges.
     newScale = max(self.minimumViewScale, newScale)
     renderer.viewScale = newScale
@@ -222,8 +226,8 @@ class EditorViewModel {
   private func initEditor(with target: DisplayViewModel) {
     guard let engine = self.engine,
       let renderer = try? engine.createRenderer(
-        dpiX: Helper.scaledDpi(),
-        dpiY: Helper.scaledDpi(),
+        dpiX: Helper.scaledDpi(scale: displayScale),
+        dpiY: Helper.scaledDpi(scale: displayScale),
         target: target)
     else {
       return
@@ -237,15 +241,15 @@ class EditorViewModel {
 
     // Apply theme from css file if any
     if let path = Bundle.main.path(forResource: "theme", ofType: "css"),
-      let cssString = try? String(contentsOfFile: path).trimmingCharacters(
+      let cssString = try? String(contentsOfFile: path, encoding: .utf8).trimmingCharacters(
         in: .whitespacesAndNewlines)
     {
       try? self.editor?.set(theme: cssString)
     }
 
     self.editor?.set(fontMetricsProvider: FontMetricsProvider())
-    if self.editor != nil {
-      self.editorDelegate?.didCreateEditor(editor: self.editor!)
+    if let editor = self.editor {
+      self.editorDelegate?.didCreateEditor(editor: editor)
     }
     target.renderer = renderer
     target.imageLoader = ImageLoader()

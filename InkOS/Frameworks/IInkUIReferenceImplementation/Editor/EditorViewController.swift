@@ -44,6 +44,8 @@ class EditorViewController: UIViewController {
         NSNumber(value: UITouch.TouchType.direct.rawValue)
       ]
     }
+    // Uses the current trait collection scale for renderer creation.
+    self.viewModel.displayScale = self.view.traitCollection.displayScale
     self.bindViewModel()
     self.viewModel.setupModel(with: panGestureRecognizer, pinchGesture: self.pinchGestureRecognizer)
     self.viewModel.configureEditorUI(with: self.view.bounds.size)

@@ -34,8 +34,8 @@ class Helper {
     return UIDevice.current.modelName == .iPadMiniRetina
   }
 
-  static func isPadRetina() -> Bool {
-    return UIDevice.current.userInterfaceIdiom == .pad && UIScreen.main.scale > 1
+  static func isPadRetina(scale: CGFloat) -> Bool {
+    return UIDevice.current.userInterfaceIdiom == .pad && scale > 1
   }
 
   static func isPhone() -> Bool {
@@ -46,15 +46,15 @@ class Helper {
     return UIDevice.current.modelName == .iPhoneX
   }
 
-  static func isPhonePlus() -> Bool {
-    return UIDevice.current.userInterfaceIdiom == .phone && UIScreen.main.scale > 2
+  static func isPhonePlus(scale: CGFloat) -> Bool {
+    return UIDevice.current.userInterfaceIdiom == .phone && scale > 2
   }
 
-  static func dpi() -> Float {
+  static func dpi(scale: CGFloat) -> Float {
     if isPhone() {
       if isPhoneX() {
         return Helper.kDpiPhoneX
-      } else if isPhonePlus() {
+      } else if isPhonePlus(scale: scale) {
         return Helper.kDpiPhonePlus
       }
       return Helper.kDpiPhone
@@ -64,7 +64,7 @@ class Helper {
         return Helper.kDpiPadMini
       } else if isPadMiniRetina() {
         return Helper.kDpiPadMiniRetina
-      } else if isPadRetina() {
+      } else if isPadRetina(scale: scale) {
         return Helper.kDpiPadRetina
       }
       return Helper.kDpiPad
@@ -72,8 +72,8 @@ class Helper {
     return 0
   }
 
-  static func scaledDpi() -> Float {
-    return Helper.dpi() / Float(UIScreen.main.scale)
+  static func scaledDpi(scale: CGFloat) -> Float {
+    return Helper.dpi(scale: scale) / Float(scale)
   }
 }
 

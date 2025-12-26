@@ -31,6 +31,8 @@ class DisplayViewController: UIViewController {
     self.view = UIView(frame: CGRect.zero)
     self.view.backgroundColor = UIColor.clear
     self.bindViewModel()
+    // Uses the current trait collection scale for render callbacks.
+    self.viewModel.displayScale = self.view.traitCollection.displayScale
     self.viewModel.setOffScreenRendererSurfacesScale(scale: self.view.contentScaleFactor)
     self.viewModel.setupModel()
   }

@@ -18,6 +18,8 @@ class DisplayViewModel: NSObject {
   var imageLoader: ImageLoader?
   private(set) var offscreenRenderSurfaces: OffscreenRenderSurfaces = OffscreenRenderSurfaces()
   private var didSetConstraints: Bool = false
+  // Stores the view scale to avoid using UIScreen.main in render target callbacks.
+  var displayScale: CGFloat = 1.0
 
   func setupModel() {
     let model: DisplayModel = DisplayModel()
@@ -110,6 +112,6 @@ extension DisplayViewModel: IINKIRenderTarget {
   }
 
   var pixelDensity: Float {
-    return Float(UIScreen.main.scale)
+    return Float(displayScale)
   }
 }
