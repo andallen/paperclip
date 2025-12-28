@@ -2,6 +2,7 @@
 
 import Combine
 import Foundation
+import UIKit
 
 /// This class is the ViewModel of the HomeViewController. It handles all its business logic.
 
@@ -192,7 +193,7 @@ class HomeViewModel {
   }
 
   // Releases the editor binding to avoid keeping the part locked.
-  func releaseEditor() {
+  func releaseEditor(previewImage: UIImage? = nil) {
     autoSaveTask?.cancel()
     fullSaveTask?.cancel()
     do {
@@ -201,10 +202,34 @@ class HomeViewModel {
       appLog("❌ HomeViewModel.releaseEditor failed error=\(error.localizedDescription)")
     }
     let handle = documentHandle
+    let previewData = previewImage?.pngData()
+    let hasPreviewImage = previewImage != nil
+    let previewBytes = previewData?.count ?? 0
+    addLog(
+      "🧪 HomeViewModel.releaseEditor previewImage=\(hasPreviewImage) previewBytes=\(previewBytes)"
+    )
     documentHandle = nil
     Task { [weak self] in
       guard let handle = handle else {
         return
+      }
+      if let previewData {
+        do {
+          try await handle.savePreviewImageData(previewData)
+          await MainActor.run {
+            addLog(
+              "🧪 HomeViewModel.releaseEditor previewSaved notification notebookID=\(handle.notebookID)"
+            )
+            NotificationCenter.default.post(
+              name: .notebookPreviewUpdated,
+              object: handle.notebookID
+            )
+          }
+        } catch {
+          addLog("🧪 HomeViewModel.releaseEditor previewSaveFailed error=\(error)")
+        }
+      } else {
+        addLog("🧪 HomeViewModel.releaseEditor previewSaveSkipped")
       }
       do {
         try await handle.savePackage()
