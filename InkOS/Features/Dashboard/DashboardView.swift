@@ -214,35 +214,33 @@ struct DashboardView: View {
         spacing: 16
       ) {
         ForEach(library.notebooks) { notebook in
-          NotebookCard(notebook: notebook)
-            .contentShape(Rectangle())
-            .onTapGesture {
-              Task {
-                do {
-                  let handle = try await library.openNotebook(notebookID: notebook.id)
-                  activeSession = NotebookSession(
-                    id: notebook.id,
-                    handle: handle
-                  )
-                } catch {
-                  openErrorMessage = error.localizedDescription
-                }
+          NotebookCardButton(notebook: notebook) {
+            Task {
+              do {
+                let handle = try await library.openNotebook(notebookID: notebook.id)
+                activeSession = NotebookSession(
+                  id: notebook.id,
+                  handle: handle
+                )
+              } catch {
+                openErrorMessage = error.localizedDescription
               }
             }
-            .contextMenu {
-              Button {
-                renameText = notebook.displayName
-                renamingNotebook = notebook
-              } label: {
-                Label("Rename", systemImage: "pencil")
-              }
+          }
+          .contextMenu {
+            Button {
+              renameText = notebook.displayName
+              renamingNotebook = notebook
+            } label: {
+              Label("Rename", systemImage: "pencil")
+            }
 
-              Button(role: .destructive) {
-                deletingNotebook = notebook
-              } label: {
-                Label("Delete", systemImage: "trash")
-              }
+            Button(role: .destructive) {
+              deletingNotebook = notebook
+            } label: {
+              Label("Delete", systemImage: "trash")
             }
+          }
         }
       }
       .padding(.horizontal, 24)
@@ -259,6 +257,78 @@ struct DashboardView: View {
 private struct NotebookSession: Identifiable {
   let id: String
   let handle: DocumentHandle
+}
+
+private struct NotebookCardButton: View {
+  let notebook: NotebookMetadata
+  let action: () -> Void
+  // Tracks finger-down state for tactile press effects.
+  @GestureState private var isPressed = false
+  // Drives a quick highlight flash on touch-down.
+  @State private var showHighlight = false
+  // Moves a bright sweep across the card on touch-down.
+  @State private var sweepOffset: CGFloat = -1.2
+
+  var body: some View {
+    let cardCornerRadius: CGFloat = 12
+    Button(action: action) {
+      NotebookCard(notebook: notebook)
+        .contentShape(Rectangle())
+    }
+    .buttonStyle(.plain)
+    // Scales the card while a finger is down.
+    .scaleEffect(isPressed ? 1.07 : 1.0)
+    .animation(.spring(response: 0.18, dampingFraction: 0.7), value: isPressed)
+    // Adds a quick highlight sweep to signal interactivity.
+    .overlay(
+      GeometryReader { proxy in
+        let sweepDistance = proxy.size.width * 1.2
+        ZStack {
+          RoundedRectangle(cornerRadius: cardCornerRadius, style: .continuous)
+            .fill(Color.white.opacity(showHighlight ? 0.7 : 0.0))
+            .blendMode(.screen)
+            .animation(.easeOut(duration: 0.28), value: showHighlight)
+
+          RoundedRectangle(cornerRadius: cardCornerRadius, style: .continuous)
+            .fill(
+              LinearGradient(
+                stops: [
+                  .init(color: Color.white.opacity(0.0), location: 0.0),
+                  .init(color: Color.white.opacity(0.45), location: 0.45),
+                  .init(color: Color.white.opacity(0.75), location: 0.55),
+                  .init(color: Color.white.opacity(0.0), location: 1.0),
+                ],
+                startPoint: .leading,
+                endPoint: .trailing
+              )
+            )
+            .blendMode(.screen)
+            .offset(x: sweepOffset * sweepDistance)
+            .opacity(showHighlight ? 1.0 : 0.0)
+        }
+        // Keeps the sweep confined to this card only.
+        .compositingGroup()
+        .clipShape(RoundedRectangle(cornerRadius: cardCornerRadius, style: .continuous))
+      }
+    )
+    .simultaneousGesture(
+      DragGesture(minimumDistance: 0)
+        .updating($isPressed) { _, state, _ in
+          state = true
+        }
+        .onChanged { _ in
+          guard !showHighlight else { return }
+          showHighlight = true
+          sweepOffset = -1.2
+          withAnimation(.easeOut(duration: 0.5)) {
+            sweepOffset = 1.2
+          }
+          DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            showHighlight = false
+          }
+        }
+    )
+  }
 }
 
 // MARK: - Notebook Card
