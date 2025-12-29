@@ -105,9 +105,12 @@ final class ToolPaletteView: UIView {
     let highlighterOptions = ToolPaletteView.makeHighlighterColorOptions()
     self.penColorOptions = penOptions
     self.highlighterColorOptions = highlighterOptions
-    self.selectedPenColor = penOptions.first ?? ColorOption(name: "Black", hex: "#000000", color: .black)
-    self.selectedHighlighterColor = highlighterOptions.first
-      ?? ColorOption(name: "Lemon", hex: "#FFF176", color: UIColor(red: 1, green: 0.95, blue: 0.46, alpha: 1))
+    self.selectedPenColor =
+      penOptions.first ?? ColorOption(name: "Black", hex: "#000000", color: .black)
+    self.selectedHighlighterColor =
+      highlighterOptions.first
+      ?? ColorOption(
+        name: "Lemon", hex: "#FFF176", color: UIColor(red: 1, green: 0.95, blue: 0.46, alpha: 1))
     let maxOptionCount = max(penOptions.count, highlighterOptions.count)
     self.colorPaletteView = ColorPaletteView(maxOptionCount: maxOptionCount)
     super.init(frame: .zero)
@@ -120,9 +123,12 @@ final class ToolPaletteView: UIView {
     let highlighterOptions = ToolPaletteView.makeHighlighterColorOptions()
     self.penColorOptions = penOptions
     self.highlighterColorOptions = highlighterOptions
-    self.selectedPenColor = penOptions.first ?? ColorOption(name: "Black", hex: "#000000", color: .black)
-    self.selectedHighlighterColor = highlighterOptions.first
-      ?? ColorOption(name: "Lemon", hex: "#FFF176", color: UIColor(red: 1, green: 0.95, blue: 0.46, alpha: 1))
+    self.selectedPenColor =
+      penOptions.first ?? ColorOption(name: "Black", hex: "#000000", color: .black)
+    self.selectedHighlighterColor =
+      highlighterOptions.first
+      ?? ColorOption(
+        name: "Lemon", hex: "#FFF176", color: UIColor(red: 1, green: 0.95, blue: 0.46, alpha: 1))
     let maxOptionCount = max(penOptions.count, highlighterOptions.count)
     self.colorPaletteView = ColorPaletteView(maxOptionCount: maxOptionCount)
     super.init(coder: coder)
@@ -282,8 +288,10 @@ final class ToolPaletteView: UIView {
       constant: -toolbarHorizontalPadding
     )
     .isActive = true
-    toolbarStackView.topAnchor.constraint(equalTo: toolbarView.contentView.topAnchor).isActive = true
-    toolbarStackView.bottomAnchor.constraint(equalTo: toolbarView.contentView.bottomAnchor).isActive =
+    toolbarStackView.topAnchor.constraint(equalTo: toolbarView.contentView.topAnchor).isActive =
+      true
+    toolbarStackView.bottomAnchor.constraint(equalTo: toolbarView.contentView.bottomAnchor)
+      .isActive =
       true
 
     // Orders the tools to match the updated toolbar layout.
@@ -467,7 +475,8 @@ final class ToolPaletteView: UIView {
     let animations = { [weak self] in
       guard let self = self else { return }
       self.toolbarView.alpha = visible ? 1 : 0
-      self.toolbarView.transform = visible ? .identity : CGAffineTransform(translationX: 0, y: offset)
+      self.toolbarView.transform =
+        visible ? .identity : CGAffineTransform(translationX: 0, y: offset)
       self.pencilToolbar.transform =
         visible ? CGAffineTransform(translationX: 0, y: pencilOffset) : .identity
     }
@@ -653,7 +662,8 @@ final class ToolPaletteView: UIView {
       ColorOption(
         name: "Red", hex: "#C62828", color: UIColor(red: 0.78, green: 0.16, blue: 0.16, alpha: 1)),
       ColorOption(
-        name: "Yellow", hex: "#FBC02D", color: UIColor(red: 0.98, green: 0.75, blue: 0.18, alpha: 1)),
+        name: "Yellow", hex: "#FBC02D", color: UIColor(red: 0.98, green: 0.75, blue: 0.18, alpha: 1)
+      ),
     ]
   }
 
@@ -669,7 +679,8 @@ final class ToolPaletteView: UIView {
       ColorOption(
         name: "Coral", hex: "#FFAB91", color: UIColor(red: 1, green: 0.67, blue: 0.57, alpha: 1)),
       ColorOption(
-        name: "Lavender", hex: "#E1BEE7", color: UIColor(red: 0.88, green: 0.75, blue: 0.91, alpha: 1)
+        name: "Lavender", hex: "#E1BEE7",
+        color: UIColor(red: 0.88, green: 0.75, blue: 0.91, alpha: 1)
       ),
     ]
   }

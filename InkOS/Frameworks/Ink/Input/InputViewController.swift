@@ -208,7 +208,9 @@ extension InputViewController: UIGestureRecognizerDelegate {
       with: translation, velocity: velocity, state: state)
   }
 
-  @objc private func touchDownGestureRecognizerAction(_ gestureRecognizer: UILongPressGestureRecognizer) {
+  @objc private func touchDownGestureRecognizerAction(
+    _ gestureRecognizer: UILongPressGestureRecognizer
+  ) {
     guard gestureRecognizer.state == .began else {
       return
     }

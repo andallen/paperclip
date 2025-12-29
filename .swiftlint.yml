@@ -1,0 +1,15 @@
+opt_in_rules:
+  - force_unwrapping
+  - empty_count
+  - fatal_error_message
+
+identifier_name:
+  min_length: 3
+  excluded: 
+    - i
+    - x
+    - y
+    - z
+    - dx
+    - dy
+    - id

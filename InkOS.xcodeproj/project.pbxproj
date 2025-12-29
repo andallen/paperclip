@@ -34,6 +34,18 @@
 		FAE72E6CE6B665ECB4F183CE /* libPods-InkOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-InkOS.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		AEBCDA6F2F01D2C200324888 /* Exceptions for "InkOS" folder in "InkOS" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Editor/CLAUDE.md,
+				Info.plist,
+				Storage/CLAUDE.md,
+			);
+			target = AEAFC2382EF4B85B00811728 /* InkOS */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		AE1AC10E2EFB3B9E00E6E4BA /* InkOSUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
@@ -47,6 +59,9 @@
 		};
 		AEAFC23B2EF4B85B00811728 /* InkOS */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				AEBCDA6F2F01D2C200324888 /* Exceptions for "InkOS" folder in "InkOS" target */,
+			);
 			path = InkOS;
 			sourceTree = "<group>";
 		};
@@ -483,7 +498,7 @@
 					"\"${SRCROOT}/InkOS/Frameworks\"",
 					"$(inherited)",
 				);
-				INFOPLIST_FILE = "Reference/GetStarted/GetStarted/Supporting Files/Info.plist";
+				INFOPLIST_FILE = InkOS/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -534,7 +549,7 @@
 					"\"${SRCROOT}/InkOS/Frameworks\"",
 					"$(inherited)",
 				);
-				INFOPLIST_FILE = "Reference/GetStarted/GetStarted/Supporting Files/Info.plist";
+				INFOPLIST_FILE = InkOS/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
