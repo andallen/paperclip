@@ -311,7 +311,9 @@ actor BundleManager {
       try writeManifest(handleManifest, to: manifestURL)
     } catch {
       // Logs the error but continues opening to avoid blocking access.
-      appLog("❌ BundleManager.openNotebook lastAccessedAt update failed notebookID=\(notebookID) error=\(error)")
+      appLog(
+        "❌ BundleManager.openNotebook lastAccessedAt update failed notebookID=\(notebookID) error=\(error)"
+      )
       handleManifest = manifest
     }
 

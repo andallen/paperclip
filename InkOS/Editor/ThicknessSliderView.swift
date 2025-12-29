@@ -231,7 +231,8 @@ final class ThicknessSliderView: UIView {
     }
     trackContainer.addSubview(thumbView)
 
-    thumbCenterXConstraint = thumbView.centerXAnchor.constraint(equalTo: trackContainer.leadingAnchor)
+    thumbCenterXConstraint = thumbView.centerXAnchor.constraint(
+      equalTo: trackContainer.leadingAnchor)
     thumbCenterXConstraint?.isActive = true
     thumbView.centerYAnchor.constraint(equalTo: trackContainer.centerYAnchor).isActive = true
     thumbView.widthAnchor.constraint(equalToConstant: thumbSize).isActive = true
