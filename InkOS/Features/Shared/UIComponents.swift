@@ -32,23 +32,15 @@ struct BackgroundWhite: View {
 extension View {
   func glassBackground(cornerRadius: CGFloat) -> some View {
     Group {
-      if #available(iOS 18.0, *) {
+      if #available(iOS 26.0, *) {
         self
           .glassEffect(.regular.interactive(), in: .rect(cornerRadius: cornerRadius))
-          .overlay(
-            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-              .stroke(Color.rule, lineWidth: 1)
-          )
       } else {
-        let opacity: Double = cornerRadius == 18 ? 0.82 : (cornerRadius == 12 ? 0.86 : 0.92)
+        // Falls back to a blurred material background on older iOS.
         self
           .background(
-            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-              .fill(Color.white.opacity(opacity))
-          )
-          .overlay(
-            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-              .stroke(Color.rule, lineWidth: 1)
+            .ultraThinMaterial,
+            in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
           )
       }
     }

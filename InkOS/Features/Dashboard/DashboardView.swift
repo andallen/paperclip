@@ -1,10 +1,12 @@
 import SwiftUI
 import UIKit
 
-// The Dashboard shows a list of Notebooks and provides create, rename, delete, and open actions.
+// The Dashboard shows a list of Notebooks and Folders, providing create, rename, delete, and open actions.
 // It does not contain storage logic. It forwards user actions to the Notebook Library.
+// swiftlint:disable type_body_length
+// Type body length exception justified: SwiftUI view with many computed subview properties for organization.
 struct DashboardView: View {
-  // The Notebook Library manages the list of notebooks and operations on them.
+  // The Notebook Library manages the list of notebooks, folders, and operations on them.
   @StateObject private var library = NotebookLibrary(bundleManager: BundleManager())
 
   // Tracks which notebook is being renamed.
@@ -22,30 +24,91 @@ struct DashboardView: View {
   // Tracks an error message when opening a notebook fails.
   @State private var openErrorMessage: String?
 
-  // Animation namespace for matched geometry transitions.
-  @Namespace private var animation
+  // Tracks whether the dashboard is loading items.
+  @State private var isLoadingItems = true
 
-  // Tracks whether the dashboard is loading notebooks.
-  @State private var isLoadingNotebooks = true
+  // MARK: - Folder State
+
+  // Tracks which folder is being renamed.
+  @State private var renamingFolder: FolderMetadata?
+
+  // Tracks which folder is being confirmed for deletion.
+  @State private var deletingFolder: FolderMetadata?
+
+  // Tracks which notebook is being moved to a folder.
+  @State private var movingNotebook: NotebookMetadata?
+
+  // Tracks whether the create folder alert is shown.
+  @State private var showCreateFolderAlert = false
+
+  // The name being typed when creating a new folder.
+  @State private var newFolderName: String = ""
+
+  // Cache of folder thumbnail images for display.
+  @State private var folderThumbnails: [String: [UIImage]] = [:]
+
+  // Tracks which folder ID is currently being targeted for drop.
+  @State private var dropTargetFolderID: String?
+
+  // MARK: - Folder Expansion State
+
+  // Namespace for matchedGeometryEffect animations between folder card and overlay.
+  @Namespace private var folderAnimationNamespace
+
+  // Tracks which folder is currently expanded (nil when no folder is open).
+  @State private var expandedFolder: FolderMetadata?
+
+  // Notebooks loaded for the currently expanded folder.
+  @State private var expandedFolderNotebooks: [NotebookMetadata] = []
+
+  // Controls the visibility state of the folder overlay for animation timing.
+  @State private var isFolderOverlayVisible = false
 
   var body: some View {
+    mainContent
+      .modifier(
+        DashboardViewModifiers(
+          library: library,
+          renamingNotebook: $renamingNotebook,
+          renameText: $renameText,
+          deletingNotebook: $deletingNotebook,
+          renamingFolder: $renamingFolder,
+          deletingFolder: $deletingFolder,
+          showCreateFolderAlert: $showCreateFolderAlert,
+          newFolderName: $newFolderName,
+          openErrorMessage: $openErrorMessage,
+          isLoadingItems: $isLoadingItems,
+          activeSession: $activeSession,
+          movingNotebook: $movingNotebook,
+          expandedFolder: $expandedFolder,
+          expandedFolderNotebooks: $expandedFolderNotebooks,
+          loadFolderThumbnails: loadFolderThumbnails
+        )
+      )
+      .toolbar {
+        toolbarContent
+      }
+  }
+
+  // MARK: - Main Content
+
+  private var mainContent: some View {
     ZStack(alignment: .topLeading) {
       // Keeps the background uniform and bright.
       Color.white
         .ignoresSafeArea()
 
       VStack(spacing: 0) {
-        // Notebook grid or empty state
-        if isLoadingNotebooks {
+        // Item grid or empty state.
+        if isLoadingItems {
           loadingState
-        } else if library.notebooks.isEmpty {
+        } else if library.items.isEmpty {
           emptyState
         } else {
-          notebookGrid
+          itemGrid
         }
-
-        Spacer(minLength: 0)
       }
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
 
       // Shows the title as a separate overlay above the transparent navigation bar.
       Text("Notes")
@@ -56,101 +119,69 @@ struct DashboardView: View {
         .padding(.top, 8)
         .offset(y: -60)
         .allowsHitTesting(false)
+
+      // Folder expansion overlay.
+      if let folder = expandedFolder {
+        FolderOverlay(
+          folder: folder,
+          notebooks: expandedFolderNotebooks,
+          namespace: folderAnimationNamespace,
+          isContentVisible: isFolderOverlayVisible,
+          onNotebookTap: { notebook in
+            openNotebookFromFolder(notebook)
+          },
+          onMoveToRoot: { notebook in
+            moveNotebookToRoot(notebook)
+          },
+          onRenameNotebook: { notebook, newName in
+            renameNotebookInFolder(notebook, newName: newName)
+          },
+          onDeleteNotebook: { notebook in
+            deleteNotebookInFolder(notebook)
+          },
+          onDismiss: {
+            closeFolder()
+          }
+        )
+        .zIndex(100)
+      }
     }
-    .fontDesign(.rounded)
-    .navigationBarTitleDisplayMode(.inline)
-    .toolbar {
-      // Adds a new notebook from the trailing navigation bar button.
-      ToolbarItem(placement: .navigationBarTrailing) {
+  }
+
+  // MARK: - Toolbar Content
+
+  @ToolbarContentBuilder
+  private var toolbarContent: some ToolbarContent {
+    // When folder is open: direct notebook creation (no menu).
+    // When no folder is open: shows menu with notebook and folder options.
+    ToolbarItem(placement: .navigationBarTrailing) {
+      if let folder = expandedFolder {
+        // Direct create button when folder is open.
         Button {
-          Task {
-            await library.createNotebook()
+          createNotebookInExpandedFolder(folder)
+        } label: {
+          Image(systemName: "plus")
+        }
+      } else {
+        // Menu with options when no folder is open.
+        Menu {
+          Button {
+            Task {
+              await library.createNotebook()
+            }
+          } label: {
+            Label("New Note", systemImage: "doc.badge.plus")
+          }
+
+          Button {
+            newFolderName = ""
+            showCreateFolderAlert = true
+          } label: {
+            Label("New Folder", systemImage: "folder.badge.plus")
           }
         } label: {
           Image(systemName: "plus")
         }
-      }
-    }
-    .toolbarBackground(.hidden, for: .navigationBar)
-    .tint(Color.offBlack)
-    .task {
-      isLoadingNotebooks = true
-      await library.loadBundles()
-      isLoadingNotebooks = false
-    }
-    .alert(
-      "Rename Notebook",
-      isPresented: .init(
-        get: { renamingNotebook != nil },
-        set: { if !$0 { renamingNotebook = nil } }
-      )
-    ) {
-      TextField("Notebook name", text: $renameText)
-      Button("Cancel", role: .cancel) {
-        renamingNotebook = nil
-      }
-      Button("Rename") {
-        let trimmedName = renameText.trimmingCharacters(in: .whitespaces)
-        if let notebook = renamingNotebook, !trimmedName.isEmpty {
-          Task {
-            await library.renameNotebook(notebookID: notebook.id, newDisplayName: trimmedName)
-          }
-        }
-        renamingNotebook = nil
-      }
-    } message: {
-      Text("Enter a new name for this notebook.")
-    }
-    .alert(
-      "Delete Notebook?",
-      isPresented: .init(
-        get: { deletingNotebook != nil },
-        set: { if !$0 { deletingNotebook = nil } }
-      )
-    ) {
-      Button("Cancel", role: .cancel) {
-        deletingNotebook = nil
-      }
-      Button("Delete", role: .destructive) {
-        if let notebook = deletingNotebook {
-          Task {
-            await library.deleteNotebook(notebookID: notebook.id)
-          }
-        }
-        deletingNotebook = nil
-      }
-    } message: {
-      if let notebook = deletingNotebook {
-        Text("\"\(notebook.displayName)\" will be permanently deleted. This cannot be undone.")
-      }
-    }
-    .alert(
-      "Unable to Open Notebook",
-      isPresented: .init(
-        get: { openErrorMessage != nil },
-        set: { if !$0 { openErrorMessage = nil } }
-      )
-    ) {
-      Button("OK", role: .cancel) {
-        openErrorMessage = nil
-      }
-    } message: {
-      Text(openErrorMessage ?? "Unknown error.")
-    }
-    .fullScreenCover(
-      item: $activeSession,
-      onDismiss: {
-        activeSession = nil
-      },
-      content: { session in
-        EditorHostView(documentHandle: session.handle)
-      }
-    )
-    .onReceive(NotificationCenter.default.publisher(for: .notebookPreviewUpdated)) { _ in
-      Task {
-        isLoadingNotebooks = true
-        await library.loadBundles()
-        isLoadingNotebooks = false
       }
     }
   }
@@ -202,43 +233,22 @@ struct DashboardView: View {
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
   }
 
-  // MARK: - Notebook Grid
+  // MARK: - Item Grid
 
-  private var notebookGrid: some View {
+  private var itemGrid: some View {
     ScrollView {
       LazyVGrid(
         columns: [
-          GridItem(.adaptive(minimum: 120, maximum: 160), spacing: 16)
+          GridItem(.adaptive(minimum: 90, maximum: 120), spacing: 12)
         ],
-        spacing: 16
+        spacing: 12
       ) {
-        ForEach(library.notebooks) { notebook in
-          NotebookCardButton(notebook: notebook) {
-            Task {
-              do {
-                let handle = try await library.openNotebook(notebookID: notebook.id)
-                activeSession = NotebookSession(
-                  id: notebook.id,
-                  handle: handle
-                )
-              } catch {
-                openErrorMessage = error.localizedDescription
-              }
-            }
-          }
-          .contextMenu {
-            Button {
-              renameText = notebook.displayName
-              renamingNotebook = notebook
-            } label: {
-              Label("Rename", systemImage: "pencil")
-            }
-
-            Button(role: .destructive) {
-              deletingNotebook = notebook
-            } label: {
-              Label("Delete", systemImage: "trash")
-            }
+        ForEach(library.items) { item in
+          switch item {
+          case .notebook(let notebook):
+            notebookCardView(notebook: notebook)
+          case .folder(let folder):
+            folderCardView(folder: folder)
           }
         }
       }
@@ -248,208 +258,404 @@ struct DashboardView: View {
     .padding(.top, 24)
   }
 
-  // MARK: - Actions
-}
+  // MARK: - Notebook Card View
 
-// MARK: - Notebook Session
-
-private struct NotebookSession: Identifiable {
-  let id: String
-  let handle: DocumentHandle
-}
-
-private struct NotebookCardButton: View {
-  let notebook: NotebookMetadata
-  let action: () -> Void
-  // Tracks finger-down state for tactile press effects.
-  @GestureState private var isPressed = false
-  // Drives a quick highlight flash on touch-down.
-  @State private var showHighlight = false
-  // Moves a bright sweep across the card on touch-down.
-  @State private var sweepOffset: CGFloat = -1.2
-
-  var body: some View {
-    let cardCornerRadius: CGFloat = 12
-    Button(action: action) {
-      NotebookCard(notebook: notebook)
-        .contentShape(Rectangle())
+  @ViewBuilder
+  private func notebookCardView(notebook: NotebookMetadata) -> some View {
+    NotebookCardButton(notebook: notebook) {
+      openNotebook(notebook)
     }
-    .buttonStyle(.plain)
-    // Scales the card while a finger is down.
-    .scaleEffect(isPressed ? 1.07 : 1.0)
-    .animation(.spring(response: 0.18, dampingFraction: 0.7), value: isPressed)
-    // Adds a quick highlight sweep to signal interactivity.
-    .overlay(
-      GeometryReader { proxy in
-        let sweepDistance = proxy.size.width * 1.2
-        ZStack {
-          RoundedRectangle(cornerRadius: cardCornerRadius, style: .continuous)
-            .fill(Color.white.opacity(showHighlight ? 0.7 : 0.0))
-            .blendMode(.screen)
-            .animation(.easeOut(duration: 0.28), value: showHighlight)
-
-          RoundedRectangle(cornerRadius: cardCornerRadius, style: .continuous)
-            .fill(
-              LinearGradient(
-                stops: [
-                  .init(color: Color.white.opacity(0.0), location: 0.0),
-                  .init(color: Color.white.opacity(0.45), location: 0.45),
-                  .init(color: Color.white.opacity(0.75), location: 0.55),
-                  .init(color: Color.white.opacity(0.0), location: 1.0)
-                ],
-                startPoint: .leading,
-                endPoint: .trailing
-              )
-            )
-            .blendMode(.screen)
-            .offset(x: sweepOffset * sweepDistance)
-            .opacity(showHighlight ? 1.0 : 0.0)
-        }
-        // Keeps the sweep confined to this card only.
-        .compositingGroup()
-        .clipShape(RoundedRectangle(cornerRadius: cardCornerRadius, style: .continuous))
+    .draggable(notebook)
+    .contextMenu {
+      Button {
+        renameText = notebook.displayName
+        renamingNotebook = notebook
+      } label: {
+        Label("Rename", systemImage: "pencil")
       }
-    )
-    .simultaneousGesture(
-      DragGesture(minimumDistance: 0)
-        .updating($isPressed) { _, state, _ in
-          state = true
+
+      if !library.folders.isEmpty {
+        Button {
+          movingNotebook = notebook
+        } label: {
+          Label("Move to Folder", systemImage: "folder")
         }
-        .onChanged { _ in
-          guard !showHighlight else { return }
-          showHighlight = true
-          sweepOffset = -1.2
-          withAnimation(.easeOut(duration: 0.5)) {
-            sweepOffset = 1.2
-          }
-          DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            showHighlight = false
-          }
-        }
-    )
+      }
+
+      Button(role: .destructive) {
+        deletingNotebook = notebook
+      } label: {
+        Label("Delete", systemImage: "trash")
+      }
+    }
   }
-}
 
-// MARK: - Notebook Card
+  // MARK: - Folder Card View
 
-private struct NotebookCard: View {
-  let notebook: NotebookMetadata
+  @ViewBuilder
+  private func folderCardView(folder: FolderMetadata) -> some View {
+    let isTargeted = dropTargetFolderID == folder.id
+    let thumbnails = folderThumbnails[folder.id] ?? []
+    let isExpanded = expandedFolder?.id == folder.id
 
-  var body: some View {
-    let previewImage = notebook.previewImageData.flatMap { UIImage(data: $0) }
-    let cardCornerRadius: CGFloat = 12
-    // Keeps a paper-like portrait ratio.
-    let cardAspectRatio: CGFloat = 0.72
-
-    GeometryReader { proxy in
-      let size = proxy.size
-      let shape = RoundedRectangle(cornerRadius: cardCornerRadius, style: .continuous)
-
-      let previewLayer =
-        ZStack {
-          // Ensures a clean base behind the preview.
-          Color.white
-
-          // Draws the preview or placeholder cover.
-          if let previewImage {
-            Image(uiImage: previewImage)
-              .resizable()
-              .scaledToFill()
-              .frame(width: size.width, height: size.height)
-              // Keeps the preview a touch softer and less bright.
-              .brightness(0.02)
-              .contrast(1.0)
-          } else {
-            RoundedRectangle(cornerRadius: cardCornerRadius, style: .continuous)
-              .fill(Color.white)
+    FolderCardButton(folder: folder, thumbnails: thumbnails) {
+      // Opens the folder overlay with animation.
+      openFolder(folder)
+    }
+    // Apply matchedGeometryEffect for position animation.
+    // The overlay takes over the matched ID when expanded.
+    .matchedGeometryEffect(
+      id: "folder-\(folder.id)",
+      in: folderAnimationNamespace,
+      isSource: !isExpanded
+    )
+    // Hide the source card when its folder is expanded.
+    .opacity(isExpanded ? 0 : 1)
+    .scaleEffect(isTargeted ? 1.08 : 1.0)
+    .animation(.spring(response: 0.2, dampingFraction: 0.7), value: isTargeted)
+    .onDrop(
+      of: [.notebookID],
+      delegate: FolderDropDelegate(
+        folderID: folder.id,
+        onNotebookDropped: { notebookID in
+          Task {
+            await library.moveNotebookToFolder(notebookID: notebookID, folderID: folder.id)
+            await loadFolderThumbnails()
           }
-        }
-        .frame(width: size.width, height: size.height)
-
-      ZStack(alignment: .bottomLeading) {
-        previewLayer
-
-        // Adds a feathered title band for readability.
-        NotebookTitleBand(
-          title: notebook.displayName,
-          lastAccessedAt: notebook.lastAccessedAt,
-          cornerRadius: cardCornerRadius
+        },
+        isTargeted: Binding(
+          get: { dropTargetFolderID == folder.id },
+          set: { newValue in
+            if newValue {
+              dropTargetFolderID = folder.id
+            } else if dropTargetFolderID == folder.id {
+              dropTargetFolderID = nil
+            }
+          }
         )
-      }
-      .frame(width: size.width, height: size.height)
-      .clipShape(shape)
-      // Adds a soft shadow for card lift.
-      .shadow(color: Color.black.opacity(0.16), radius: 9, x: 0, y: 6)
-    }
-    .aspectRatio(cardAspectRatio, contentMode: .fit)
-  }
-}
-
-private struct NotebookTitleBand: View {
-  let title: String
-  let lastAccessedAt: Date?
-  let cornerRadius: CGFloat
-
-  var body: some View {
-    ZStack(alignment: .bottomLeading) {
-      // Feathers the white backing into the preview.
-      Rectangle()
-        .fill(
-          LinearGradient(
-            stops: [
-              .init(color: Color.white.opacity(1.0), location: 0.0),
-              .init(color: Color.white.opacity(1.0), location: 0.28),
-              .init(color: Color.white.opacity(0.2), location: 0.3)
-              // .init(color: Color.white.opacity(0.0), location: 0.45),
-              // .init(color: Color.white.opacity(0.0), location: 0.7),
-            ],
-            startPoint: .bottom,
-            endPoint: .top
-          )
-        )
-      // Keeps the title readable on top of the preview.
-      VStack(alignment: .leading, spacing: 2) {
-        Text(title)
-          .font(.system(size: 14, weight: .semibold))
-          .foregroundStyle(Color.black)
-          .lineLimit(1)
-          .truncationMode(.tail)
-
-        if let subtitle = formattedAccessDate {
-          Text(subtitle)
-            .font(.system(size: 12, weight: .medium))
-            .foregroundStyle(Color.black.opacity(0.55))
-            .lineLimit(1)
-            .truncationMode(.tail)
-        }
-      }
-      .padding(.horizontal, 12)
-      .padding(.bottom, 10)
-      .padding(.top, 8)
-    }
-    .clipShape(
-      RoundedCornerShape(
-        radius: cornerRadius,
-        corners: [.bottomLeft, .bottomRight]
       )
     )
-  }
+    .contextMenu {
+      Button {
+        renameText = folder.displayName
+        renamingFolder = folder
+      } label: {
+        Label("Rename Folder", systemImage: "pencil")
+      }
 
-  // Formats a short date string for the last access label.
-  private var formattedAccessDate: String? {
-    guard let lastAccessedAt else {
-      return nil
+      Button(role: .destructive) {
+        deletingFolder = folder
+      } label: {
+        Label("Delete Folder", systemImage: "trash")
+      }
     }
-    return Self.dateFormatter.string(from: lastAccessedAt)
   }
 
-  // Reuses a single formatter for performance.
-  private static let dateFormatter: DateFormatter = {
-    let formatter = DateFormatter()
-    formatter.locale = Locale(identifier: "en_US_POSIX")
-    formatter.dateFormat = "h:mm a  MM/dd/yy"
-    return formatter
-  }()
+  // MARK: - Actions
+
+  // Opens a notebook from the main grid.
+  private func openNotebook(_ notebook: NotebookMetadata) {
+    Task {
+      do {
+        let handle = try await library.openNotebook(notebookID: notebook.id)
+        activeSession = NotebookSession(
+          id: notebook.id,
+          handle: handle
+        )
+      } catch {
+        openErrorMessage = error.localizedDescription
+      }
+    }
+  }
+
+  // MARK: - Folder Expansion Actions
+
+  // Opens a folder and loads its notebooks for display in the overlay.
+  private func openFolder(_ folder: FolderMetadata) {
+    Task {
+      // Load notebooks before showing overlay.
+      let notebooks = await library.notebooksInFolder(folderID: folder.id)
+      expandedFolderNotebooks = notebooks
+
+      // Animate the folder expansion.
+      withAnimation(.spring(response: 0.35, dampingFraction: 0.78)) {
+        expandedFolder = folder
+      }
+
+      // Slight delay for content to fade in after position animation starts.
+      try? await Task.sleep(nanoseconds: 50_000_000)
+      withAnimation(.easeOut(duration: 0.2)) {
+        isFolderOverlayVisible = true
+      }
+    }
+  }
+
+  // Closes the expanded folder with reverse animation.
+  private func closeFolder() {
+    // Fade out content first.
+    withAnimation(.easeIn(duration: 0.15)) {
+      isFolderOverlayVisible = false
+    }
+
+    // Then animate back to source position.
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
+      withAnimation(.spring(response: 0.32, dampingFraction: 0.8)) {
+        expandedFolder = nil
+      }
+      expandedFolderNotebooks = []
+    }
+  }
+
+  // Opens a notebook from within the expanded folder overlay.
+  private func openNotebookFromFolder(_ notebook: NotebookMetadata) {
+    // Close the folder first, then open the notebook.
+    closeFolder()
+
+    // Small delay to allow folder close animation to start.
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+      openNotebook(notebook)
+    }
+  }
+
+  // Creates a notebook directly inside the currently expanded folder.
+  private func createNotebookInExpandedFolder(_ folder: FolderMetadata) {
+    Task { @MainActor in
+      _ = await library.createNotebookInFolder(
+        folderID: folder.id,
+        displayName: "Untitled Notebook"
+      )
+      await library.loadBundles()
+      await loadFolderThumbnails()
+      let updatedNotebooks = await library.notebooksInFolder(folderID: folder.id)
+      withAnimation(.easeInOut(duration: 0.2)) {
+        expandedFolderNotebooks = updatedNotebooks
+      }
+    }
+  }
+
+  // Renames a notebook inside the expanded folder and refreshes the display.
+  private func renameNotebookInFolder(_ notebook: NotebookMetadata, newName: String) {
+    guard let folder = expandedFolder else { return }
+    Task { @MainActor in
+      await library.renameNotebook(notebookID: notebook.id, newDisplayName: newName)
+      await library.loadBundles()
+      await loadFolderThumbnails()
+      let updatedNotebooks = await library.notebooksInFolder(folderID: folder.id)
+      withAnimation(.easeInOut(duration: 0.2)) {
+        expandedFolderNotebooks = updatedNotebooks
+      }
+    }
+  }
+
+  // Moves a notebook out of the expanded folder to the root level.
+  private func moveNotebookToRoot(_ notebook: NotebookMetadata) {
+    guard let folder = expandedFolder else { return }
+    Task { @MainActor in
+      await library.moveNotebookToRoot(notebookID: notebook.id, fromFolderID: folder.id)
+      await library.loadBundles()
+      await loadFolderThumbnails()
+      let updatedNotebooks = await library.notebooksInFolder(folderID: folder.id)
+      withAnimation(.easeInOut(duration: 0.2)) {
+        expandedFolderNotebooks = updatedNotebooks
+      }
+    }
+  }
+
+  // Deletes a notebook inside the expanded folder and refreshes the display.
+  private func deleteNotebookInFolder(_ notebook: NotebookMetadata) {
+    guard let folder = expandedFolder else { return }
+    Task { @MainActor in
+      await library.deleteNotebook(notebookID: notebook.id)
+      await library.loadBundles()
+      await loadFolderThumbnails()
+      let updatedNotebooks = await library.notebooksInFolder(folderID: folder.id)
+      withAnimation(.easeInOut(duration: 0.2)) {
+        expandedFolderNotebooks = updatedNotebooks
+      }
+    }
+  }
+
+  // Loads thumbnail images for all folders.
+  private func loadFolderThumbnails() async {
+    var thumbnails: [String: [UIImage]] = [:]
+    for folder in library.folders {
+      var images: [UIImage] = []
+      for imageData in folder.previewImages.prefix(4) {
+        if let image = UIImage(data: imageData) {
+          images.append(image)
+        }
+      }
+      thumbnails[folder.id] = images
+    }
+    folderThumbnails = thumbnails
+  }
+}
+// swiftlint:enable type_body_length
+
+// View modifier that encapsulates all the modifiers applied to the dashboard main content.
+// Breaks complex modifier chains into manageable pieces to help Swift compiler type-check.
+struct DashboardViewModifiers: ViewModifier {
+  let library: NotebookLibrary
+  @Binding var renamingNotebook: NotebookMetadata?
+  @Binding var renameText: String
+  @Binding var deletingNotebook: NotebookMetadata?
+  @Binding var renamingFolder: FolderMetadata?
+  @Binding var deletingFolder: FolderMetadata?
+  @Binding var showCreateFolderAlert: Bool
+  @Binding var newFolderName: String
+  @Binding var openErrorMessage: String?
+  @Binding var isLoadingItems: Bool
+  @Binding var activeSession: NotebookSession?
+  @Binding var movingNotebook: NotebookMetadata?
+  @Binding var expandedFolder: FolderMetadata?
+  @Binding var expandedFolderNotebooks: [NotebookMetadata]
+  let loadFolderThumbnails: () async -> Void
+
+  func body(content: Content) -> some View {
+    content
+      .fontDesign(.rounded)
+      .navigationBarTitleDisplayMode(.inline)
+      .toolbarBackground(.hidden, for: .navigationBar)
+      .tint(Color.offBlack)
+      .task {
+        isLoadingItems = true
+        await library.loadBundles()
+        await loadFolderThumbnails()
+        isLoadingItems = false
+      }
+      .modifier(
+        AlertModifiers(
+          renamingNotebook: $renamingNotebook,
+          renameText: $renameText,
+          deletingNotebook: $deletingNotebook,
+          renamingFolder: $renamingFolder,
+          deletingFolder: $deletingFolder,
+          showCreateFolderAlert: $showCreateFolderAlert,
+          newFolderName: $newFolderName,
+          openErrorMessage: $openErrorMessage,
+          library: library,
+          onCreateFolder: {
+            await loadFolderThumbnails()
+          }
+        )
+      )
+      .modifier(
+        DashboardSheetModifiers(
+          activeSession: $activeSession,
+          movingNotebook: $movingNotebook,
+          expandedFolder: $expandedFolder,
+          expandedFolderNotebooks: $expandedFolderNotebooks,
+          renamingNotebook: $renamingNotebook,
+          deletingNotebook: $deletingNotebook,
+          library: library,
+          showCreateFolderAlert: $showCreateFolderAlert,
+          newFolderName: $newFolderName,
+          isLoadingItems: $isLoadingItems,
+          loadFolderThumbnails: loadFolderThumbnails
+        ))
+  }
+}
+
+// Encapsulates sheet and fullScreenCover modifiers for the dashboard.
+struct DashboardSheetModifiers: ViewModifier {
+  @Binding var activeSession: NotebookSession?
+  @Binding var movingNotebook: NotebookMetadata?
+  @Binding var expandedFolder: FolderMetadata?
+  @Binding var expandedFolderNotebooks: [NotebookMetadata]
+  @Binding var renamingNotebook: NotebookMetadata?
+  @Binding var deletingNotebook: NotebookMetadata?
+  let library: NotebookLibrary
+  @Binding var showCreateFolderAlert: Bool
+  @Binding var newFolderName: String
+  @Binding var isLoadingItems: Bool
+  let loadFolderThumbnails: () async -> Void
+
+  func body(content: Content) -> some View {
+    content
+      .fullScreenCover(
+        item: $activeSession,
+        onDismiss: {
+          activeSession = nil
+        },
+        content: { session in
+          EditorHostView(documentHandle: session.handle)
+        }
+      )
+      .sheet(item: $movingNotebook) { notebook in
+        MoveToFolderSheet(
+          notebook: notebook,
+          folders: library.folders,
+          onSelectFolder: { folder in
+            Task {
+              await library.moveNotebookToFolder(notebookID: notebook.id, folderID: folder.id)
+              await loadFolderThumbnails()
+            }
+            movingNotebook = nil
+          },
+          onCreateNewFolder: {
+            movingNotebook = nil
+            newFolderName = ""
+            showCreateFolderAlert = true
+          },
+          onDismiss: {
+            movingNotebook = nil
+          }
+        )
+      }
+      .modifier(
+        DashboardNotificationModifiers(
+          expandedFolder: $expandedFolder,
+          expandedFolderNotebooks: $expandedFolderNotebooks,
+          renamingNotebook: $renamingNotebook,
+          deletingNotebook: $deletingNotebook,
+          isLoadingItems: $isLoadingItems,
+          library: library,
+          loadFolderThumbnails: loadFolderThumbnails
+        ))
+  }
+}
+
+// Encapsulates notification and onChange modifiers for the dashboard.
+struct DashboardNotificationModifiers: ViewModifier {
+  @Binding var expandedFolder: FolderMetadata?
+  @Binding var expandedFolderNotebooks: [NotebookMetadata]
+  @Binding var renamingNotebook: NotebookMetadata?
+  @Binding var deletingNotebook: NotebookMetadata?
+  @Binding var isLoadingItems: Bool
+  let library: NotebookLibrary
+  let loadFolderThumbnails: () async -> Void
+
+  func body(content: Content) -> some View {
+    content
+      .onReceive(NotificationCenter.default.publisher(for: .notebookPreviewUpdated)) { _ in
+        Task {
+          isLoadingItems = true
+          await library.loadBundles()
+          await loadFolderThumbnails()
+          isLoadingItems = false
+
+          // Refresh expanded folder contents if a folder is open.
+          if let folder = expandedFolder {
+            expandedFolderNotebooks = await library.notebooksInFolder(folderID: folder.id)
+          }
+        }
+      }
+      // Refresh folder contents when rename or delete dialogs are dismissed.
+      .onChange(of: renamingNotebook) { _, newValue in
+        if newValue == nil, let folder = expandedFolder {
+          Task {
+            expandedFolderNotebooks = await library.notebooksInFolder(folderID: folder.id)
+          }
+        }
+      }
+      .onChange(of: deletingNotebook) { _, newValue in
+        if newValue == nil, let folder = expandedFolder {
+          Task {
+            expandedFolderNotebooks = await library.notebooksInFolder(folderID: folder.id)
+          }
+        }
+      }
+  }
 }
 
 #if DEBUG
