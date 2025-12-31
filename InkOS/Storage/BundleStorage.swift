@@ -36,4 +36,17 @@ enum BundleStorage {
 
     return bundlesURL
   }
+
+  // Synchronous version of bundlesDirectory for use in non-async contexts.
+  // Returns the URL to the folder where Bundles are stored without creating it.
+  // Throws if the Documents directory cannot be accessed.
+  static func bundlesDirectorySync() throws -> URL {
+    let documentsURL = try FileManager.default.url(
+      for: .documentDirectory,
+      in: .userDomainMask,
+      appropriateFor: nil,
+      create: false
+    )
+    return documentsURL.appendingPathComponent(bundlesFolderName, isDirectory: true)
+  }
 }

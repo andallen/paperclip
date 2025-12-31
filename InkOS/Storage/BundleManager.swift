@@ -3,7 +3,8 @@ import Foundation
 // Represents a Notebook in the list returned by the Bundle Manager.
 // Contains only the metadata needed to display the Notebook in the Dashboard.
 // Sendable so it can be passed across actor boundaries.
-struct NotebookMetadata: Identifiable, Sendable {
+// Equatable to support onChange modifiers for UI state tracking.
+struct NotebookMetadata: Identifiable, Sendable, Equatable {
   // Unique identifier for this Notebook.
   let id: String
 
@@ -31,6 +32,9 @@ actor BundleManager {
   // The name of the preview image inside each Bundle.
   private static let previewImageFileName = "preview.png"
 
+  // The name of the folder manifest file that distinguishes folders from notebooks.
+  private static let folderManifestFileName = FolderConstants.folderManifestFileName
+
   // Lists all existing Bundles in the Notebooks directory.
   // Returns an array of NotebookMetadata for each Bundle that has a valid Manifest.
   // Skips Bundles that don't have a Manifest or have invalid Manifests.
@@ -55,6 +59,12 @@ actor BundleManager {
       // Check if this is a directory.
       let resourceValues = try url.resourceValues(forKeys: [.isDirectoryKey])
       guard resourceValues.isDirectory == true else {
+        continue
+      }
+
+      // Skip folders (directories containing folder.json).
+      let folderManifestURL = url.appendingPathComponent(Self.folderManifestFileName)
+      if fileManager.fileExists(atPath: folderManifestURL.path) {
         continue
       }
 
@@ -159,20 +169,12 @@ actor BundleManager {
   // Also updates the modifiedAt timestamp.
   // Throws if the Bundle doesn't exist or the Manifest cannot be read or written.
   func renameBundle(notebookID: String, newDisplayName: String) async throws {
-    // Get the directory where Bundles are stored.
-    let bundlesDirectory = try await BundleStorage.bundlesDirectory()
-
-    // Find the Bundle folder.
-    let bundleURL = bundlesDirectory.appendingPathComponent(notebookID, isDirectory: true)
-    let fileManager = FileManager.default
-
-    // Check if the Bundle exists.
-    var isDirectory: ObjCBool = false
-    guard fileManager.fileExists(atPath: bundleURL.path, isDirectory: &isDirectory),
-      isDirectory.boolValue
-    else {
+    // Find the Bundle URL by searching root level and all folders.
+    guard let bundleURL = try findBundleURL(notebookID: notebookID) else {
       throw BundleError.bundleNotFound(notebookID: notebookID)
     }
+
+    let fileManager = FileManager.default
 
     // Read the existing Manifest.
     let manifestURL = bundleURL.appendingPathComponent(Self.manifestFileName)
@@ -192,6 +194,7 @@ actor BundleManager {
   }
 
   // Deletes a Bundle folder and all its contents including the iink package.
+  // Searches both root level and inside folders to find the notebook.
   // Throws if the Bundle doesn't exist or cannot be deleted.
   func deleteBundle(notebookID: String) async throws {
     // Validate the notebookID is not empty.
@@ -199,20 +202,12 @@ actor BundleManager {
       throw BundleError.bundleNotFound(notebookID: notebookID)
     }
 
-    // Get the directory where Bundles are stored.
-    let bundlesDirectory = try await BundleStorage.bundlesDirectory()
-
-    // Find the Bundle folder.
-    let bundleURL = bundlesDirectory.appendingPathComponent(notebookID, isDirectory: true)
-    let fileManager = FileManager.default
-
-    // Check if the Bundle exists.
-    var isDirectory: ObjCBool = false
-    guard fileManager.fileExists(atPath: bundleURL.path, isDirectory: &isDirectory),
-      isDirectory.boolValue
-    else {
+    // Find the Bundle URL by searching root level and all folders.
+    guard let bundleURL = try findBundleURL(notebookID: notebookID) else {
       throw BundleError.bundleNotFound(notebookID: notebookID)
     }
+
+    let fileManager = FileManager.default
 
     // Delete the iink package using the engine if it exists.
     let iinkPath =
@@ -242,22 +237,15 @@ actor BundleManager {
   // Opens a Notebook and returns a DocumentHandle for safe access.
   // Validates that the Bundle exists, the Manifest can be decoded,
   // the version is supported, and required fields are present.
+  // Searches both root level and inside folders to find the notebook.
   // Throws if any validation fails.
   // swiftlint:disable function_body_length
   // Function requires comprehensive validation and error handling for notebook opening
   func openNotebook(id notebookID: String) async throws -> DocumentHandle {
-    // Get the directory where Bundles are stored.
-    let bundlesDirectory = try await BundleStorage.bundlesDirectory()
-
-    // Build the Bundle folder URL from the notebook ID.
-    let bundleURL = bundlesDirectory.appendingPathComponent(notebookID, isDirectory: true)
     let fileManager = FileManager.default
 
-    // Check if the Bundle exists.
-    var isDirectory: ObjCBool = false
-    guard fileManager.fileExists(atPath: bundleURL.path, isDirectory: &isDirectory),
-      isDirectory.boolValue
-    else {
+    // Find the Bundle URL by searching root level and all folders.
+    guard let bundleURL = try findBundleURL(notebookID: notebookID) else {
       throw BundleError.bundleNotFound(notebookID: notebookID)
     }
 
@@ -357,6 +345,396 @@ actor BundleManager {
       try fileManager.removeItem(at: url)
     }
     try fileManager.moveItem(at: tempURL, to: url)
+  }
+
+  // Writes a FolderManifest to disk using atomic write.
+  // Writes to a temporary file first, then replaces the target file.
+  private func writeFolderManifest(_ manifest: FolderManifest, to url: URL) throws {
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+    encoder.dateEncodingStrategy = .iso8601
+    let data = try encoder.encode(manifest)
+
+    let tempURL = url.deletingLastPathComponent().appendingPathComponent(
+      ".\(url.lastPathComponent).tmp")
+    try data.write(to: tempURL, options: [.atomic])
+
+    let fileManager = FileManager.default
+    if fileManager.fileExists(atPath: url.path) {
+      try fileManager.removeItem(at: url)
+    }
+    try fileManager.moveItem(at: tempURL, to: url)
+  }
+
+  // MARK: - Folder Operations
+
+  // Lists all folders in the Notebooks directory.
+  // Returns an array of FolderMetadata for each folder that has a valid folder.json.
+  // Skips directories that have manifest.json (those are notebooks, not folders).
+  func listFolders() async throws -> [FolderMetadata] {
+    let bundlesDirectory = try await BundleStorage.bundlesDirectory()
+    let fileManager = FileManager.default
+
+    let contents = try fileManager.contentsOfDirectory(
+      at: bundlesDirectory,
+      includingPropertiesForKeys: [.isDirectoryKey],
+      options: [.skipsHiddenFiles]
+    )
+
+    var folders: [FolderMetadata] = []
+
+    for url in contents {
+      let resourceValues = try url.resourceValues(forKeys: [.isDirectoryKey])
+      guard resourceValues.isDirectory == true else {
+        continue
+      }
+
+      // Check for folder.json to identify folders.
+      let folderManifestURL = url.appendingPathComponent(Self.folderManifestFileName)
+      guard fileManager.fileExists(atPath: folderManifestURL.path) else {
+        continue
+      }
+
+      // Read and decode the folder manifest.
+      do {
+        let data = try Data(contentsOf: folderManifestURL)
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let folderManifest = try decoder.decode(FolderManifest.self, from: data)
+
+        // Collect preview images and notebook count from contained notebooks.
+        let notebooksInFolder = try listBundlesInFolderInternal(folderURL: url)
+        let previewImages = notebooksInFolder
+          .prefix(FolderConstants.maxPreviewImages)
+          .compactMap { $0.previewImageData }
+
+        folders.append(
+          FolderMetadata(
+            id: folderManifest.folderID,
+            displayName: folderManifest.displayName,
+            previewImages: previewImages,
+            notebookCount: notebooksInFolder.count,
+            modifiedAt: folderManifest.modifiedAt
+          ))
+      } catch {
+        // Skip folders with invalid manifests.
+        continue
+      }
+    }
+
+    return folders
+  }
+
+  // Lists all notebooks contained within a specific folder.
+  // Returns an array of NotebookMetadata for each notebook in the folder.
+  func listBundlesInFolder(folderID: String) async throws -> [NotebookMetadata] {
+    // Validate folder ID is not empty.
+    guard !folderID.isEmpty else {
+      throw FolderBundleError.folderNotFound(folderID: folderID)
+    }
+
+    let bundlesDirectory = try await BundleStorage.bundlesDirectory()
+    let folderURL = bundlesDirectory.appendingPathComponent(folderID, isDirectory: true)
+    let fileManager = FileManager.default
+
+    // Check if the folder exists.
+    var isDirectory: ObjCBool = false
+    guard fileManager.fileExists(atPath: folderURL.path, isDirectory: &isDirectory),
+      isDirectory.boolValue
+    else {
+      throw FolderBundleError.folderNotFound(folderID: folderID)
+    }
+
+    // Check that this is actually a folder (has folder.json).
+    let folderManifestURL = folderURL.appendingPathComponent(Self.folderManifestFileName)
+    guard fileManager.fileExists(atPath: folderManifestURL.path) else {
+      throw FolderBundleError.folderNotFound(folderID: folderID)
+    }
+
+    return try listBundlesInFolderInternal(folderURL: folderURL)
+  }
+
+  // Internal helper to list notebooks in a folder URL.
+  private func listBundlesInFolderInternal(folderURL: URL) throws -> [NotebookMetadata] {
+    let fileManager = FileManager.default
+    let contents = try fileManager.contentsOfDirectory(
+      at: folderURL,
+      includingPropertiesForKeys: [.isDirectoryKey],
+      options: [.skipsHiddenFiles]
+    )
+
+    var notebooks: [NotebookMetadata] = []
+
+    for url in contents {
+      let resourceValues = try url.resourceValues(forKeys: [.isDirectoryKey])
+      guard resourceValues.isDirectory == true else {
+        continue
+      }
+
+      // Try to read the Manifest from this Bundle.
+      let manifestURL = url.appendingPathComponent(Self.manifestFileName)
+      guard fileManager.fileExists(atPath: manifestURL.path) else {
+        continue
+      }
+
+      do {
+        let data = try Data(contentsOf: manifestURL)
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let manifest = try decoder.decode(Manifest.self, from: data)
+        let previewURL = url.appendingPathComponent(Self.previewImageFileName)
+        let previewData: Data? =
+          fileManager.fileExists(atPath: previewURL.path)
+          ? try? Data(contentsOf: previewURL) : nil
+
+        notebooks.append(
+          NotebookMetadata(
+            id: manifest.notebookID,
+            displayName: manifest.displayName,
+            previewImageData: previewData,
+            lastAccessedAt: manifest.lastAccessedAt ?? manifest.modifiedAt
+          ))
+      } catch {
+        // Skip notebooks with invalid manifests.
+        continue
+      }
+    }
+
+    return notebooks
+  }
+
+  // Creates a new folder with the given display name.
+  // Generates a UUID for the folder ID.
+  // Creates folder.json with initial metadata.
+  func createFolder(displayName: String) async throws -> FolderMetadata {
+    let folderID = UUID().uuidString
+    let bundlesDirectory = try await BundleStorage.bundlesDirectory()
+
+    // Create the folder directory.
+    let folderURL = bundlesDirectory.appendingPathComponent(folderID, isDirectory: true)
+    try FileManager.default.createDirectory(
+      at: folderURL,
+      withIntermediateDirectories: true,
+      attributes: nil
+    )
+
+    // Create and write the folder manifest.
+    let folderManifest = FolderManifest(folderID: folderID, displayName: displayName)
+    let folderManifestURL = folderURL.appendingPathComponent(Self.folderManifestFileName)
+    try writeFolderManifest(folderManifest, to: folderManifestURL)
+
+    return FolderMetadata(
+      id: folderID,
+      displayName: displayName,
+      previewImages: [],
+      notebookCount: 0,
+      modifiedAt: folderManifest.modifiedAt
+    )
+  }
+
+  // Renames a folder by updating the display name in folder.json.
+  // Updates the modifiedAt timestamp.
+  func renameFolder(folderID: String, newDisplayName: String) async throws {
+    guard !folderID.isEmpty else {
+      throw FolderBundleError.folderNotFound(folderID: folderID)
+    }
+
+    let bundlesDirectory = try await BundleStorage.bundlesDirectory()
+    let folderURL = bundlesDirectory.appendingPathComponent(folderID, isDirectory: true)
+    let fileManager = FileManager.default
+
+    // Check if the folder exists.
+    var isDirectory: ObjCBool = false
+    guard fileManager.fileExists(atPath: folderURL.path, isDirectory: &isDirectory),
+      isDirectory.boolValue
+    else {
+      throw FolderBundleError.folderNotFound(folderID: folderID)
+    }
+
+    // Check that this is actually a folder.
+    let folderManifestURL = folderURL.appendingPathComponent(Self.folderManifestFileName)
+    guard fileManager.fileExists(atPath: folderManifestURL.path) else {
+      throw FolderBundleError.folderNotFound(folderID: folderID)
+    }
+
+    // Read and update the folder manifest.
+    let data = try Data(contentsOf: folderManifestURL)
+    let decoder = JSONDecoder()
+    decoder.dateDecodingStrategy = .iso8601
+    var folderManifest = try decoder.decode(FolderManifest.self, from: data)
+    folderManifest.displayName = newDisplayName
+    folderManifest.modifiedAt = Date()
+
+    try writeFolderManifest(folderManifest, to: folderManifestURL)
+  }
+
+  // Deletes a folder and ALL notebooks contained within it.
+  // This is a destructive operation that removes the folder directory recursively.
+  func deleteFolder(folderID: String) async throws {
+    guard !folderID.isEmpty else {
+      throw FolderBundleError.folderNotFound(folderID: folderID)
+    }
+
+    let bundlesDirectory = try await BundleStorage.bundlesDirectory()
+    let folderURL = bundlesDirectory.appendingPathComponent(folderID, isDirectory: true)
+    let fileManager = FileManager.default
+
+    // Check if the folder exists.
+    var isDirectory: ObjCBool = false
+    guard fileManager.fileExists(atPath: folderURL.path, isDirectory: &isDirectory),
+      isDirectory.boolValue
+    else {
+      throw FolderBundleError.folderNotFound(folderID: folderID)
+    }
+
+    // Check that this is actually a folder.
+    let folderManifestURL = folderURL.appendingPathComponent(Self.folderManifestFileName)
+    guard fileManager.fileExists(atPath: folderManifestURL.path) else {
+      throw FolderBundleError.folderNotFound(folderID: folderID)
+    }
+
+    // Delete iink packages for all notebooks in the folder.
+    let notebooks = try listBundlesInFolderInternal(folderURL: folderURL)
+    for notebook in notebooks {
+      let notebookURL = folderURL.appendingPathComponent(notebook.id, isDirectory: true)
+      let iinkPath =
+        notebookURL
+        .appendingPathComponent(Self.iinkFileName)
+        .path
+        .decomposedStringWithCanonicalMapping
+
+      if fileManager.fileExists(atPath: iinkPath) {
+        await MainActor.run {
+          guard let engine = EngineProvider.sharedInstance.engine else { return }
+          do {
+            try engine.deletePackage(iinkPath)
+          } catch {
+            // Package deletion failed, folder delete will clean it up.
+          }
+        }
+      }
+    }
+
+    // Delete the entire folder directory.
+    try fileManager.removeItem(at: folderURL)
+  }
+
+  // Moves a notebook from its current location (root or another folder) into the specified folder.
+  // Physically moves the notebook directory.
+  func moveNotebookToFolder(notebookID: String, folderID: String) async throws {
+    guard !notebookID.isEmpty else {
+      throw BundleError.bundleNotFound(notebookID: notebookID)
+    }
+    guard !folderID.isEmpty else {
+      throw FolderBundleError.folderNotFound(folderID: folderID)
+    }
+
+    let bundlesDirectory = try await BundleStorage.bundlesDirectory()
+    let fileManager = FileManager.default
+
+    // Verify the folder exists and is actually a folder.
+    let folderURL = bundlesDirectory.appendingPathComponent(folderID, isDirectory: true)
+    var isDirectory: ObjCBool = false
+    guard fileManager.fileExists(atPath: folderURL.path, isDirectory: &isDirectory),
+      isDirectory.boolValue
+    else {
+      throw FolderBundleError.folderNotFound(folderID: folderID)
+    }
+    let folderManifestURL = folderURL.appendingPathComponent(Self.folderManifestFileName)
+    guard fileManager.fileExists(atPath: folderManifestURL.path) else {
+      throw FolderBundleError.folderNotFound(folderID: folderID)
+    }
+
+    // Find the notebook's current location.
+    guard let currentNotebookURL = try findBundleURL(notebookID: notebookID) else {
+      throw BundleError.bundleNotFound(notebookID: notebookID)
+    }
+
+    // Check if notebook is already in the target folder.
+    let destinationURL = folderURL.appendingPathComponent(notebookID, isDirectory: true)
+    if currentNotebookURL.path == destinationURL.path {
+      throw FolderBundleError.notebookAlreadyInFolder(notebookID: notebookID, folderID: folderID)
+    }
+
+    // Move the notebook directory.
+    try fileManager.moveItem(at: currentNotebookURL, to: destinationURL)
+  }
+
+  // Moves a notebook from a folder to the root level (Documents/Notebooks/).
+  // Requires specifying which folder the notebook is in for validation.
+  func moveNotebookToRoot(notebookID: String, fromFolderID: String) async throws {
+    guard !notebookID.isEmpty else {
+      throw BundleError.bundleNotFound(notebookID: notebookID)
+    }
+    guard !fromFolderID.isEmpty else {
+      throw FolderBundleError.folderNotFound(folderID: fromFolderID)
+    }
+
+    let bundlesDirectory = try await BundleStorage.bundlesDirectory()
+    let fileManager = FileManager.default
+
+    // Verify the folder exists and is actually a folder.
+    let folderURL = bundlesDirectory.appendingPathComponent(fromFolderID, isDirectory: true)
+    var isDirectory: ObjCBool = false
+    guard fileManager.fileExists(atPath: folderURL.path, isDirectory: &isDirectory),
+      isDirectory.boolValue
+    else {
+      throw FolderBundleError.folderNotFound(folderID: fromFolderID)
+    }
+    let folderManifestURL = folderURL.appendingPathComponent(Self.folderManifestFileName)
+    guard fileManager.fileExists(atPath: folderManifestURL.path) else {
+      throw FolderBundleError.folderNotFound(folderID: fromFolderID)
+    }
+
+    // Check if the notebook exists in the specified folder.
+    let notebookInFolderURL = folderURL.appendingPathComponent(notebookID, isDirectory: true)
+    let notebookManifestURL = notebookInFolderURL.appendingPathComponent(Self.manifestFileName)
+    guard fileManager.fileExists(atPath: notebookManifestURL.path) else {
+      throw FolderBundleError.notebookNotInFolder(notebookID: notebookID)
+    }
+
+    // Move the notebook to root level.
+    let destinationURL = bundlesDirectory.appendingPathComponent(notebookID, isDirectory: true)
+    try fileManager.moveItem(at: notebookInFolderURL, to: destinationURL)
+  }
+
+  // Finds the bundle URL for a notebook, checking both root and all folders.
+  // Returns nil if the notebook is not found.
+  private func findBundleURL(notebookID: String) throws -> URL? {
+    let bundlesDirectory = try BundleStorage.bundlesDirectorySync()
+    let fileManager = FileManager.default
+
+    // Check root level first.
+    let rootBundleURL = bundlesDirectory.appendingPathComponent(notebookID, isDirectory: true)
+    let rootManifestURL = rootBundleURL.appendingPathComponent(Self.manifestFileName)
+    if fileManager.fileExists(atPath: rootManifestURL.path) {
+      return rootBundleURL
+    }
+
+    // Search inside folders.
+    let contents = try fileManager.contentsOfDirectory(
+      at: bundlesDirectory,
+      includingPropertiesForKeys: [.isDirectoryKey],
+      options: [.skipsHiddenFiles]
+    )
+
+    for url in contents {
+      let resourceValues = try url.resourceValues(forKeys: [.isDirectoryKey])
+      guard resourceValues.isDirectory == true else { continue }
+
+      // Check if this is a folder.
+      let folderManifestURL = url.appendingPathComponent(Self.folderManifestFileName)
+      guard fileManager.fileExists(atPath: folderManifestURL.path) else { continue }
+
+      // Check for notebook inside this folder.
+      let nestedBundleURL = url.appendingPathComponent(notebookID, isDirectory: true)
+      let nestedManifestURL = nestedBundleURL.appendingPathComponent(Self.manifestFileName)
+      if fileManager.fileExists(atPath: nestedManifestURL.path) {
+        return nestedBundleURL
+      }
+    }
+
+    return nil
   }
 }
 
