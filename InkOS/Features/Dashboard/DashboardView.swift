@@ -84,6 +84,11 @@ struct DashboardView: View {
   // Using @State with a class preserves the reference across view updates.
   @State private var cardFrameStore = CardFrameStore()
 
+  // MARK: - Custom Context Menu State
+
+  // Tracks the active context menu state (nil when no menu is shown).
+  @State private var contextMenuState: ContextMenuState?
+
   var body: some View {
     mainContent
       .modifier(
@@ -113,7 +118,7 @@ struct DashboardView: View {
   // MARK: - Main Content
 
   private var mainContent: some View {
-    GeometryReader { screenGeometry in
+    GeometryReader { _ in
       ZStack(alignment: .topLeading) {
         // Keeps the background uniform and bright.
         Color.white
@@ -165,6 +170,18 @@ struct DashboardView: View {
             }
           )
           .zIndex(100)
+        }
+
+        // Custom context menu overlay.
+        if let menuState = contextMenuState {
+          ContextMenuOverlay(
+            state: menuState,
+            actions: buildContextMenuActions(for: menuState),
+            onDismiss: {
+              contextMenuState = nil
+            }
+          )
+          .zIndex(200)
         }
       }
       // Collect card frame preferences for hero transitions.
@@ -289,9 +306,34 @@ struct DashboardView: View {
 
   @ViewBuilder
   private func notebookCardView(notebook: NotebookMetadata) -> some View {
-    NotebookCardButton(notebook: notebook) {
-      openNotebook(notebook)
-    }
+    // Check if this notebook's context menu is currently shown.
+    let isContextMenuActive = contextMenuState?.matchesNotebook(notebook) == true
+
+    NotebookCardButton(
+      notebook: notebook,
+      action: {
+        openNotebook(notebook)
+      },
+      onRename: {
+        renameText = notebook.displayName
+        renamingNotebook = notebook
+      },
+      onMoveToFolder: library.folders.isEmpty
+        ? nil
+        : {
+          movingNotebook = notebook
+        },
+      onDelete: {
+        deletingNotebook = notebook
+      },
+      onLongPress: { frame, cardHeight in
+        contextMenuState = ContextMenuState(
+          item: .notebook(notebook),
+          sourceFrame: frame,
+          cardHeight: cardHeight
+        )
+      }
+    )
     // Capture the card's frame for hero animation positioning.
     .background(
       GeometryReader { geometry in
@@ -302,32 +344,11 @@ struct DashboardView: View {
           )
       }
     )
-    .draggable(notebook)
-    .contextMenu {
-      Button {
-        renameText = notebook.displayName
-        renamingNotebook = notebook
-      } label: {
-        Label("Rename", systemImage: "pencil")
-      }
-
-      if !library.folders.isEmpty {
-        Button {
-          movingNotebook = notebook
-        } label: {
-          Label("Move to Folder", systemImage: "folder")
-        }
-      }
-
-      Button(role: .destructive) {
-        deletingNotebook = notebook
-      } label: {
-        Label("Delete", systemImage: "trash")
-      }
-    } preview: {
-      // Shows only the card in the preview, keeping the title visible in place.
-      NotebookCardContextMenuPreview(notebook: notebook)
-    }
+    // Lift the card above the dim overlay when context menu is active.
+    .zIndex(isContextMenuActive ? 300 : 0)
+    // Scale up when context menu is active.
+    .scaleEffect(isContextMenuActive ? 1.08 : 1.0, anchor: .top)
+    .animation(.spring(response: 0.28, dampingFraction: 0.72), value: isContextMenuActive)
   }
 
   // MARK: - Folder Card View
@@ -337,43 +358,49 @@ struct DashboardView: View {
     let isTargeted = dropTargetFolderID == folder.id
     let thumbnails = folderThumbnails[folder.id] ?? []
     let isExpanded = expandedFolder?.id == folder.id
+    // Check if this folder's context menu is currently shown.
+    let isContextMenuActive = contextMenuState?.matchesFolder(folder) == true
 
-    FolderCardButton(folder: folder, thumbnails: thumbnails) {
-      // Opens the folder overlay with animation.
-      openFolder(folder)
-    }
-    // Apply matchedGeometryEffect for position animation.
-    // The overlay takes over the matched ID when expanded.
+    FolderCardButton(
+      folder: folder,
+      thumbnails: thumbnails,
+      action: {
+        // Opens the folder overlay with animation.
+        openFolder(folder)
+      },
+      onRename: {
+        renameText = folder.displayName
+        renamingFolder = folder
+      },
+      onDelete: {
+        deletingFolder = folder
+      },
+      onLongPress: { frame, cardHeight in
+        contextMenuState = ContextMenuState(
+          item: .folder(folder, thumbnails: thumbnails),
+          sourceFrame: frame,
+          cardHeight: cardHeight
+        )
+      }
+    )
+    // Apply matchedGeometryEffect for folder expansion animation.
     .matchedGeometryEffect(
       id: "folder-\(folder.id)",
       in: folderAnimationNamespace,
       isSource: !isExpanded
     )
-    // Hide the source card when its folder is expanded.
+    // Hide when folder is expanded (for folder overlay transition).
     .opacity(isExpanded ? 0 : 1)
-    .scaleEffect(isTargeted ? 1.08 : 1.0)
+    // Lift the card above the dim overlay when context menu is active.
+    .zIndex(isContextMenuActive ? 300 : 0)
+    // Scale up when context menu is active or drop target.
+    .scaleEffect(isContextMenuActive ? 1.08 : (isTargeted ? 1.08 : 1.0), anchor: .top)
+    .animation(.spring(response: 0.28, dampingFraction: 0.72), value: isContextMenuActive)
     .animation(.spring(response: 0.2, dampingFraction: 0.7), value: isTargeted)
     .onDrop(
       of: [.notebookID],
       delegate: createFolderDropDelegate(for: folder)
     )
-    .contextMenu {
-      Button {
-        renameText = folder.displayName
-        renamingFolder = folder
-      } label: {
-        Label("Rename Folder", systemImage: "pencil")
-      }
-
-      Button(role: .destructive) {
-        deletingFolder = folder
-      } label: {
-        Label("Delete Folder", systemImage: "trash")
-      }
-    } preview: {
-      // Shows only the folder card in the preview, keeping the title visible in place.
-      FolderCardContextMenuPreview(folder: folder, thumbnails: thumbnails)
-    }
   }
 
   // Creates a drop delegate for folder drag-and-drop operations.
@@ -454,7 +481,7 @@ struct DashboardView: View {
 
         // Get the root view controller and present.
         if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-           let rootVC = windowScene.windows.first?.rootViewController {
+          let rootVC = windowScene.windows.first?.rootViewController {
           coordinator.present(from: rootVC)
         }
 
@@ -594,6 +621,65 @@ struct DashboardView: View {
       thumbnails[folder.id] = images
     }
     folderThumbnails = thumbnails
+  }
+
+  // MARK: - Context Menu Actions
+
+  // Builds the context menu actions for the given menu state.
+  private func buildContextMenuActions(for state: ContextMenuState) -> [ContextMenuAction] {
+    switch state.item {
+    case .notebook(let notebook):
+      return buildNotebookContextMenuActions(for: notebook)
+    case .folder(let folder, _):
+      return buildFolderContextMenuActions(for: folder)
+    }
+  }
+
+  // Builds context menu actions for a notebook.
+  private func buildNotebookContextMenuActions(for notebook: NotebookMetadata)
+    -> [ContextMenuAction] {
+    var actions: [ContextMenuAction] = [
+      ContextMenuAction(title: "Rename", systemImage: "pencil") {
+        renameText = notebook.displayName
+        renamingNotebook = notebook
+      }
+    ]
+
+    // Add "Move to Folder" if folders exist.
+    if !library.folders.isEmpty {
+      actions.append(
+        ContextMenuAction(title: "Move to Folder", systemImage: "folder") {
+          movingNotebook = notebook
+        })
+    }
+
+    actions.append(
+      ContextMenuAction(
+        title: "Delete",
+        systemImage: "trash",
+        isDestructive: true
+      ) {
+        deletingNotebook = notebook
+      })
+
+    return actions
+  }
+
+  // Builds context menu actions for a folder.
+  private func buildFolderContextMenuActions(for folder: FolderMetadata) -> [ContextMenuAction] {
+    [
+      ContextMenuAction(title: "Rename Folder", systemImage: "pencil") {
+        renameText = folder.displayName
+        renamingFolder = folder
+      },
+      ContextMenuAction(
+        title: "Delete Folder",
+        systemImage: "trash",
+        isDestructive: true
+      ) {
+        deletingFolder = folder
+      }
+    ]
   }
 }
 // swiftlint:enable type_body_length

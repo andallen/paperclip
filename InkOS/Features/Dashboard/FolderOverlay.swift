@@ -150,32 +150,22 @@ struct FolderOverlay: View {
     return ScrollView {
       LazyVGrid(columns: columns, spacing: 10) {
         ForEach(notebooks) { notebook in
-          NotebookCardButton(notebook: notebook) {
-            onNotebookTap(notebook)
-          }
-          .contextMenu {
-            Button {
+          NotebookCardButton(
+            notebook: notebook,
+            action: {
+              onNotebookTap(notebook)
+            },
+            onRename: {
               renameText = notebook.displayName
               renamingNotebook = notebook
-            } label: {
-              Label("Rename", systemImage: "pencil")
-            }
-
-            Button {
+            },
+            onMoveOutOfFolder: {
               onMoveToRoot(notebook)
-            } label: {
-              Label("Move Out of Folder", systemImage: "arrow.up.doc")
-            }
-
-            Button(role: .destructive) {
+            },
+            onDelete: {
               deletingNotebook = notebook
-            } label: {
-              Label("Delete", systemImage: "trash")
             }
-          } preview: {
-            // Shows only the card in the preview, keeping the title visible in place.
-            NotebookCardContextMenuPreview(notebook: notebook)
-          }
+          )
         }
       }
       .padding(.horizontal, contentPadding)
