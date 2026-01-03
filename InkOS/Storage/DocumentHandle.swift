@@ -5,10 +5,12 @@ import Foundation
 // Uses an actor so notebook operations do not run at the same time.
 actor DocumentHandle {
   // Stores the notebook identifier.
-  let notebookID: String
+  // Marked nonisolated because it is immutable and safe to access from any context.
+  nonisolated let notebookID: String
 
   // Stores the manifest loaded at open time.
-  let initialManifest: Manifest
+  // Marked nonisolated because it is immutable and safe to access from any context.
+  nonisolated let initialManifest: Manifest
 
   // Tracks the current manifest state including any updates.
   private var currentManifest: Manifest

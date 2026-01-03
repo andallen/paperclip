@@ -8,8 +8,8 @@ import SwiftUI
 // and keeps the Dashboard list of Notebooks and Folders accurate.
 // The Notebook Library does not read or write files directly.
 // It treats the Bundle Manager as the one place that knows how items are stored.
-// swiftlint:disable type_body_length
-// Type body length exception: Centralized facade for notebook, folder, and PDF document operations.
+// swiftlint:disable file_length type_body_length
+// File and type body length exceptions: Centralized facade for notebook, folder, and PDF document operations.
 @MainActor
 class NotebookLibrary: ObservableObject {
   // The list of root-level Notebooks currently available.
@@ -301,6 +301,120 @@ class NotebookLibrary: ObservableObject {
     }
   }
 
+  // MARK: - Debug Utilities
+
+  // Represents a corrupt PDF document for debug display.
+  struct CorruptPDFInfo: Identifiable {
+    let id: String
+    let displayName: String
+    let reason: String
+    let directoryURL: URL
+  }
+
+  // Finds PDF documents that are corrupt or improperly imported.
+  // A PDF is considered corrupt if:
+  // - It has an empty blocks array (no pages were created)
+  // - It is missing the annotations.iink file
+  // Returns an array of CorruptPDFInfo for display in debug UI.
+  func findCorruptPDFs() async -> [CorruptPDFInfo] {
+    do {
+      let pdfNotesDir = try await PDFNoteStorage.pdfNotesDirectory()
+      let fileManager = FileManager.default
+
+      guard fileManager.fileExists(atPath: pdfNotesDir.path) else {
+        return []
+      }
+
+      let contents = try fileManager.contentsOfDirectory(
+        at: pdfNotesDir,
+        includingPropertiesForKeys: [.isDirectoryKey],
+        options: [.skipsHiddenFiles]
+      )
+
+      var corruptPDFs: [CorruptPDFInfo] = []
+
+      for url in contents {
+        let isDir = try url.resourceValues(forKeys: [.isDirectoryKey]).isDirectory ?? false
+        guard isDir else { continue }
+
+        if let corruptInfo = checkPDFDirectory(url: url, fileManager: fileManager) {
+          corruptPDFs.append(corruptInfo)
+        }
+      }
+
+      return corruptPDFs
+    } catch {
+      return []
+    }
+  }
+
+  // Checks a single PDF directory for corruption issues.
+  // Returns CorruptPDFInfo if the directory contains a corrupt PDF, nil otherwise.
+  private func checkPDFDirectory(url: URL, fileManager: FileManager) -> CorruptPDFInfo? {
+    let manifestURL = url.appendingPathComponent(ImportCoordinator.manifestFileName)
+    let iinkURL = url.appendingPathComponent(ImportCoordinator.iinkFileName)
+
+    // Check if manifest exists.
+    guard fileManager.fileExists(atPath: manifestURL.path) else {
+      return CorruptPDFInfo(
+        id: url.lastPathComponent,
+        displayName: "Unknown (no manifest)",
+        reason: "Missing manifest file",
+        directoryURL: url
+      )
+    }
+
+    do {
+      let data = try Data(contentsOf: manifestURL)
+      let decoder = JSONDecoder()
+      decoder.dateDecodingStrategy = .iso8601
+      let noteDoc = try decoder.decode(NoteDocument.self, from: data)
+
+      var reasons: [String] = []
+
+      // Check for empty blocks.
+      if noteDoc.blocks.isEmpty {
+        reasons.append("Empty blocks array (0 pages)")
+      }
+
+      // Check for missing iink file.
+      if !fileManager.fileExists(atPath: iinkURL.path) {
+        reasons.append("Missing annotations.iink")
+      }
+
+      if !reasons.isEmpty {
+        return CorruptPDFInfo(
+          id: noteDoc.documentID.uuidString,
+          displayName: noteDoc.displayName,
+          reason: reasons.joined(separator: ", "),
+          directoryURL: url
+        )
+      }
+    } catch {
+      // Failed to decode manifest.
+      return CorruptPDFInfo(
+        id: url.lastPathComponent,
+        displayName: "Unknown (decode error)",
+        reason: "Invalid manifest: \(error.localizedDescription)",
+        directoryURL: url
+      )
+    }
+
+    return nil
+  }
+
+  // Deletes a corrupt PDF by its directory URL.
+  // Used by the debug UI to clean up corrupt documents.
+  func deleteCorruptPDF(directoryURL: URL) async {
+    let fileManager = FileManager.default
+    do {
+      try fileManager.removeItem(at: directoryURL)
+      await loadBundles()
+    } catch {
+      // Silently ignore errors.
+    }
+  }
+
   // Moves a PDF document to a folder by updating its manifest with folder information.
   // The PDF file location does not change; only the folderID property is updated.
   // After moving, refreshes the list to reflect the change.
@@ -553,15 +667,19 @@ class NotebookLibrary: ObservableObject {
   // Creates a new Folder by asking the Bundle Manager to create it.
   // After creation, refreshes the list to include the new Folder.
   // Uses a default display name if none is provided.
+  // Returns the folder ID on success, nil on failure.
   // Errors are silently ignored to keep the app usable.
-  func createFolder(displayName: String = "Untitled Folder") async {
+  @discardableResult
+  func createFolder(displayName: String = "Untitled Folder") async -> String? {
     do {
-      _ = try await bundleManager.createFolder(displayName: displayName)
+      let folder = try await bundleManager.createFolder(displayName: displayName)
       // Refresh the list to include the newly created Folder.
       await loadBundles()
+      return folder.id
     } catch {
       // Silently ignore errors to keep the app usable.
       // Later on, should show error message to the user.
+      return nil
     }
   }
 

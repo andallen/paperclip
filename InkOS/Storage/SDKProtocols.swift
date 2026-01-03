@@ -1,4 +1,5 @@
 import Foundation
+import PDFKit
 import UIKit
 
 // MARK: - ContentPartProtocol
@@ -60,7 +61,8 @@ extension IINKContentPackage: ContentPackageProtocol {
 // Protocol abstracting IINKEngine for testability.
 // Covers the package operations used by DocumentHandle and ImportCoordinator.
 protocol EngineProtocol: AnyObject {
-  func openContentPackage(_ path: String, openOption: IINKPackageOpenOption) throws -> any ContentPackageProtocol
+  func openContentPackage(_ path: String, openOption: IINKPackageOpenOption) throws
+    -> any ContentPackageProtocol
   func createContentPackage(_ path: String) throws -> any ContentPackageProtocol
 }
 
@@ -253,7 +255,8 @@ extension IINKEditor: EditorProtocol {
   }
 
   func pointerDown(point: CGPoint, timestamp: Int64, force: Float, type: IINKPointerType) throws {
-    _ = try self.pointerDown(point: point, timestamp: timestamp, force: force, type: type, pointerId: 0)
+    _ = try self.pointerDown(
+      point: point, timestamp: timestamp, force: force, type: type, pointerId: 0)
   }
 
   func pointerMove(point: CGPoint, timestamp: Int64, force: Float, type: IINKPointerType) throws {
@@ -286,9 +289,9 @@ extension InputViewController: InputViewControllerProtocol {}
 // Protocol abstracting DocumentHandle for testability.
 // Covers the properties and methods used by EditorViewModel for document operations.
 // Inherits JIIXDocumentHandleProtocol to support JIIX persistence.
-protocol DocumentHandleProtocol: AnyObject, Sendable, JIIXDocumentHandleProtocol {
-  var notebookID: String { get }
-  var initialManifest: Manifest { get }
+protocol DocumentHandleProtocol: JIIXDocumentHandleProtocol {
+  nonisolated var notebookID: String { get }
+  nonisolated var initialManifest: Manifest { get }
   var manifest: Manifest { get async }
   func ensureInitialPart(type: String) async throws -> any ContentPartProtocol
   func savePackageToTemp() async throws
