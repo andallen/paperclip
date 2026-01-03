@@ -179,7 +179,8 @@ protocol EditorExportProtocol: AnyObject {
 
 // Protocol extending DocumentHandleProtocol with JIIX-specific file operations.
 // Implemented by DocumentHandle to save and load JIIX files within notebook bundles.
-protocol JIIXDocumentHandleProtocol: AnyObject, Sendable {
+// Uses Actor constraint because DocumentHandle is an actor.
+protocol JIIXDocumentHandleProtocol: Actor {
   // Saves JIIX data to the content.jiix file in the notebook bundle.
   // The data should be UTF-8 encoded JIIX JSON.
   // Uses atomic write to prevent corruption.
