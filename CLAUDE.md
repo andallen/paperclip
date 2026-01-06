@@ -33,6 +33,7 @@ InkOS/
 │   │   │   ├── FolderCard.swift          # Folder display card
 │   │   │   ├── FolderOverlay.swift       # Folder contents overlay
 │   │   │   ├── FolderDropDelegate.swift  # Drag-and-drop folder handling
+│   │   │   ├── FolderDraggableCards.swift # Draggable card components for folders
 │   │   │   ├── MoveToFolderSheet.swift   # Move notebook to folder UI
 │   │   │   └── ContextMenuOverlay.swift  # Context menu presentation overlay
 │   │   │
@@ -51,6 +52,19 @@ InkOS/
 │   │   │   ├── PDFBackgroundRenderer.swift    # PDF background rendering
 │   │   │   ├── DottedGridView.swift      # Grid overlay for annotation
 │   │   │   └── PDFStubs.swift            # PDF-related stub implementations
+│   │   │
+│   │   ├── Search/                       # Search and indexing system
+│   │   │   ├── Index/                    # Search index components
+│   │   │   │   ├── Contract.swift        # Search index contract/interface
+│   │   │   │   ├── SearchIndex.swift     # Core search index implementation
+│   │   │   │   └── SearchIndexTriggers.swift  # Event triggers for indexing
+│   │   │   ├── Service/                  # Search service layer
+│   │   │   │   ├── SearchService.swift   # Search service implementation
+│   │   │   │   └── SearchServiceContract.swift  # Service contract/interface
+│   │   │   └── UI/                       # Search UI components (placeholder dirs)
+│   │   │       ├── Dashboard/
+│   │   │       ├── Editor/
+│   │   │       └── Folder/
 │   │   │
 │   │   └── Shared/                       # Shared UI components & utilities
 │   │       ├── ContextMenuView.swift     # Reusable context menu component
@@ -78,6 +92,9 @@ InkOS/
 │   │   ├── ToolPaletteView.swift         # Floating custom toolbar
 │   │   ├── EditingToolbarView.swift      # Undo/Redo/Clear toolbar
 │   │   ├── ColorThicknessPillView.swift  # Color and thickness selection UI
+│   │   ├── AIButtonView.swift            # AI assistant button component
+│   │   ├── AIOverlayView.swift           # AI assistant overlay interface
+│   │   ├── AIChatInputBar.swift          # AI chat input component
 │   │   │
 │   │   └── RawContentConfiguration/      # MyScript Raw Content mode settings
 │   │       └── RawContentConfiguration.swift  # Configuration applier for recognition
@@ -129,7 +146,10 @@ InkOS/
 │   │
 │   ├── Features/
 │   │   ├── NotebookModelTests.swift
-│   │   └── PDFImport/
+│   │   ├── PDFImport/
+│   │   └── Search/
+│   │       ├── SearchIndexTests.swift
+│   │       └── SearchServiceTests.swift
 │   │
 │   ├── Rendering/
 │   │   ├── DisplayViewModelTests.swift
@@ -170,21 +190,19 @@ InkOS/
 
 ## Project Rules
 
+
+
 ### 1. Comments
 - Comment frequently with simple and direct language
 - Concisely spell out what every part of the code is doing, making the logic easy to follow
 - Use clear grammar and avoid special headers, decorative markers, or section labels
 - Be impersonal; no first/second/third person
 
-### 2. Architectural Decoupling
-- The UI must remain replaceable. SwiftUI views should only handle presentation and layout
-- Data and storage code must live outside the UI. Centralize all file-system access in **BundleManager** and **EngineProvider**
-
-### 3. Quality Assurance
+### 2. Quality Assurance
 - Make errors explicit. Do not use force unwraps (`!`), `try!`, or `fatalError` for expected runtime issues
 - Use `throws` and pass error messages back to the UI so the user can be notified
 
-### 4. Security & Configuration
+### 3. Security & Configuration
 - Do not commit private keys or license material beyond the checked-in certificate files
 - Treat `recognition-assets/` as large binary dependencies; avoid editing by hand
 
@@ -192,10 +210,8 @@ InkOS/
 
 - **Build**: `Scripts/buildapp`
 - **Test**: `Scripts/testapp`
-- **Grab Logs**: `Scripts/grablogs`
 
 ## Key Architecture Notes
-
 See subdirectory CLAUDE.md files for layer-specific rules:
 - `InkOS/Editor/CLAUDE.md` - MainActor isolation and thread safety for MyScript SDK
 - `InkOS/Storage/CLAUDE.md` - Actor isolation for BundleManager and DocumentHandle
