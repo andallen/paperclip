@@ -161,6 +161,24 @@ class EditorViewController: UIViewController {
     self.viewModel.setEditorViewSize(bounds: self.view.bounds)
   }
 
+  override func viewWillTransition(
+    to size: CGSize,
+    with coordinator: UIViewControllerTransitionCoordinator
+  ) {
+    super.viewWillTransition(to: size, with: coordinator)
+
+    // If the AI overlay is expanded during rotation, animate it alongside the transition.
+    // This ensures the overlay stays properly positioned during orientation changes.
+    guard aiOverlayState != .collapsed, let overlayView = aiOverlayView else { return }
+
+    coordinator.animate(alongsideTransition: { _ in
+      // Force layout to adapt constraints to new size.
+      self.view.layoutIfNeeded()
+      // Keep overlay visible at identity transform.
+      overlayView.transform = .identity
+    }, completion: nil)
+  }
+
   // MARK: - Navigation
 
   // Hides the navigation bar since all UI is now floating views.
@@ -476,7 +494,7 @@ class EditorViewController: UIViewController {
         delay: 0,
         usingSpringWithDamping: 0.85,
         initialSpringVelocity: 0,
-        options: [],
+        options: [.layoutSubviews],
         animations: animations,
         completion: completion
       )

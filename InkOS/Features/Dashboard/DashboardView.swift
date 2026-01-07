@@ -738,7 +738,7 @@ struct DashboardView: View {
           await library.createNotebook()
         }
       } label: {
-        Text("Create Notebook")
+        Text("Create Note")
           .font(.system(size: 17, weight: .semibold))
           .foregroundStyle(Color.ink)
           .padding(.horizontal, 24)
@@ -1338,7 +1338,7 @@ struct DashboardView: View {
     Task { @MainActor in
       _ = await library.createNotebookInFolder(
         folderID: folder.id,
-        displayName: "Untitled Notebook"
+        displayName: "Untitled Note"
       )
       await library.loadBundles()
       await loadFolderThumbnails()

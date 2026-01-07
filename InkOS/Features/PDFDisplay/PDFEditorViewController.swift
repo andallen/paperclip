@@ -144,6 +144,24 @@ final class PDFEditorViewController: UIViewController {
     inputVM?.setEditorViewSize(size: view.bounds.size)
   }
 
+  override func viewWillTransition(
+    to size: CGSize,
+    with coordinator: UIViewControllerTransitionCoordinator
+  ) {
+    super.viewWillTransition(to: size, with: coordinator)
+
+    // If the AI overlay is expanded during rotation, animate it alongside the transition.
+    // This ensures the overlay stays properly positioned during orientation changes.
+    guard aiOverlayState != .collapsed, let overlayView = aiOverlayView else { return }
+
+    coordinator.animate(alongsideTransition: { _ in
+      // Force layout to adapt constraints to new size.
+      self.view.layoutIfNeeded()
+      // Keep overlay visible at identity transform.
+      overlayView.transform = .identity
+    }, completion: nil)
+  }
+
   // MARK: - Setup
 
   // Hides the navigation bar since all UI is now floating views.
@@ -398,7 +416,7 @@ final class PDFEditorViewController: UIViewController {
     aiOverlayView = overlayView
 
     // Add chat input bar at the bottom of the overlay.
-    configureChatInputBar(in: overlayView)
+    configureChatInputBar(in: overlayView, overlayHeight: aiOverlayHeight)
 
     // Bring AI button to front so it's above the overlay.
     if let buttonView = aiButtonView {
@@ -407,7 +425,7 @@ final class PDFEditorViewController: UIViewController {
   }
 
   // Embeds the SwiftUI overlay content (hamburger menu, chat history, chat input bar).
-  private func configureChatInputBar(in overlayView: UIVisualEffectView) {
+  private func configureChatInputBar(in overlayView: UIVisualEffectView, overlayHeight: CGFloat) {
     let overlayContent = AIChatOverlayContent(
       text: Binding(
         get: { [weak self] in self?.aiChatText ?? "" },
@@ -501,7 +519,7 @@ final class PDFEditorViewController: UIViewController {
         delay: 0,
         usingSpringWithDamping: 0.85,
         initialSpringVelocity: 0,
-        options: [],
+        options: [.layoutSubviews],
         animations: animations,
         completion: completion
       )
