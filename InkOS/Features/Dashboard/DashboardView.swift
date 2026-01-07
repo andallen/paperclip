@@ -171,6 +171,27 @@ struct DashboardView: View {
   // Used to trigger overlay dismiss animation only when drag crosses the boundary.
   @State private var hasDragExitedOverlayBounds: Bool = false
 
+  // MARK: - UIKit Drag Snapshot State
+
+  // The UIKit view used as the single visual element throughout the entire drag operation.
+  // Created at drag start, moved during drag, animated back on release.
+  // Using a single UIKit view (instead of SwiftUI overlay) ensures perfectly fluid animation
+  // with no visual switching or snapping - matching Apple's native drag behavior.
+  @State private var notebookDragSnapshot: UIView?
+
+  // Same pattern for PDF cards - a single UIKit view for the entire drag operation.
+  @State private var pdfDragSnapshot: UIView?
+
+  // MARK: - Drag Return Animation State
+
+  // Tracks which notebook is returning from drag and should start at lifted scale.
+  // When set, the SwiftUI card appears at scale 1.1, then animates to 1.0.
+  // This creates a smooth scale-down animation matching the context menu dismiss feel.
+  @State private var returningFromDragNotebookID: String?
+
+  // Same pattern for PDFs returning from drag.
+  @State private var returningFromDragPDFID: String?
+
   // MARK: - Folder Expansion State
 
   // Tracks which folder is currently expanded (nil when no folder is open).
@@ -369,6 +390,9 @@ struct DashboardView: View {
             // Used to hide the original cards while dragging (so they appear to move, not duplicate).
             draggedNotebookID: dragSourceFolderID != nil ? draggedNotebook?.id : nil,
             draggedPDFID: pdfDragSourceFolderID != nil ? draggedPDF?.id : nil,
+            // IDs of items returning from drag that need scale-down animation.
+            returningFromDragNotebookID: returningFromDragNotebookID,
+            returningFromDragPDFID: returningFromDragPDFID,
             // Namespace for matched geometry effects when cards move between dashboard and folder.
             cardNamespace: cardNamespace
           )
@@ -387,17 +411,10 @@ struct DashboardView: View {
           .zIndex(200)
         }
 
-        // Drag overlay showing the notebook card following the finger.
-        if let notebook = draggedNotebook {
-          dragOverlay(for: notebook)
-            .zIndex(400)
-        }
-
-        // Drag overlay showing the PDF card following the finger.
-        if let pdf = draggedPDF {
-          pdfDragOverlay(for: pdf)
-            .zIndex(400)
-        }
+        // NOTE: Both notebook and PDF drags now use single UIKit snapshots
+        // (notebookDragSnapshot / pdfDragSnapshot) created at drag start and used
+        // throughout the entire operation. No SwiftUI drag overlays needed -
+        // this eliminates visual switching/snapping and matches Apple's native behavior.
 
         // AI overlay, dim background, and button at bottom-right corner.
         // The overlay expands from the button with liquid glass animation.
@@ -704,6 +721,9 @@ struct DashboardView: View {
       // Grey underlay that stays at full size when the card contracts.
       dropTargetUnderlay(isActive: isDragTarget)
 
+      // Check if this notebook is returning from drag and should animate scale-down.
+      let isReturningFromDrag = returningFromDragNotebookID == notebook.id
+
       // The notebook card that scales down when targeted.
       notebookCardButton(for: notebook, isDragTarget: isDragTarget)
         // Always act as geometry source. The drag overlay doesn't use matchedGeometryEffect,
@@ -714,18 +734,21 @@ struct DashboardView: View {
           in: cardNamespace,
           isSource: true
         )
-        .transition(.scale.combined(with: .opacity))
+        // Transition removed - was causing snap when LazyVGrid reloads cards after drag.
         .scaleEffect(
-          isContextMenuActive ? 1.08 : (isDragTarget ? 0.82 : 1.0),
+          isReturningFromDrag ? 1.1 : (isContextMenuActive ? 1.08 : (isDragTarget ? 0.82 : 1.0)),
           anchor: .center
         )
+        // Animate scale-down when returning from drag (matches context menu feel).
+        .animation(.spring(response: 0.28, dampingFraction: 0.72), value: isReturningFromDrag)
         .animation(.spring(response: 0.28, dampingFraction: 0.72), value: isContextMenuActive)
         .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isDragTarget)
     }
     .background(notebookCardFrameCapture(for: notebook))
+    // Hide the card while being dragged. With the "Relay Handoff" pattern,
+    // the snapshot lands exactly on the slot before being removed, so the
+    // instant swap from opacity 0 to 1 is invisible to the user.
     .opacity(isBeingDragged ? 0 : 1)
-    // Prevent animation on visibility change to avoid ghost card effect.
-    .animation(nil, value: isBeingDragged)
     .zIndex(isContextMenuActive ? 300 : 0)
   }
 
@@ -941,6 +964,9 @@ struct DashboardView: View {
       // Grey underlay that stays at full size when the card contracts.
       dropTargetUnderlay(isActive: isDragTarget)
 
+      // Check if this PDF is returning from drag and should animate scale-down.
+      let isReturningFromDrag = returningFromDragPDFID == pdfDocument.id
+
       // The PDF card that scales down when targeted.
       pdfCardButton(for: pdfDocument, isDragTarget: isDragTarget)
         // Always act as geometry source. The drag overlay doesn't use matchedGeometryEffect,
@@ -951,18 +977,21 @@ struct DashboardView: View {
           in: cardNamespace,
           isSource: true
         )
-        .transition(.scale.combined(with: .opacity))
+        // Transition removed - was causing snap when LazyVGrid reloads cards after drag.
         .scaleEffect(
-          isContextMenuActive ? 1.08 : (isDragTarget ? 0.82 : 1.0),
+          isReturningFromDrag ? 1.1 : (isContextMenuActive ? 1.08 : (isDragTarget ? 0.82 : 1.0)),
           anchor: .center
         )
+        // Animate scale-down when returning from drag (matches context menu feel).
+        .animation(.spring(response: 0.28, dampingFraction: 0.72), value: isReturningFromDrag)
         .animation(.spring(response: 0.28, dampingFraction: 0.72), value: isContextMenuActive)
         .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isDragTarget)
     }
     .background(pdfCardFrameCapture(for: pdfDocument))
+    // Hide the card while being dragged. With the "Relay Handoff" pattern,
+    // the snapshot lands exactly on the slot before being removed, so the
+    // instant swap from opacity 0 to 1 is invisible to the user.
     .opacity(isBeingDragged ? 0 : 1)
-    // Prevent animation on visibility change to avoid ghost card effect.
-    .animation(nil, value: isBeingDragged)
     .zIndex(isContextMenuActive ? 300 : 0)
   }
 
@@ -1402,147 +1431,191 @@ struct DashboardView: View {
 
   // MARK: - Drag Overlay
 
-  // Builds the floating card overlay that follows the finger during drag.
-  @ViewBuilder
-  private func dragOverlay(for notebook: NotebookMetadata) -> some View {
-    let cardWidth = dragSourceFrame.width
-    let cardHeight = dragSourceFrame.height - 36  // Subtract title area height.
-
-    NotebookCardPreview(notebook: notebook, dimOpacity: 0)
-      .frame(width: cardWidth, height: cardHeight)
-      .background(Color.white)
-      .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-      .shadow(color: Color.black.opacity(0.25), radius: 12, x: 0, y: 8)
-      .scaleEffect(1.05)
-      // Position the card centered under the finger.
-      // Note: Do NOT use matchedGeometryEffect here. The .position() modifier places the view
-      // at an absolute position, but matchedGeometryEffect tracks geometry BEFORE position
-      // adjustment. This mismatch corrupts the namespace and causes all cards to become jittery.
-      .position(x: dragPosition.x, y: dragPosition.y - cardHeight / 2 - 20)
-      .allowsHitTesting(false)
-  }
-
-  // MARK: - Drop Animation Snapshots
+  // MARK: - UIKit Drag Snapshots
 
   // Creates a UIView snapshot of the notebook card for drop animation.
-  // Uses UIHostingController to render the SwiftUI preview content.
+  // Uses a hybrid approach: SwiftUI for the preview image, UIKit for the title/date.
+  // UIKit labels are used because SwiftUI's conditional rendering (`if let`) inside
+  // NotebookCardTitle doesn't reliably render when captured via drawHierarchy.
   private func createNotebookDragSnapshot(for notebook: NotebookMetadata) -> UIView {
-    let cardWidth = dragSourceFrame.width
-    let cardHeight = dragSourceFrame.height - 36
+    let totalWidth = dragSourceFrame.width
+    let totalHeight = dragSourceFrame.height
+    let titleAreaHeight: CGFloat = 36
+    let previewHeight = totalHeight - titleAreaHeight
+    let cornerRadius: CGFloat = 10
 
-    // Create SwiftUI preview matching the drag overlay appearance.
-    let preview = NotebookCardPreview(notebook: notebook, dimOpacity: 0)
-      .frame(width: cardWidth, height: cardHeight)
+    // Container for the complete card snapshot.
+    let container = UIView(frame: CGRect(x: 0, y: 0, width: totalWidth, height: totalHeight))
+    container.backgroundColor = .clear
+
+    // Create the preview card using SwiftUI (for the notebook preview image).
+    let previewView = NotebookCardPreview(notebook: notebook, dimOpacity: 0)
+      .frame(width: totalWidth, height: previewHeight)
       .background(Color.white)
-      .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+      .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
 
-    // Host the SwiftUI view in a UIView.
-    let hostingController = UIHostingController(rootView: preview)
-    hostingController.view.frame = CGRect(x: 0, y: 0, width: cardWidth, height: cardHeight)
-    hostingController.view.backgroundColor = .clear
+    let previewHosting = UIHostingController(rootView: previewView)
+    previewHosting.view.frame = CGRect(x: 0, y: 0, width: totalWidth, height: previewHeight)
+    previewHosting.view.backgroundColor = .clear
 
-    // Add shadow matching the drag overlay.
-    hostingController.view.layer.shadowColor = UIColor.black.cgColor
-    hostingController.view.layer.shadowOpacity = 0.25
-    hostingController.view.layer.shadowRadius = 12
-    hostingController.view.layer.shadowOffset = CGSize(width: 0, height: 8)
+    // Add to window for proper SwiftUI rendering.
+    let window = windowRef
+    window?.addSubview(previewHosting.view)
+    previewHosting.view.setNeedsLayout()
+    previewHosting.view.layoutIfNeeded()
 
-    return hostingController.view
+    // Render preview to image.
+    let previewRenderer = UIGraphicsImageRenderer(size: CGSize(width: totalWidth, height: previewHeight))
+    let previewImage = previewRenderer.image { _ in
+      previewHosting.view.drawHierarchy(
+        in: CGRect(x: 0, y: 0, width: totalWidth, height: previewHeight),
+        afterScreenUpdates: true
+      )
+    }
+    previewHosting.view.removeFromSuperview()
+
+    // Shadow container - provides shadow without clipping.
+    // Uses shadowPath for efficient rendering without needing masksToBounds = false.
+    let shadowView = UIView(frame: CGRect(x: 0, y: 0, width: totalWidth, height: previewHeight))
+    shadowView.backgroundColor = .clear
+    shadowView.layer.shadowColor = UIColor.black.cgColor
+    shadowView.layer.shadowOpacity = 0.14
+    shadowView.layer.shadowRadius = 7
+    shadowView.layer.shadowOffset = CGSize(width: 0, height: 4)
+    shadowView.layer.shadowPath = UIBezierPath(
+      roundedRect: CGRect(x: 0, y: 0, width: totalWidth, height: previewHeight),
+      cornerRadius: cornerRadius
+    ).cgPath
+
+    // Image view with rounded corners - masksToBounds clips the content to rounded rect.
+    let previewImageView = UIImageView(image: previewImage)
+    previewImageView.frame = shadowView.bounds
+    previewImageView.layer.cornerRadius = cornerRadius
+    previewImageView.layer.masksToBounds = true
+
+    shadowView.addSubview(previewImageView)
+    container.addSubview(shadowView)
+
+    // Add title label using UIKit (guaranteed to render).
+    let titleLabel = UILabel()
+    titleLabel.text = notebook.displayName
+    titleLabel.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
+    titleLabel.textColor = UIColor.black.withAlphaComponent(0.88)
+    titleLabel.lineBreakMode = .byTruncatingTail
+    titleLabel.frame = CGRect(x: 2, y: previewHeight + 4, width: totalWidth - 4, height: 17)
+    container.addSubview(titleLabel)
+
+    // Add date label using UIKit (guaranteed to render if date exists).
+    if let date = notebook.lastAccessedAt {
+      let dateLabel = UILabel()
+      dateLabel.text = Self.snapshotDateFormatter.string(from: date)
+      dateLabel.font = UIFont.systemFont(ofSize: 11, weight: .medium)
+      dateLabel.textColor = UIColor.black.withAlphaComponent(0.62)
+      dateLabel.lineBreakMode = .byTruncatingTail
+      dateLabel.frame = CGRect(x: 2, y: previewHeight + 4 + 17 + 1, width: totalWidth - 4, height: 14)
+      container.addSubview(dateLabel)
+    }
+
+    return container
   }
+
+  // Date formatter for snapshot labels (matches NotebookCardTitle format).
+  private static let snapshotDateFormatter: DateFormatter = {
+    let formatter = DateFormatter()
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.dateFormat = "h:mm a  MM/dd/yy"
+    return formatter
+  }()
 
   // Creates a UIView snapshot of the PDF card for drop animation.
+  // Uses a hybrid approach: SwiftUI for the preview image, UIKit for the title/page count.
+  // UIKit labels are used because SwiftUI's conditional rendering doesn't reliably
+  // render when captured via drawHierarchy.
   private func createPDFDragSnapshot(for pdf: PDFDocumentMetadata) -> UIView {
-    let cardWidth = pdfDragSourceFrame.width
-    let cardHeight = pdfDragSourceFrame.height - 36
+    let totalWidth = pdfDragSourceFrame.width
+    let totalHeight = pdfDragSourceFrame.height
+    let titleAreaHeight: CGFloat = 36
+    let previewHeight = totalHeight - titleAreaHeight
+    let cornerRadius: CGFloat = 10
 
-    // Create SwiftUI preview matching the drag overlay appearance.
-    let preview = PDFDocumentCardPreview(metadata: pdf, dimOpacity: 0)
-      .frame(width: cardWidth, height: cardHeight)
+    // Container for the complete card snapshot.
+    let container = UIView(frame: CGRect(x: 0, y: 0, width: totalWidth, height: totalHeight))
+    container.backgroundColor = .clear
+
+    // Create the preview card using SwiftUI (for the PDF preview image).
+    let previewView = PDFDocumentCardPreview(metadata: pdf, dimOpacity: 0)
+      .frame(width: totalWidth, height: previewHeight)
       .background(Color(.systemGray5))
-      .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+      .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
 
-    // Host the SwiftUI view in a UIView.
-    let hostingController = UIHostingController(rootView: preview)
-    hostingController.view.frame = CGRect(x: 0, y: 0, width: cardWidth, height: cardHeight)
-    hostingController.view.backgroundColor = .clear
+    let previewHosting = UIHostingController(rootView: previewView)
+    previewHosting.view.frame = CGRect(x: 0, y: 0, width: totalWidth, height: previewHeight)
+    previewHosting.view.backgroundColor = .clear
 
-    // Add shadow matching the drag overlay.
-    hostingController.view.layer.shadowColor = UIColor.black.cgColor
-    hostingController.view.layer.shadowOpacity = 0.25
-    hostingController.view.layer.shadowRadius = 12
-    hostingController.view.layer.shadowOffset = CGSize(width: 0, height: 8)
+    // Add to window for proper SwiftUI rendering.
+    let window = windowRef
+    window?.addSubview(previewHosting.view)
+    previewHosting.view.setNeedsLayout()
+    previewHosting.view.layoutIfNeeded()
 
-    return hostingController.view
-  }
-
-  // Animates a notebook card snapshot from the drag position to a destination frame.
-  // Uses spring animation for natural movement with slight overshoot.
-  private func animateNotebookDropToDestination(
-    notebook: NotebookMetadata,
-    fromPosition: CGPoint,
-    toFrame: CGRect,
-    in window: UIWindow,
-    completion: (() -> Void)? = nil
-  ) {
-    let cardHeight = dragSourceFrame.height - 36
-
-    // Create snapshot at current drag position.
-    let snapshot = createNotebookDragSnapshot(for: notebook)
-    snapshot.center = CGPoint(x: fromPosition.x, y: fromPosition.y - cardHeight / 2 - 20)
-    snapshot.transform = CGAffineTransform(scaleX: 1.05, y: 1.05)
-    window.addSubview(snapshot)
-
-    // Animate to destination with spring physics.
-    UIView.animate(
-      withDuration: 0.4,
-      delay: 0,
-      usingSpringWithDamping: 0.75,
-      initialSpringVelocity: 0,
-      options: []
-    ) {
-      snapshot.center = CGPoint(x: toFrame.midX, y: toFrame.midY)
-      snapshot.transform = .identity
-    } completion: { _ in
-      snapshot.removeFromSuperview()
-      completion?()
+    // Render preview to image.
+    let previewRenderer = UIGraphicsImageRenderer(size: CGSize(width: totalWidth, height: previewHeight))
+    let previewImage = previewRenderer.image { _ in
+      previewHosting.view.drawHierarchy(
+        in: CGRect(x: 0, y: 0, width: totalWidth, height: previewHeight),
+        afterScreenUpdates: true
+      )
     }
-  }
+    previewHosting.view.removeFromSuperview()
 
-  // Animates a PDF card snapshot from the drag position to a destination frame.
-  private func animatePDFDropToDestination(
-    pdf: PDFDocumentMetadata,
-    fromPosition: CGPoint,
-    toFrame: CGRect,
-    in window: UIWindow,
-    completion: (() -> Void)? = nil
-  ) {
-    let cardHeight = pdfDragSourceFrame.height - 36
+    // Shadow container - provides shadow without clipping.
+    // Uses shadowPath for efficient rendering without needing masksToBounds = false.
+    let shadowView = UIView(frame: CGRect(x: 0, y: 0, width: totalWidth, height: previewHeight))
+    shadowView.backgroundColor = .clear
+    shadowView.layer.shadowColor = UIColor.black.cgColor
+    shadowView.layer.shadowOpacity = 0.14
+    shadowView.layer.shadowRadius = 7
+    shadowView.layer.shadowOffset = CGSize(width: 0, height: 4)
+    shadowView.layer.shadowPath = UIBezierPath(
+      roundedRect: CGRect(x: 0, y: 0, width: totalWidth, height: previewHeight),
+      cornerRadius: cornerRadius
+    ).cgPath
 
-    // Create snapshot at current drag position.
-    let snapshot = createPDFDragSnapshot(for: pdf)
-    snapshot.center = CGPoint(x: fromPosition.x, y: fromPosition.y - cardHeight / 2 - 20)
-    snapshot.transform = CGAffineTransform(scaleX: 1.05, y: 1.05)
-    window.addSubview(snapshot)
+    // Image view with rounded corners - masksToBounds clips the content to rounded rect.
+    let previewImageView = UIImageView(image: previewImage)
+    previewImageView.frame = shadowView.bounds
+    previewImageView.layer.cornerRadius = cornerRadius
+    previewImageView.layer.masksToBounds = true
 
-    // Animate to destination with spring physics.
-    UIView.animate(
-      withDuration: 0.4,
-      delay: 0,
-      usingSpringWithDamping: 0.75,
-      initialSpringVelocity: 0,
-      options: []
-    ) {
-      snapshot.center = CGPoint(x: toFrame.midX, y: toFrame.midY)
-      snapshot.transform = .identity
-    } completion: { _ in
-      snapshot.removeFromSuperview()
-      completion?()
-    }
+    shadowView.addSubview(previewImageView)
+    container.addSubview(shadowView)
+
+    // Add title label using UIKit (guaranteed to render).
+    let titleLabel = UILabel()
+    titleLabel.text = pdf.displayName
+    titleLabel.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
+    titleLabel.textColor = UIColor.black.withAlphaComponent(0.88)
+    titleLabel.lineBreakMode = .byTruncatingTail
+    titleLabel.frame = CGRect(x: 2, y: previewHeight + 4, width: totalWidth - 4, height: 17)
+    container.addSubview(titleLabel)
+
+    // Add page count label using UIKit (guaranteed to render).
+    let pageCountLabel = UILabel()
+    pageCountLabel.text = pdf.pageCount == 1 ? "1 page" : "\(pdf.pageCount) pages"
+    pageCountLabel.font = UIFont.systemFont(ofSize: 11, weight: .medium)
+    pageCountLabel.textColor = UIColor.black.withAlphaComponent(0.62)
+    pageCountLabel.lineBreakMode = .byTruncatingTail
+    pageCountLabel.frame = CGRect(x: 2, y: previewHeight + 4 + 17 + 1, width: totalWidth - 4, height: 14)
+    container.addSubview(pageCountLabel)
+
+    return container
   }
 
   // MARK: - Drag Handlers
 
   // Called when a drag starts after long press on a notebook card.
+  // Creates a single UIKit snapshot that will be used throughout the entire drag operation.
+  // This matches Apple's native drag behavior - one continuous visual element.
   private func handleDragStart(notebook: NotebookMetadata, frame: CGRect, position: CGPoint) {
     // Dismiss context menu when drag starts.
     withAnimation(.easeOut(duration: 0.15)) {
@@ -1553,11 +1626,43 @@ struct DashboardView: View {
     draggedNotebook = notebook
     dragSourceFrame = frame
     dragPosition = position
+
+    // Create the UIKit snapshot immediately at drag start.
+    // This single view will be used for the entire drag operation - no SwiftUI overlay.
+    guard let window = windowRef else { return }
+
+    // Snapshot now includes the title (atomic unit), so use full frame height.
+    let snapshot = createNotebookDragSnapshot(for: notebook)
+
+    // Position snapshot at EXACT original card position (center of full frame).
+    snapshot.center = CGPoint(x: frame.midX, y: frame.midY)
+
+    window.addSubview(snapshot)
+    notebookDragSnapshot = snapshot
+
+    // Animate the lift: move to finger-centered position, scale up slightly.
+    // The card lifts toward the finger with a subtle scale increase.
+    // Card is centered on the finger for natural drag feel (matches iOS behavior).
+    UIView.animate(
+      withDuration: 0.2,
+      delay: 0,
+      options: .curveEaseOut
+    ) {
+      snapshot.center = position
+      snapshot.transform = CGAffineTransform(scaleX: 1.1, y: 1.1)
+    }
   }
 
   // Called during drag as the finger moves.
+  // Moves the single UIKit snapshot - no SwiftUI state updates for position.
   private func handleDragMove(position: CGPoint) {
     dragPosition = position
+
+    // Move the UIKit snapshot directly - this is instant, no SwiftUI redraw.
+    // Card is centered on the finger for natural drag feel.
+    if let snapshot = notebookDragSnapshot {
+      snapshot.center = position
+    }
 
     // Check which folder (if any) the finger is over.
     var foundFolderTarget: String?
@@ -1627,6 +1732,9 @@ struct DashboardView: View {
 
     // Check if we're over a folder.
     if let targetFolderID = dragTargetFolderID {
+      // Remove the UIKit snapshot immediately - the card disappears into the folder.
+      notebookDragSnapshot?.removeFromSuperview()
+
       // No animation when merging into folder - the card just disappears into it.
       // Move notebook to the existing folder.
       // Reset drag state only after library reloads to avoid ghost card appearing.
@@ -1643,6 +1751,9 @@ struct DashboardView: View {
     if let targetNotebookID = dragTargetNotebookID,
       let targetNotebook = library.notebooks.first(where: { $0.id == targetNotebookID })
     {
+      // Remove the UIKit snapshot immediately - cards combine into a folder.
+      notebookDragSnapshot?.removeFromSuperview()
+
       // No animation when merging with another card - the cards just combine into a folder.
       // Create folder from the two notebooks.
       createFolderFromNotebooks(
@@ -1654,7 +1765,11 @@ struct DashboardView: View {
 
     // Check if we're over a PDF to create a folder.
     if let targetPDFID = dragTargetPDFID,
-      let targetPDF = library.pdfDocuments.first(where: { $0.id == targetPDFID }) {
+      let targetPDF = library.pdfDocuments.first(where: { $0.id == targetPDFID })
+    {
+      // Remove the UIKit snapshot immediately - items combine into a folder.
+      notebookDragSnapshot?.removeFromSuperview()
+
       // No animation when merging with a PDF - they just combine into a folder.
       // Create folder from the notebook and PDF.
       createFolderFromNotebookAndPDF(
@@ -1665,31 +1780,54 @@ struct DashboardView: View {
     }
 
     // No valid target - released over empty space.
-    // Animate card back to its original position, then reset state after animation completes.
-    if let window = windowRef {
-      // Hide drag overlay immediately so only the snapshot is visible during animation.
-      draggedNotebook = nil
+    // Single combined animation for smooth return: position and scale animate together.
+    guard let snapshot = notebookDragSnapshot else {
+      resetDragState()
+      return
+    }
 
-      animateNotebookDropToDestination(
-        notebook: notebook,
-        fromPosition: position,
-        toFrame: dragSourceFrame,
-        in: window
-      ) {
-        // Reset remaining drag state after animation completes.
+    // Target position: use CURRENT card frame if available (more accurate than drag source frame,
+    // which may be stale if scroll or layout changed during drag).
+    let currentFrame = cardFrameStore.frames[notebook.id] ?? dragSourceFrame
+    let targetCenter = CGPoint(x: currentFrame.midX, y: currentFrame.midY)
+
+    // Ensure snapshot is at lifted scale before return animation.
+    // This cancels any in-progress lift animation and guarantees consistent shrink effect.
+    snapshot.layer.removeAllAnimations()
+    snapshot.transform = CGAffineTransform(scaleX: 1.1, y: 1.1)
+
+    // Combined animation: position and scale animate simultaneously for one fluid motion.
+    // Use UIView.animate to match the lift animation style.
+    UIView.animate(
+      withDuration: 0.4,
+      delay: 0,
+      usingSpringWithDamping: 0.75,
+      initialSpringVelocity: 0,
+      options: []
+    ) {
+      snapshot.center = targetCenter
+      snapshot.transform = .identity
+    } completion: { _ in
+      // Remove snapshot and reveal SwiftUI card.
+      // Card is now at exact position and scale, so swap is invisible.
+      snapshot.removeFromSuperview()
+      // Disable animations during state reset to prevent grid from animating the card.
+      var transaction = Transaction()
+      transaction.disablesAnimations = true
+      withTransaction(transaction) {
         self.resetDragState()
       }
-    } else {
-      // No window available, just reset immediately.
-      resetDragState()
     }
   }
 
   // Resets all drag-related state.
   private func resetDragState() {
-    // Clear dragged item WITHOUT animation to avoid matchedGeometryEffect confusion.
-    // Animating this causes isSource to transition with animation, and SwiftUI
-    // interpolates from an undefined position, creating a "jump up then slide down" ghost.
+    // Clear the UIKit snapshot reference.
+    notebookDragSnapshot = nil
+
+    // Clear drag state. With the "Relay Handoff" pattern (no crossfade),
+    // clearing draggedNotebook instantly reveals the SwiftUI card since
+    // isBeingDragged becomes false and the opacity condition evaluates to 1.
     draggedNotebook = nil
 
     // Animate target state for smooth scale-back on target cards.
@@ -1707,6 +1845,7 @@ struct DashboardView: View {
   // MARK: - Folder Drag Handlers
 
   // Called when a notebook drag starts from within the folder overlay.
+  // Creates a single UIKit snapshot that will be used throughout the entire drag operation.
   private func handleFolderNotebookDragStart(
     notebook: NotebookMetadata, frame: CGRect, position: CGPoint
   ) {
@@ -1720,6 +1859,30 @@ struct DashboardView: View {
     dragSourceFrame = frame
     dragPosition = position
     dragSourceFolderID = expandedFolder?.id
+
+    // Create the UIKit snapshot immediately at drag start.
+    // This single view will be used for the entire drag operation - no SwiftUI overlay.
+    guard let window = windowRef else { return }
+
+    // Snapshot now includes the title (atomic unit), so use full frame height.
+    let snapshot = createNotebookDragSnapshot(for: notebook)
+
+    // Position snapshot at EXACT original card position (center of full frame).
+    snapshot.center = CGPoint(x: frame.midX, y: frame.midY)
+
+    window.addSubview(snapshot)
+    notebookDragSnapshot = snapshot
+
+    // Animate the lift: move to finger-centered position, scale up slightly.
+    // Card is centered on the finger for natural drag feel (matches iOS behavior).
+    UIView.animate(
+      withDuration: 0.2,
+      delay: 0,
+      options: .curveEaseOut
+    ) {
+      snapshot.center = position
+      snapshot.transform = CGAffineTransform(scaleX: 1.1, y: 1.1)
+    }
   }
 
   // Called when a notebook drag from a folder ends.
@@ -1727,17 +1890,55 @@ struct DashboardView: View {
     guard let notebook = draggedNotebook,
       let sourceFolderID = dragSourceFolderID
     else {
+      notebookDragSnapshot?.removeFromSuperview()
       resetDragState()
       cleanupFolderOverlay()
       return
     }
 
-    // If drag never exited overlay bounds, just reset state (card snaps back).
+    // If drag never exited overlay bounds, animate card back to original position.
     // The folder overlay is still open, so no move happens.
     guard hasDragExitedOverlayBounds else {
-      resetDragState()
+      // Single combined animation for smooth return.
+      guard let snapshot = notebookDragSnapshot else {
+        resetDragState()
+        return
+      }
+
+      // Target position: center of the original card frame.
+      let targetCenter = CGPoint(x: dragSourceFrame.midX, y: dragSourceFrame.midY)
+
+      // Ensure snapshot is at lifted scale before return animation.
+      // This cancels any in-progress lift animation and guarantees consistent shrink effect.
+      snapshot.layer.removeAllAnimations()
+      snapshot.transform = CGAffineTransform(scaleX: 1.1, y: 1.1)
+
+      // Combined animation: position and scale animate simultaneously for one fluid motion.
+      // Use UIView.animate to match the lift animation style.
+      UIView.animate(
+        withDuration: 0.4,
+        delay: 0,
+        usingSpringWithDamping: 0.75,
+        initialSpringVelocity: 0,
+        options: []
+      ) {
+        snapshot.center = targetCenter
+        snapshot.transform = .identity
+      } completion: { _ in
+        // Remove snapshot and reveal SwiftUI card.
+        snapshot.removeFromSuperview()
+        // Disable animations during state reset to prevent grid from animating the card.
+        var transaction = Transaction()
+        transaction.disablesAnimations = true
+        withTransaction(transaction) {
+          self.resetDragState()
+        }
+      }
       return
     }
+
+    // Remove the UIKit snapshot - card disappears into target or root.
+    notebookDragSnapshot?.removeFromSuperview()
 
     // No animations for merge operations (folder, notebook, PDF).
     // For empty space drops that move to root, the destination grid position
@@ -1750,13 +1951,15 @@ struct DashboardView: View {
         await library.moveNotebookToRoot(notebookID: notebook.id, fromFolderID: sourceFolderID)
         await library.moveNotebookToFolder(notebookID: notebook.id, folderID: targetFolderID)
       } else if let targetNotebookID = dragTargetNotebookID,
-        let targetNotebook = library.notebooks.first(where: { $0.id == targetNotebookID }) {
+        let targetNotebook = library.notebooks.first(where: { $0.id == targetNotebookID })
+      {
         // Move to root, then create folder with target notebook.
         await library.moveNotebookToRoot(notebookID: notebook.id, fromFolderID: sourceFolderID)
         await createFolderFromNotebooksAsync(
           draggedNotebook: notebook, targetNotebook: targetNotebook)
       } else if let targetPDFID = dragTargetPDFID,
-        let targetPDF = library.pdfDocuments.first(where: { $0.id == targetPDFID }) {
+        let targetPDF = library.pdfDocuments.first(where: { $0.id == targetPDFID })
+      {
         // Move to root, then create folder with target PDF.
         await library.moveNotebookToRoot(notebookID: notebook.id, fromFolderID: sourceFolderID)
         await createFolderFromNotebookAndPDFAsync(notebook: notebook, pdf: targetPDF)
@@ -1773,6 +1976,7 @@ struct DashboardView: View {
   }
 
   // Called when a PDF drag starts from within the folder overlay.
+  // Creates a single UIKit snapshot that will be used throughout the entire drag operation.
   private func handleFolderPDFDragStart(pdf: PDFDocumentMetadata, frame: CGRect, position: CGPoint) {
     // Dismiss context menu when drag starts.
     withAnimation(.easeOut(duration: 0.15)) {
@@ -1784,6 +1988,30 @@ struct DashboardView: View {
     pdfDragSourceFrame = frame
     pdfDragPosition = position
     pdfDragSourceFolderID = expandedFolder?.id
+
+    // Create the UIKit snapshot immediately at drag start.
+    // This single view will be used for the entire drag operation - no SwiftUI overlay.
+    guard let window = windowRef else { return }
+
+    // Snapshot now includes the title (atomic unit), so use full frame height.
+    let snapshot = createPDFDragSnapshot(for: pdf)
+
+    // Position snapshot at EXACT original card position (center of full frame).
+    snapshot.center = CGPoint(x: frame.midX, y: frame.midY)
+
+    window.addSubview(snapshot)
+    pdfDragSnapshot = snapshot
+
+    // Animate the lift: move to finger-centered position, scale up slightly.
+    // Card is centered on the finger for natural drag feel (matches iOS behavior).
+    UIView.animate(
+      withDuration: 0.2,
+      delay: 0,
+      options: .curveEaseOut
+    ) {
+      snapshot.center = position
+      snapshot.transform = CGAffineTransform(scaleX: 1.1, y: 1.1)
+    }
   }
 
   // Called when a PDF drag from a folder ends.
@@ -1791,17 +2019,55 @@ struct DashboardView: View {
     guard let pdf = draggedPDF,
       pdfDragSourceFolderID != nil
     else {
+      pdfDragSnapshot?.removeFromSuperview()
       resetPDFDragState()
       cleanupFolderOverlay()
       return
     }
 
-    // If drag never exited overlay bounds, just reset state (card snaps back).
+    // If drag never exited overlay bounds, animate card back to original position.
     // The folder overlay is still open, so no move happens.
     guard hasDragExitedOverlayBounds else {
-      resetPDFDragState()
+      // Single combined animation for smooth return.
+      guard let snapshot = pdfDragSnapshot else {
+        resetPDFDragState()
+        return
+      }
+
+      // Target position: center of the original card frame.
+      let targetCenter = CGPoint(x: pdfDragSourceFrame.midX, y: pdfDragSourceFrame.midY)
+
+      // Ensure snapshot is at lifted scale before return animation.
+      // This cancels any in-progress lift animation and guarantees consistent shrink effect.
+      snapshot.layer.removeAllAnimations()
+      snapshot.transform = CGAffineTransform(scaleX: 1.1, y: 1.1)
+
+      // Combined animation: position and scale animate simultaneously for one fluid motion.
+      // Use UIView.animate to match the lift animation style.
+      UIView.animate(
+        withDuration: 0.4,
+        delay: 0,
+        usingSpringWithDamping: 0.75,
+        initialSpringVelocity: 0,
+        options: []
+      ) {
+        snapshot.center = targetCenter
+        snapshot.transform = .identity
+      } completion: { _ in
+        // Remove snapshot and reveal SwiftUI card.
+        snapshot.removeFromSuperview()
+        // Disable animations during state reset to prevent grid from animating the card.
+        var transaction = Transaction()
+        transaction.disablesAnimations = true
+        withTransaction(transaction) {
+          self.resetPDFDragState()
+        }
+      }
       return
     }
+
+    // Remove the UIKit snapshot - card disappears into target or root.
+    pdfDragSnapshot?.removeFromSuperview()
 
     // No animations for merge operations (folder, notebook, PDF).
     // For empty space drops that move to root, the destination grid position
@@ -1814,12 +2080,14 @@ struct DashboardView: View {
         await library.movePDFDocumentToRoot(documentID: pdf.id)
         await library.movePDFDocumentToFolder(documentID: pdf.id, folderID: targetFolderID)
       } else if let targetNotebookID = dragTargetNotebookID,
-        let targetNotebook = library.notebooks.first(where: { $0.id == targetNotebookID }) {
+        let targetNotebook = library.notebooks.first(where: { $0.id == targetNotebookID })
+      {
         // Move to root, then create folder with target notebook.
         await library.movePDFDocumentToRoot(documentID: pdf.id)
         await createFolderFromPDFAndNotebookAsync(pdf: pdf, notebook: targetNotebook)
       } else if let targetPDFID = dragTargetPDFID,
-        let targetPDF = library.pdfDocuments.first(where: { $0.id == targetPDFID }) {
+        let targetPDF = library.pdfDocuments.first(where: { $0.id == targetPDFID })
+      {
         // Move to root, then create folder with target PDF.
         await library.movePDFDocumentToRoot(documentID: pdf.id)
         await createFolderFromTwoPDFsAsync(draggedPDF: pdf, targetPDF: targetPDF)
@@ -1951,31 +2219,11 @@ struct DashboardView: View {
     }
   }
 
-  // MARK: - PDF Drag Overlay
-
-  // Builds the floating PDF card overlay that follows the finger during drag.
-  @ViewBuilder
-  private func pdfDragOverlay(for pdf: PDFDocumentMetadata) -> some View {
-    let cardWidth = pdfDragSourceFrame.width
-    let cardHeight = pdfDragSourceFrame.height - 36  // Subtract title area height.
-
-    PDFDocumentCardPreview(metadata: pdf, dimOpacity: 0)
-      .frame(width: cardWidth, height: cardHeight)
-      .background(Color(.systemGray5))
-      .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-      .shadow(color: Color.black.opacity(0.25), radius: 12, x: 0, y: 8)
-      .scaleEffect(1.05)
-      // Position the card centered under the finger.
-      // Note: Do NOT use matchedGeometryEffect here. The .position() modifier places the view
-      // at an absolute position, but matchedGeometryEffect tracks geometry BEFORE position
-      // adjustment. This mismatch corrupts the namespace and causes all cards to become jittery.
-      .position(x: pdfDragPosition.x, y: pdfDragPosition.y - cardHeight / 2 - 20)
-      .allowsHitTesting(false)
-  }
-
   // MARK: - PDF Drag Handlers
 
-  // Called when a drag starts after long press on a PDF card.
+  // Called when a PDF drag starts after long press on a PDF card.
+  // Creates a single UIKit snapshot that will be used throughout the entire drag operation.
+  // This matches Apple's native drag behavior - one continuous visual element.
   private func handlePDFDragStart(pdf: PDFDocumentMetadata, frame: CGRect, position: CGPoint) {
     // Dismiss context menu when drag starts.
     withAnimation(.easeOut(duration: 0.15)) {
@@ -1986,11 +2234,42 @@ struct DashboardView: View {
     draggedPDF = pdf
     pdfDragSourceFrame = frame
     pdfDragPosition = position
+
+    // Create the UIKit snapshot immediately at drag start.
+    // This single view will be used for the entire drag operation - no SwiftUI overlay.
+    guard let window = windowRef else { return }
+
+    // Snapshot now includes the title (atomic unit), so use full frame height.
+    let snapshot = createPDFDragSnapshot(for: pdf)
+
+    // Position snapshot at EXACT original card position (center of full frame).
+    snapshot.center = CGPoint(x: frame.midX, y: frame.midY)
+
+    window.addSubview(snapshot)
+    pdfDragSnapshot = snapshot
+
+    // Animate the lift: move to finger-centered position, scale up slightly.
+    // Card is centered on the finger for natural drag feel (matches iOS behavior).
+    UIView.animate(
+      withDuration: 0.2,
+      delay: 0,
+      options: .curveEaseOut
+    ) {
+      snapshot.center = position
+      snapshot.transform = CGAffineTransform(scaleX: 1.1, y: 1.1)
+    }
   }
 
   // Called during PDF drag as the finger moves.
+  // Moves the single UIKit snapshot - no SwiftUI state updates for position.
   private func handlePDFDragMove(position: CGPoint) {
     pdfDragPosition = position
+
+    // Move the UIKit snapshot directly - this is instant, no SwiftUI redraw.
+    // Card is centered on the finger for natural drag feel.
+    if let snapshot = pdfDragSnapshot {
+      snapshot.center = position
+    }
 
     // Check which folder (if any) the finger is over.
     var foundFolderTarget: String?
@@ -2058,6 +2337,9 @@ struct DashboardView: View {
 
     // Check if we're over a folder.
     if let targetFolderID = dragTargetFolderID {
+      // Remove the UIKit snapshot immediately - the card disappears into the folder.
+      pdfDragSnapshot?.removeFromSuperview()
+
       // No animation when merging into folder - the card just disappears into it.
       // Move PDF to the existing folder.
       // Reset drag state only after library reloads to avoid ghost card appearing.
@@ -2072,7 +2354,11 @@ struct DashboardView: View {
 
     // Check if we're over a notebook to create a folder.
     if let targetNotebookID = dragTargetNotebookID,
-      let targetNotebook = library.notebooks.first(where: { $0.id == targetNotebookID }) {
+      let targetNotebook = library.notebooks.first(where: { $0.id == targetNotebookID })
+    {
+      // Remove the UIKit snapshot immediately - items combine into a folder.
+      pdfDragSnapshot?.removeFromSuperview()
+
       // No animation when merging with a notebook - they just combine into a folder.
       // Create folder from the PDF and notebook.
       createFolderFromPDFAndNotebook(
@@ -2084,7 +2370,11 @@ struct DashboardView: View {
 
     // Check if we're over another PDF to create a folder.
     if let targetPDFID = dragTargetPDFID,
-      let targetPDF = library.pdfDocuments.first(where: { $0.id == targetPDFID }) {
+      let targetPDF = library.pdfDocuments.first(where: { $0.id == targetPDFID })
+    {
+      // Remove the UIKit snapshot immediately - PDFs combine into a folder.
+      pdfDragSnapshot?.removeFromSuperview()
+
       // No animation when merging with another PDF - they just combine into a folder.
       // Create folder from the two PDFs.
       createFolderFromTwoPDFs(
@@ -2095,31 +2385,54 @@ struct DashboardView: View {
     }
 
     // No valid target - released over empty space.
-    // Animate card back to its original position, then reset state after animation completes.
-    if let window = windowRef {
-      // Hide drag overlay immediately so only the snapshot is visible during animation.
-      draggedPDF = nil
+    // Single combined animation for smooth return: position and scale animate together.
+    guard let snapshot = pdfDragSnapshot else {
+      resetPDFDragState()
+      return
+    }
 
-      animatePDFDropToDestination(
-        pdf: pdf,
-        fromPosition: position,
-        toFrame: pdfDragSourceFrame,
-        in: window
-      ) {
-        // Reset remaining drag state after animation completes.
+    // Target position: use CURRENT card frame if available (more accurate than drag source frame,
+    // which may be stale if scroll or layout changed during drag).
+    let currentFrame = pdfCardFrames[pdf.id] ?? pdfDragSourceFrame
+    let targetCenter = CGPoint(x: currentFrame.midX, y: currentFrame.midY)
+
+    // Ensure snapshot is at lifted scale before return animation.
+    // This cancels any in-progress lift animation and guarantees consistent shrink effect.
+    snapshot.layer.removeAllAnimations()
+    snapshot.transform = CGAffineTransform(scaleX: 1.1, y: 1.1)
+
+    // Combined animation: position and scale animate simultaneously for one fluid motion.
+    // Use UIView.animate to match the lift animation style.
+    UIView.animate(
+      withDuration: 0.4,
+      delay: 0,
+      usingSpringWithDamping: 0.75,
+      initialSpringVelocity: 0,
+      options: []
+    ) {
+      snapshot.center = targetCenter
+      snapshot.transform = .identity
+    } completion: { _ in
+      // Remove snapshot and reveal SwiftUI card.
+      // Card is now at exact position and scale, so swap is invisible.
+      snapshot.removeFromSuperview()
+      // Disable animations during state reset to prevent grid from animating the card.
+      var transaction = Transaction()
+      transaction.disablesAnimations = true
+      withTransaction(transaction) {
         self.resetPDFDragState()
       }
-    } else {
-      // No window available, just reset immediately.
-      resetPDFDragState()
     }
   }
 
   // Resets all PDF drag-related state.
   private func resetPDFDragState() {
-    // Clear dragged item WITHOUT animation to avoid matchedGeometryEffect confusion.
-    // Animating this causes isSource to transition with animation, and SwiftUI
-    // interpolates from an undefined position, creating a "jump up then slide down" ghost.
+    // Clear the UIKit snapshot reference.
+    pdfDragSnapshot = nil
+
+    // Clear drag state. With the "Relay Handoff" pattern (no crossfade),
+    // clearing draggedPDF instantly reveals the SwiftUI card since
+    // isBeingDragged becomes false and the opacity condition evaluates to 1.
     draggedPDF = nil
 
     // Animate target state for smooth scale-back on target cards.
