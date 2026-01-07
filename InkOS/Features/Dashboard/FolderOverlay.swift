@@ -160,6 +160,13 @@ struct FolderOverlay: View {
   // Used to hide the original card while dragging (so it appears to move, not duplicate).
   let draggedPDFID: String?
 
+  // ID of the notebook returning from drag that should animate scale-down.
+  // When set, the SwiftUI card appears at scale 1.1, then animates to 1.0.
+  let returningFromDragNotebookID: String?
+
+  // ID of the PDF returning from drag that should animate scale-down.
+  let returningFromDragPDFID: String?
+
   // Namespace for matched geometry effects when cards move between dashboard and folder overlay.
   let cardNamespace: Namespace.ID
 
@@ -654,6 +661,7 @@ struct FolderOverlay: View {
     -> some View {
     let isContextMenuActive = contextMenuState?.matchesNotebook(notebook) == true
     let isBeingDragged = draggedNotebookID == notebook.id
+    let isReturningFromDrag = returningFromDragNotebookID == notebook.id
 
     FolderDraggableNotebookCard(
       notebook: notebook,
@@ -703,7 +711,13 @@ struct FolderOverlay: View {
       isSource: false
     )
     .transition(.scale.combined(with: .opacity))
-    .scaleEffect(isContextMenuActive ? 1.08 : 1.0, anchor: .center)
+    .scaleEffect(
+      isReturningFromDrag ? 1.1 : (isContextMenuActive ? 1.08 : 1.0),
+      anchor: .center
+    )
+    // Animate scale-down when returning from drag (matches context menu feel).
+    .animation(.spring(response: 0.28, dampingFraction: 0.72), value: isReturningFromDrag)
+    .animation(.spring(response: 0.28, dampingFraction: 0.72), value: isContextMenuActive)
     // Hide the card while it's being dragged (drag overlay shows the moving card).
     .opacity(isBeingDragged ? 0 : 1)
     // Prevent animation on visibility change to avoid ghost card effect.
@@ -718,6 +732,7 @@ struct FolderOverlay: View {
     -> some View {
     let isContextMenuActive = contextMenuState?.matchesPDFDocument(pdf) == true
     let isBeingDragged = draggedPDFID == pdf.id
+    let isReturningFromDrag = returningFromDragPDFID == pdf.id
 
     FolderDraggablePDFCard(
       pdf: pdf,
@@ -767,7 +782,13 @@ struct FolderOverlay: View {
       isSource: false
     )
     .transition(.scale.combined(with: .opacity))
-    .scaleEffect(isContextMenuActive ? 1.08 : 1.0, anchor: .center)
+    .scaleEffect(
+      isReturningFromDrag ? 1.1 : (isContextMenuActive ? 1.08 : 1.0),
+      anchor: .center
+    )
+    // Animate scale-down when returning from drag (matches context menu feel).
+    .animation(.spring(response: 0.28, dampingFraction: 0.72), value: isReturningFromDrag)
+    .animation(.spring(response: 0.28, dampingFraction: 0.72), value: isContextMenuActive)
     // Hide the card while it's being dragged (drag overlay shows the moving card).
     .opacity(isBeingDragged ? 0 : 1)
     // Prevent animation on visibility change to avoid ghost card effect.
