@@ -208,18 +208,28 @@ struct FolderOverlay: View {
   @State private var containerOpacity: CGFloat = 0
 
   // Overlay sizing constants.
-  private let overlayWidth: CGFloat = 280
+  // Base width is 280, but adapts to screen size for different orientations.
+  private let baseOverlayWidth: CGFloat = 280
   private let overlayCornerRadius: CGFloat = 24
   private let sourceCornerRadius: CGFloat = 10
   private let contentPadding: CGFloat = 16
   // Header height for animation. Matches padding + text + padding.
   private let headerHeight: CGFloat = 50
 
+  // Calculates the overlay width based on screen dimensions.
+  // Uses min(280, screenWidth * 0.7) to ensure it fits on smaller screens and landscape.
+  private func overlayWidth(for screenBounds: CGRect) -> CGFloat {
+    let maxWidth = min(screenBounds.width, screenBounds.height) * 0.7
+    return min(baseOverlayWidth, max(maxWidth, 240))
+  }
+
   var body: some View {
     GeometryReader { geometry in
       let screenBounds = geometry.frame(in: .global)
+      // Calculate dynamic overlay width for current screen size.
+      let currentOverlayWidth = overlayWidth(for: screenBounds)
       // Calculate the expanded overlay frame (centered on screen).
-      let expandedFrame = calculateExpandedFrame(in: screenBounds)
+      let expandedFrame = calculateExpandedFrame(in: screenBounds, overlayWidth: currentOverlayWidth)
 
       // Calculate separate X and Y scale factors.
       // This allows the overlay to match the source's exact dimensions when collapsed,
@@ -320,13 +330,13 @@ struct FolderOverlay: View {
     .ignoresSafeArea()
     // Notebook rename alert.
     .alert(
-      "Rename Notebook",
+      "Rename Note",
       isPresented: Binding(
         get: { renamingNotebook != nil },
         set: { if !$0 { renamingNotebook = nil } }
       )
     ) {
-      TextField("Notebook name", text: $renameText)
+      TextField("Note name", text: $renameText)
       Button("Cancel", role: .cancel) {
         renamingNotebook = nil
       }
@@ -338,11 +348,11 @@ struct FolderOverlay: View {
         renamingNotebook = nil
       }
     } message: {
-      Text("Enter a new name for this notebook.")
+      Text("Enter a new name for this note.")
     }
     // Notebook delete confirmation alert.
     .alert(
-      "Delete Notebook?",
+      "Delete Note?",
       isPresented: Binding(
         get: { deletingNotebook != nil },
         set: { if !$0 { deletingNotebook = nil } }
@@ -409,7 +419,8 @@ struct FolderOverlay: View {
   }
 
   // Calculates the expanded overlay frame centered on screen.
-  private func calculateExpandedFrame(in screenBounds: CGRect) -> CGRect {
+  // Takes dynamic overlay width to adapt to different screen sizes and orientations.
+  private func calculateExpandedFrame(in screenBounds: CGRect, overlayWidth: CGFloat) -> CGRect {
     let gridSpacing: CGFloat = 22
     let cardAspectRatio: CGFloat = 0.72
     let columns = 2
@@ -434,11 +445,15 @@ struct FolderOverlay: View {
     let isEmpty = notebooks.isEmpty && pdfDocuments.isEmpty
     let totalHeight = isEmpty ? minHeight : contentHeight
 
+    // Constrain max height to fit on screen with margins.
+    let maxHeight = screenBounds.height - 80
+    let finalHeight = min(totalHeight, maxHeight)
+
     return CGRect(
       x: (screenBounds.width - overlayWidth) / 2,
-      y: (screenBounds.height - totalHeight) / 2,
+      y: (screenBounds.height - finalHeight) / 2,
       width: overlayWidth,
-      height: totalHeight
+      height: finalHeight
     )
   }
 
@@ -568,12 +583,15 @@ struct FolderOverlay: View {
   // Content area below the header containing notebooks and PDFs.
   // Always renders content - they scale naturally with the container.
   // No snapshot needed since scale animation doesn't clip content.
+  // Wrapped in ScrollView for landscape mode where content may exceed available height.
   private var contentArea: some View {
     GeometryReader { geo in
       if notebooks.isEmpty && pdfDocuments.isEmpty {
         emptyState
       } else {
-        contentGrid(in: geo.size)
+        ScrollView(.vertical, showsIndicators: false) {
+          contentGrid(in: geo.size)
+        }
       }
     }
   }

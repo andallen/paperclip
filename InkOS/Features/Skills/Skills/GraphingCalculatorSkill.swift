@@ -62,6 +62,12 @@ struct GraphingCalculatorSkill: Skill, SkillCreatable {
   }
 
   // Executes the skill with given parameters and context.
+  // Priority order:
+  // 1. specification parameter (direct JSON specification)
+  // 2. jiixContent parameter (explicit JIIX from parameter)
+  // 3. context.selectionJIIX (JIIX from lasso selection in AI overlay)
+  // 4. prompt parameter (explicit prompt from parameter)
+  // 5. context.userMessage (natural language from AI chat)
   func execute(
     parameters: [String: SkillParameterValue],
     context: SkillContext
@@ -71,25 +77,38 @@ struct GraphingCalculatorSkill: Skill, SkillCreatable {
     let jiixContent = try extractString(from: parameters, key: "jiixContent")
     let prompt = try extractString(from: parameters, key: "prompt")
 
-    // Priority order: specification > jiixContent > prompt
+    // Priority 1: Direct specification - parse locally without cloud.
     if let specString = specification {
-      // Direct specification - parse locally without cloud.
       return try parseDirectSpecification(specString)
     }
 
+    // Priority 2: Explicit JIIX content from parameters.
     if let jiix = jiixContent {
-      // JIIX content - send to cloud for AI interpretation.
       return try await executeWithJIIX(jiix, context: context)
     }
 
+    // Priority 3: JIIX from context selection (lasso tool in AI overlay).
+    if let contextJIIX = context.selectionJIIX,
+      !contextJIIX.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    {
+      return try await executeWithJIIX(contextJIIX, context: context)
+    }
+
+    // Priority 4: Explicit prompt from parameters.
     if let promptString = prompt {
-      // Natural language prompt - send to cloud for AI generation.
       return try await executeWithPrompt(promptString, context: context)
+    }
+
+    // Priority 5: User message from context (AI chat invocation).
+    if let userMessage = context.userMessage,
+      !userMessage.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    {
+      return try await executeWithPrompt(userMessage, context: context)
     }
 
     // No valid input provided.
     throw SkillError.missingRequiredParameter(
-      parameterName: "specification, jiixContent, or prompt"
+      parameterName: "specification, jiixContent, prompt, or context selection"
     )
   }
 

@@ -43,6 +43,9 @@ class EditorViewController: UIViewController {
   private var aiChatText: String = ""
   // Tap catcher view for dismissing the overlay.
   private var aiOverlayTapCatcher: UIView?
+  // Constraint references for responsive AI overlay sizing during rotation.
+  private var aiOverlayWidthConstraint: NSLayoutConstraint?
+  private var aiOverlayHeightConstraint: NSLayoutConstraint?
 
   // Handler called when the editor requests dismissal.
   // When set, this replaces the default dismiss behavior to allow SwiftUI to control the transition.
@@ -129,6 +132,24 @@ class EditorViewController: UIViewController {
   override func viewDidLayoutSubviews() {
     super.viewDidLayoutSubviews()
     self.viewModel.setEditorViewSize(bounds: self.view.bounds)
+  }
+
+  override func viewWillTransition(
+    to size: CGSize,
+    with coordinator: UIViewControllerTransitionCoordinator
+  ) {
+    super.viewWillTransition(to: size, with: coordinator)
+
+    // If the AI overlay is expanded during rotation, animate it alongside the transition.
+    // This ensures the overlay stays properly positioned during orientation changes.
+    guard isAIOverlayExpanded, let overlayView = aiOverlayView else { return }
+
+    coordinator.animate(alongsideTransition: { _ in
+      // Force layout to adapt constraints to new size.
+      self.view.layoutIfNeeded()
+      // Keep overlay visible at identity transform.
+      overlayView.transform = .identity
+    }, completion: nil)
   }
 
   // MARK: - Navigation
@@ -267,9 +288,8 @@ class EditorViewController: UIViewController {
 
   // Configures the AI overlay panel that slides up from the bottom.
   // The overlay is a glass panel with a chat input bar at the bottom.
+  // Uses responsive sizing to adapt to different screen sizes and orientations.
   private func configureAIOverlay() {
-    let overlayWidth: CGFloat = 400
-    let overlayHeight: CGFloat = 560
     let cornerRadius: CGFloat = 24
 
     // Create tap catcher to dismiss overlay when tapping outside.
@@ -306,11 +326,22 @@ class EditorViewController: UIViewController {
 
     view.addSubview(overlayView)
 
-    // Position overlay at bottom-right, trailing and bottom edges aligned with button edges.
-    // This matches the Dashboard positioning where overlay's corner aligns with button's corner.
+    // Position overlay at bottom-right with responsive sizing.
+    // Width: min(400, available width - 48) to ensure it fits on screen.
+    // Height: min(560, available height - 140) to account for toolbars and margins.
+    let widthConstraint = overlayView.widthAnchor.constraint(equalToConstant: 400)
+    widthConstraint.priority = .defaultHigh
+    let heightConstraint = overlayView.heightAnchor.constraint(equalToConstant: 560)
+    heightConstraint.priority = .defaultHigh
+    aiOverlayWidthConstraint = widthConstraint
+    aiOverlayHeightConstraint = heightConstraint
+
     NSLayoutConstraint.activate([
-      overlayView.widthAnchor.constraint(equalToConstant: overlayWidth),
-      overlayView.heightAnchor.constraint(equalToConstant: overlayHeight),
+      widthConstraint,
+      heightConstraint,
+      // Maximum constraints ensure overlay fits on screen.
+      overlayView.widthAnchor.constraint(lessThanOrEqualTo: view.widthAnchor, constant: -48),
+      overlayView.heightAnchor.constraint(lessThanOrEqualTo: view.safeAreaLayoutGuide.heightAnchor, constant: -140),
       overlayView.trailingAnchor.constraint(
         equalTo: view.safeAreaLayoutGuide.trailingAnchor,
         constant: -24
@@ -322,12 +353,12 @@ class EditorViewController: UIViewController {
     ])
 
     // Start hidden below screen.
-    overlayView.transform = CGAffineTransform(translationX: 0, y: overlayHeight + 100)
+    overlayView.transform = CGAffineTransform(translationX: 0, y: 660)
     overlayView.isHidden = true
     aiOverlayView = overlayView
 
     // Add chat input bar at the bottom of the overlay.
-    configureChatInputBar(in: overlayView, overlayHeight: overlayHeight)
+    configureChatInputBar(in: overlayView)
 
     // Bring AI button to front so it's above the overlay.
     if let buttonView = aiButtonView {
@@ -336,7 +367,7 @@ class EditorViewController: UIViewController {
   }
 
   // Embeds the SwiftUI chat input bar at the bottom of the overlay.
-  private func configureChatInputBar(in overlayView: UIVisualEffectView, overlayHeight: CGFloat) {
+  private func configureChatInputBar(in overlayView: UIVisualEffectView) {
     let chatBar = AIChatInputBar(
       text: Binding(
         get: { [weak self] in self?.aiChatText ?? "" },
@@ -379,13 +410,18 @@ class EditorViewController: UIViewController {
   }
 
   // Updates the overlay and button state based on isAIOverlayExpanded.
+  // Calculates slide distance dynamically based on current overlay bounds.
   private func updateAIOverlayVisibility(animated: Bool) {
     guard let overlayView = aiOverlayView,
           let buttonView = aiButtonView,
           let tapCatcher = aiOverlayTapCatcher else { return }
 
-    let overlayHeight: CGFloat = 560
-    let slideDistance: CGFloat = overlayHeight + 100
+    // Force layout pass to get current bounds after any rotation.
+    view.layoutIfNeeded()
+
+    // Calculate slide distance based on actual overlay height plus margin.
+    let overlayHeight = overlayView.bounds.height
+    let slideDistance: CGFloat = max(overlayHeight + 100, 660)
 
     if isAIOverlayExpanded {
       overlayView.isHidden = false
@@ -415,7 +451,7 @@ class EditorViewController: UIViewController {
         delay: 0,
         usingSpringWithDamping: 0.85,
         initialSpringVelocity: 0,
-        options: [],
+        options: [.layoutSubviews],
         animations: animations,
         completion: completion
       )

@@ -81,13 +81,13 @@ struct RenameNotebookAlert: ViewModifier {
   func body(content: Content) -> some View {
     content
       .alert(
-        "Rename Notebook",
+        "Rename Note",
         isPresented: .init(
           get: { renamingNotebook != nil },
           set: { if !$0 { renamingNotebook = nil } }
         )
       ) {
-        TextField("Notebook name", text: $renameText)
+        TextField("Note name", text: $renameText)
         Button("Cancel", role: .cancel) {
           renamingNotebook = nil
         }
@@ -101,7 +101,7 @@ struct RenameNotebookAlert: ViewModifier {
           renamingNotebook = nil
         }
       } message: {
-        Text("Enter a new name for this notebook.")
+        Text("Enter a new name for this note.")
       }
   }
 }
@@ -116,7 +116,7 @@ struct DeleteNotebookAlert: ViewModifier {
   func body(content: Content) -> some View {
     content
       .alert(
-        "Delete Notebook?",
+        "Delete Note?",
         isPresented: .init(
           get: { deletingNotebook != nil },
           set: { if !$0 { deletingNotebook = nil } }
@@ -207,7 +207,7 @@ struct DeleteFolderAlert: ViewModifier {
       } message: {
         if let folder = deletingFolder {
           Text(
-            "\"\(folder.displayName)\" and all notebooks inside it will be permanently deleted. This cannot be undone."
+            "\"\(folder.displayName)\" and all notes inside it will be permanently deleted. This cannot be undone."
           )
         }
       }
@@ -257,7 +257,7 @@ struct OpenErrorAlert: ViewModifier {
   func body(content: Content) -> some View {
     content
       .alert(
-        "Unable to Open Notebook",
+        "Unable to Open Note",
         isPresented: .init(
           get: { openErrorMessage != nil },
           set: { if !$0 { openErrorMessage = nil } }
