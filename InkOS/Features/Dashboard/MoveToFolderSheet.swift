@@ -185,13 +185,13 @@ private struct FolderRow: View {
   }
 
   // Formats the item count label.
-  // Shows "notebooks" if only notebooks, "PDFs" if only PDFs, or "items" if mixed.
+  // Shows "notes" if only notes, "PDFs" if only PDFs, or "items" if mixed.
   private var countLabel: String {
     let total = folder.itemCount
     if total == 0 {
       return "Empty"
     } else if folder.pdfCount == 0 {
-      return total == 1 ? "1 notebook" : "\(total) notebooks"
+      return total == 1 ? "1 note" : "\(total) notes"
     } else if folder.notebookCount == 0 {
       return total == 1 ? "1 PDF" : "\(total) PDFs"
     } else {

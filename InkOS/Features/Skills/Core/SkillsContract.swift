@@ -478,6 +478,31 @@ struct SkillContext: Sendable, Equatable {
 
   // Conversation history for context-aware skills.
   let conversationHistory: [ConversationMessage]?
+
+  // JIIX content extracted from user's selection (via lasso tool in AI overlay).
+  // Used by skills that can interpret handwritten content.
+  let selectionJIIX: String?
+
+  // Bounding rectangle of the user's selection in editor coordinates.
+  // Indicates where the selection was made for positioning results.
+  let selectionBounds: CGRect?
+
+  // Creates context with all parameters (used primarily in tests and AI invocation).
+  init(
+    currentNotebookID: String? = nil,
+    currentPDFID: String? = nil,
+    userMessage: String? = nil,
+    conversationHistory: [ConversationMessage]? = nil,
+    selectionJIIX: String? = nil,
+    selectionBounds: CGRect? = nil
+  ) {
+    self.currentNotebookID = currentNotebookID
+    self.currentPDFID = currentPDFID
+    self.userMessage = userMessage
+    self.conversationHistory = conversationHistory
+    self.selectionJIIX = selectionJIIX
+    self.selectionBounds = selectionBounds
+  }
 }
 
 // A single message in conversation history.
@@ -529,6 +554,27 @@ enum MessageRole: String, Sendable, Codable, Equatable {
  WHEN: SkillContext is created
  THEN: currentNotebookID is nil
   AND: currentPDFID is nil
+
+ SCENARIO: Context with selection from lasso tool
+ GIVEN: User selects handwritten content with lasso in AI overlay
+ WHEN: SkillContext is created
+ THEN: selectionJIIX contains JIIX content from selection
+  AND: selectionBounds contains CGRect of selection area
+  AND: Skills can interpret handwritten content (e.g., equations)
+
+ SCENARIO: Context without selection
+ GIVEN: User invokes skill without using lasso tool
+ WHEN: SkillContext is created
+ THEN: selectionJIIX is nil
+  AND: selectionBounds is nil
+  AND: Skill uses other input methods (userMessage, parameters)
+
+ SCENARIO: GraphingCalculatorSkill with selection
+ GIVEN: User lasso-selects handwritten "y = x^2" and says "graph this"
+ WHEN: GraphingCalculatorSkill executes
+ THEN: selectionJIIX can be interpreted as equation
+  AND: Graph is generated from handwritten expression
+  AND: Result can be inserted near selectionBounds
 */
 
 // MARK: - SkillMetadata Struct
