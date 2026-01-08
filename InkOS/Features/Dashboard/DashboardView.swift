@@ -236,6 +236,19 @@ struct DashboardView: View {
   // Text entered in the AI chat input bar.
   @State private var aiChatText: String = ""
 
+  // MARK: - Search State
+
+  // Shared state for the search overlay UI.
+  @StateObject private var searchOverlayState = SearchOverlayState()
+  // Task for debounced search.
+  @State private var searchDebounceTask: Task<Void, Never>?
+  // Keeps a strong reference to the overlay window.
+  @State private var searchOverlayWindow: UIWindow?
+  // Hosting controller for the overlay window content.
+  @State private var searchOverlayHostingController: UIHostingController<SearchOverlayRootView>?
+  // Reference to the UIWindow for search overlay presentation.
+  @State private var windowRef: UIWindow?
+
   // Screen bounds for layout calculations.
   // Updated from GeometryReader to avoid deprecated UIScreen.main usage.
   @State private var screenBounds: CGRect = .zero
@@ -275,6 +288,12 @@ struct DashboardView: View {
       }
       .toolbarBackground(.hidden, for: .navigationBar)
       .navigationBarTitleDisplayMode(.inline)
+      .background(WindowReader { window in
+        windowRef = window
+      })
+      .onChange(of: searchOverlayState.searchText) { _, newValue in
+        handleSearchTextChanged(newValue)
+      }
   }
 
   // MARK: - Main Content
@@ -430,10 +449,28 @@ struct DashboardView: View {
 
   @ToolbarContentBuilder
   private var toolbarContent: some ToolbarContent {
-    // Shows menu with create options. When folder is open: New Note, Import PDF.
-    // When no folder is open: New Note, New Folder, Import PDF.
+    // Search button and create menu in toolbar.
     ToolbarItem(placement: .navigationBarTrailing) {
-      if let folder = expandedFolder {
+      HStack(spacing: 16) {
+        // Search button opens search overlay.
+        Button {
+          presentSearchOverlay()
+        } label: {
+          Image(systemName: "magnifyingglass")
+        }
+
+        // Plus menu for create options.
+        plusMenuButton
+      }
+    }
+  }
+
+  // MARK: - Plus Menu Button
+
+  // Plus menu button for the toolbar. Shows different options based on context.
+  @ViewBuilder
+  private var plusMenuButton: some View {
+    if let folder = expandedFolder {
         // Menu with notebook and PDF import options when folder is open.
         Menu {
           Button {
@@ -477,62 +514,6 @@ struct DashboardView: View {
           Image(systemName: "plus")
         }
       }
-    }
-  }
-
-  // MARK: - Plus Menu Button
-
-  // Plus menu button for the header. Shows different options based on context.
-  @ViewBuilder
-  private var plusMenuButton: some View {
-    if let folder = expandedFolder {
-      // Menu with notebook and PDF import options when folder is open.
-      Menu {
-        Button {
-          createNotebookInExpandedFolder(folder)
-        } label: {
-          Label("New Note", systemImage: "doc.badge.plus")
-        }
-
-        Button {
-          showPDFPicker = true
-        } label: {
-          Label("Import PDF", systemImage: "doc.richtext")
-        }
-      } label: {
-        Image(systemName: "plus")
-          .font(.system(size: 22, weight: .medium))
-          .foregroundStyle(Color.offBlack)
-      }
-    } else {
-      // Menu with all options when no folder is open.
-      Menu {
-        Button {
-          Task {
-            await library.createNotebook()
-          }
-        } label: {
-          Label("New Note", systemImage: "doc.badge.plus")
-        }
-
-        Button {
-          newFolderName = ""
-          showCreateFolderAlert = true
-        } label: {
-          Label("New Folder", systemImage: "folder.badge.plus")
-        }
-
-        Button {
-          showPDFPicker = true
-        } label: {
-          Label("Import PDF", systemImage: "doc.richtext")
-        }
-      } label: {
-        Image(systemName: "plus")
-          .font(.system(size: 22, weight: .medium))
-          .foregroundStyle(Color.offBlack)
-      }
-    }
   }
 
   // MARK: - AI Overlay Section
@@ -2221,6 +2202,155 @@ struct DashboardView: View {
     )
 
     return actions
+  }
+
+  // MARK: - Search Overlay
+
+  // Presents the search overlay above the navigation bar in its own window.
+  private func presentSearchOverlay() {
+    if searchOverlayWindow == nil {
+      createSearchOverlayWindow()
+    }
+
+    DispatchQueue.main.async {
+      self.searchOverlayState.isExpanded = true
+      self.searchOverlayState.isSearchFieldFocused = true
+    }
+  }
+
+  // Creates the search overlay window if a scene is available.
+  private func createSearchOverlayWindow() {
+    guard let windowScene = resolveSearchOverlayScene() else {
+      print("[DashboardView] Search overlay window scene unavailable")
+      return
+    }
+
+    let rootView = makeSearchOverlayRootView()
+    let hostingController = UIHostingController(rootView: rootView)
+    hostingController.view.backgroundColor = .clear
+
+    let overlayWindow = UIWindow(windowScene: windowScene)
+    overlayWindow.rootViewController = hostingController
+    overlayWindow.windowLevel = .alert + 1
+    overlayWindow.isHidden = false
+    overlayWindow.makeKeyAndVisible()
+
+    searchOverlayHostingController = hostingController
+    searchOverlayWindow = overlayWindow
+  }
+
+  // Releases the overlay window and restores focus to the main window.
+  private func removeSearchOverlayWindow() {
+    searchOverlayWindow?.isHidden = true
+    searchOverlayWindow?.rootViewController = nil
+    searchOverlayWindow = nil
+    searchOverlayHostingController = nil
+    windowRef?.makeKeyAndVisible()
+  }
+
+  // Builds the root view used by the overlay window.
+  private func makeSearchOverlayRootView() -> SearchOverlayRootView {
+    SearchOverlayRootView(
+      state: searchOverlayState,
+      onDismiss: {
+        dismissSearch()
+      },
+      onClear: {
+        clearSearchText()
+      },
+      onResultTapped: { result in
+        handleSearchResultTapped(result)
+      }
+    )
+  }
+
+  // Chooses the active scene for presenting the overlay window.
+  private func resolveSearchOverlayScene() -> UIWindowScene? {
+    if let windowScene = windowRef?.windowScene {
+      return windowScene
+    }
+
+    return UIApplication.shared.connectedScenes
+      .compactMap { $0 as? UIWindowScene }
+      .first(where: { $0.activationState == .foregroundActive })
+  }
+
+  // Dismisses the search overlay and resets state.
+  private func dismissSearch() {
+    searchOverlayState.isSearchFieldFocused = false
+    searchOverlayState.isExpanded = false
+    // Clear search after animation completes.
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+      if !searchOverlayState.isExpanded {
+        searchOverlayState.searchText = ""
+        searchOverlayState.searchResults = []
+        searchOverlayState.isSearching = false
+        removeSearchOverlayWindow()
+      }
+    }
+  }
+
+  // Clears the search text without closing the overlay.
+  private func clearSearchText() {
+    // Clear the bound search text.
+    searchOverlayState.searchText = ""
+    // Reset results for the empty query state.
+    searchOverlayState.searchResults = []
+    // Stop the loading state.
+    searchOverlayState.isSearching = false
+    // Maintain focus in the search field.
+    searchOverlayState.isSearchFieldFocused = true
+  }
+
+  // Handles search text changes with debouncing.
+  private func handleSearchTextChanged(_ newValue: String) {
+    searchDebounceTask?.cancel()
+    let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+
+    if trimmed.isEmpty {
+      searchOverlayState.searchResults = []
+      searchOverlayState.isSearching = false
+      return
+    }
+
+    searchOverlayState.isSearching = true
+    searchDebounceTask = Task {
+      try? await Task.sleep(nanoseconds: 250_000_000)
+      guard !Task.isCancelled else { return }
+      await performSearch(query: trimmed)
+    }
+  }
+
+  // Performs the actual search using SearchService.
+  private func performSearch(query: String) async {
+    // Search service integration will be added here.
+    // For now, return empty results to test the UI.
+    await MainActor.run {
+      searchOverlayState.isSearching = false
+      // Results will be populated when SearchService is integrated.
+    }
+  }
+
+  // Handles tapping on a search result.
+  private func handleSearchResultTapped(_ result: SearchResult) {
+    // Dismiss the search overlay first.
+    dismissSearch()
+
+    // Navigate to the document after a brief delay for animation.
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+      switch result.documentType {
+      case .notebook:
+        // Find the notebook and open it.
+        if let notebook = library.notebooks.first(where: { $0.id == result.documentID }) {
+          openNotebook(notebook)
+        }
+      case .pdf:
+        // Open the PDF document by ID.
+        if let uuid = UUID(uuidString: result.documentID) {
+          openPDFDocument(documentID: uuid)
+        }
+      }
+    }
   }
 }
 // swiftlint:enable type_body_length
