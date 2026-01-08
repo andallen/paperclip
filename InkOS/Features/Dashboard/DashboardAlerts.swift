@@ -9,6 +9,8 @@ struct AlertModifiers: ViewModifier {
   @Binding var deletingNotebook: NotebookMetadata?
   @Binding var renamingPDF: PDFDocumentMetadata?
   @Binding var deletingPDF: PDFDocumentMetadata?
+  @Binding var renamingLesson: LessonMetadata?
+  @Binding var deletingLesson: LessonMetadata?
   @Binding var renamingFolder: FolderMetadata?
   @Binding var deletingFolder: FolderMetadata?
   @Binding var renamingLesson: LessonMetadata?
@@ -44,6 +46,19 @@ struct AlertModifiers: ViewModifier {
       .modifier(
         DeletePDFAlert(
           deletingPDF: $deletingPDF,
+          library: library
+        )
+      )
+      .modifier(
+        RenameLessonAlert(
+          renamingLesson: $renamingLesson,
+          renameText: $renameText,
+          library: library
+        )
+      )
+      .modifier(
+        DeleteLessonAlert(
+          deletingLesson: $deletingLesson,
           library: library
         )
       )

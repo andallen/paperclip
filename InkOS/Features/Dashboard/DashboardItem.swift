@@ -10,11 +10,22 @@ import Foundation
 
 // Represents a notebook, folder, PDF document, or lesson for display in the Dashboard grid.
 // The Dashboard grid uses this type to render a mixed list of items.
-enum DashboardItem: Identifiable {
+// Conforms to Hashable for use with UICollectionViewDiffableDataSource.
+enum DashboardItem: Identifiable, Hashable {
   case notebook(NotebookMetadata)
   case folder(FolderMetadata)
   case pdfDocument(PDFDocumentMetadata)
   case lesson(LessonMetadata)
+
+  // Custom Hashable implementation based on unique id.
+  func hash(into hasher: inout Hasher) {
+    hasher.combine(id)
+  }
+
+  // Custom Equatable implementation based on unique id.
+  static func == (lhs: DashboardItem, rhs: DashboardItem) -> Bool {
+    lhs.id == rhs.id
+  }
 
   // Unique identifier combining type prefix with item ID.
   // Ensures no collision between notebook, folder, PDF document, and lesson with same UUID.
@@ -84,6 +95,14 @@ enum DashboardItem: Identifiable {
     return false
   }
 
+  // Returns true if this item is a lesson.
+  var isLesson: Bool {
+    if case .lesson = self {
+      return true
+    }
+    return false
+  }
+
   // Returns the notebook metadata if this is a notebook, nil otherwise.
   var notebookMetadata: NotebookMetadata? {
     if case .notebook(let metadata) = self {
@@ -106,14 +125,6 @@ enum DashboardItem: Identifiable {
       return metadata
     }
     return nil
-  }
-
-  // Returns true if this item is a lesson.
-  var isLesson: Bool {
-    if case .lesson = self {
-      return true
-    }
-    return false
   }
 
   // Returns the lesson metadata if this is a lesson, nil otherwise.
