@@ -134,7 +134,7 @@ enum LessonSection: Codable, Sendable, Equatable {
 }
 
 // Content section containing markdown text.
-struct ContentSection: Codable, Sendable, Equatable {
+struct ContentSection: Codable, Sendable, Equatable, Hashable {
   let id: String
   let type: String
   let content: String
@@ -147,7 +147,7 @@ struct ContentSection: Codable, Sendable, Equatable {
 }
 
 // Visual section for images or interactive content.
-struct VisualSection: Codable, Sendable, Equatable {
+struct VisualSection: Codable, Sendable, Equatable, Hashable {
   let id: String
   let type: String
   let visualType: VisualType
@@ -172,13 +172,13 @@ struct VisualSection: Codable, Sendable, Equatable {
 }
 
 // Type of visual content in a visual section.
-enum VisualType: String, Codable, Sendable {
+enum VisualType: String, Codable, Sendable, Hashable {
   case generated
   case interactive
 }
 
 // Question section for user interaction and assessment.
-struct QuestionSection: Codable, Sendable, Equatable {
+struct QuestionSection: Codable, Sendable, Equatable, Hashable {
   let id: String
   let type: String
   let questionType: QuestionType
@@ -206,14 +206,14 @@ struct QuestionSection: Codable, Sendable, Equatable {
 }
 
 // Type of question determining input method and evaluation.
-enum QuestionType: String, Codable, Sendable {
+enum QuestionType: String, Codable, Sendable, Hashable {
   case multipleChoice
   case freeResponse
   case math
 }
 
 // Summary section containing key takeaways.
-struct SummarySection: Codable, Sendable, Equatable {
+struct SummarySection: Codable, Sendable, Equatable, Hashable {
   let id: String
   let type: String
   let content: String
