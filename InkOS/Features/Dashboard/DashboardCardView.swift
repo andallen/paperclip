@@ -704,6 +704,8 @@ class LessonCardView: DashboardCardView {
   private func setupPlaceholder() {
     // Container for placeholder content.
     placeholderView.backgroundColor = .white
+    placeholderView.layer.cornerRadius = Self.cornerRadius
+    placeholderView.clipsToBounds = true
     placeholderView.isHidden = true
 
     // Icon.
