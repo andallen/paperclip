@@ -205,7 +205,7 @@ class NotebookLibrary: ObservableObject {
     return allPDFs.filter { $0.folderID == folderID }
   }
 
-  // Combines notebooks, folders, and PDF documents into a single sorted list.
+  // Combines notebooks, folders, PDF documents, and lessons into a single sorted list.
   // Sorts by most recently accessed/modified first, with folders appearing before other types
   // when they have the same date.
   private func combineItems() {

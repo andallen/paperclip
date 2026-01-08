@@ -5,114 +5,7 @@ import UIKit
 // File length exception justified: Cohesive folder overlay view with tightly coupled animation logic.
 // Type body length exception justified: SwiftUI view with many computed subview properties for organization.
 
-// MARK: - Animated Blur View
-
-// UIViewRepresentable that wraps a UIVisualEffectView for smooth blur animation.
-// Uses UIViewPropertyAnimator with CADisplayLink for smooth interpolation.
-// Animates smoothly between clear (0) and fully blurred (1).
-struct AnimatedBlurView: UIViewRepresentable {
-  // Target blur intensity from 0 (clear) to 1 (full blur).
-  let blurFraction: CGFloat
-  // Duration for blur animation.
-  let animationDuration: TimeInterval
-  // Style of blur effect to use.
-  let style: UIBlurEffect.Style
-
-  init(
-    blurFraction: CGFloat,
-    animationDuration: TimeInterval = 0.35,
-    style: UIBlurEffect.Style = .regular
-  ) {
-    self.blurFraction = blurFraction
-    self.animationDuration = animationDuration
-    self.style = style
-  }
-
-  func makeUIView(context: Context) -> UIVisualEffectView {
-    let blurView = UIVisualEffectView(effect: nil)
-    // Create an animator that applies blur when its fractionComplete increases.
-    let animator = UIViewPropertyAnimator(duration: 1, curve: .linear) {
-      blurView.effect = UIBlurEffect(style: self.style)
-    }
-    animator.pausesOnCompletion = true
-    animator.fractionComplete = 0
-    context.coordinator.animator = animator
-    context.coordinator.currentFraction = 0
-    // Start animation to target if not zero.
-    if blurFraction > 0 {
-      context.coordinator.animateTo(blurFraction, duration: animationDuration)
-    }
-    return blurView
-  }
-
-  func updateUIView(_ uiView: UIVisualEffectView, context: Context) {
-    // Animate to new target fraction if different from current target.
-    let target = blurFraction
-    if abs(context.coordinator.targetFraction - target) > 0.001 {
-      context.coordinator.animateTo(target, duration: animationDuration)
-    }
-  }
-
-  func makeCoordinator() -> Coordinator {
-    Coordinator()
-  }
-
-  class Coordinator {
-    var animator: UIViewPropertyAnimator?
-    var displayLink: CADisplayLink?
-    var currentFraction: CGFloat = 0
-    var targetFraction: CGFloat = 0
-    var animationStartTime: CFTimeInterval = 0
-    var animationStartFraction: CGFloat = 0
-    var animationDuration: TimeInterval = 0.35
-
-    // Starts a smooth animation from current fraction to target.
-    func animateTo(_ target: CGFloat, duration: TimeInterval) {
-      targetFraction = target
-      animationStartFraction = currentFraction
-      animationDuration = duration
-      animationStartTime = CACurrentMediaTime()
-
-      // Cancel existing display link.
-      displayLink?.invalidate()
-
-      // Create new display link for animation.
-      let link = CADisplayLink(target: self, selector: #selector(updateAnimation))
-      link.add(to: .main, forMode: .common)
-      displayLink = link
-    }
-
-    @objc func updateAnimation() {
-      let elapsed = CACurrentMediaTime() - animationStartTime
-      var progress = min(1.0, elapsed / animationDuration)
-
-      // Apply ease-out cubic for smooth deceleration.
-      progress = easeOutCubic(progress)
-
-      // Interpolate between start and target.
-      let newFraction = animationStartFraction + (targetFraction - animationStartFraction) * progress
-      currentFraction = newFraction
-      animator?.fractionComplete = newFraction
-
-      // Stop animation when complete.
-      if progress >= 1.0 {
-        displayLink?.invalidate()
-        displayLink = nil
-      }
-    }
-
-    // Ease out cubic for a smooth deceleration.
-    private func easeOutCubic(_ t: CGFloat) -> CGFloat {
-      let adjusted = t - 1
-      return adjusted * adjusted * adjusted + 1
-    }
-
-    deinit {
-      displayLink?.invalidate()
-      animator?.stopAnimation(true)
-    }
-  }
-}
+// AnimatedBlurView is defined in UIComponents.swift and shared across overlays.
 
 // Displays an expanded folder overlay with notebooks and PDFs inside.
 // Uses scale-based animation: renders at full size but scales down to match source position.
@@ -138,12 +31,14 @@ struct FolderOverlay: View {
   // Drag callbacks for notebooks being dragged out of the folder.
   let onNotebookDragStart: ((NotebookMetadata, CGRect, CGPoint) -> Void)?
   let onNotebookDragMove: ((CGPoint) -> Void)?
-  let onNotebookDragEnd: ((CGPoint) -> Void)?
+  // Completion callback: true = animate return, false = remove immediately.
+  let onNotebookDragEnd: ((CGPoint, @escaping (Bool) -> Void) -> Void)?
 
   // Drag callbacks for PDFs being dragged out of the folder.
   let onPDFDragStart: ((PDFDocumentMetadata, CGRect, CGPoint) -> Void)?
   let onPDFDragMove: ((CGPoint) -> Void)?
-  let onPDFDragEnd: ((CGPoint) -> Void)?
+  // Completion callback: true = animate return, false = remove immediately.
+  let onPDFDragEnd: ((CGPoint, @escaping (Bool) -> Void) -> Void)?
 
   // Called when a drag crosses outside the overlay bounds.
   let onDragExitedBounds: (() -> Void)?
@@ -159,6 +54,13 @@ struct FolderOverlay: View {
   // ID of the PDF currently being dragged from this overlay.
   // Used to hide the original card while dragging (so it appears to move, not duplicate).
   let draggedPDFID: String?
+
+  // ID of the notebook returning from drag that should animate scale-down.
+  // When set, the SwiftUI card appears at scale 1.1, then animates to 1.0.
+  let returningFromDragNotebookID: String?
+
+  // ID of the PDF returning from drag that should animate scale-down.
+  let returningFromDragPDFID: String?
 
   // Namespace for matched geometry effects when cards move between dashboard and folder overlay.
   let cardNamespace: Namespace.ID
@@ -647,18 +549,16 @@ struct FolderOverlay: View {
   }
 
   // Renders a notebook card in the folder grid.
-  // Uses FolderDraggableNotebookCard which leverages UIKit's UIDragInteraction
-  // for accurate position tracking that's immune to parent view transforms.
+  // Uses NotebookCardRepresentable which is a UIKit card reparented during drag.
   @ViewBuilder
   private func notebookItemCard(notebook: NotebookMetadata, cardWidth: CGFloat, cardHeight: CGFloat)
     -> some View {
     let isContextMenuActive = contextMenuState?.matchesNotebook(notebook) == true
     let isBeingDragged = draggedNotebookID == notebook.id
+    let isReturningFromDrag = returningFromDragNotebookID == notebook.id
 
-    FolderDraggableNotebookCard(
+    NotebookCardRepresentable(
       notebook: notebook,
-      cardWidth: cardWidth,
-      cardHeight: cardHeight,
       onTap: {
         onNotebookTap(notebook)
       },
@@ -686,15 +586,21 @@ struct FolderOverlay: View {
         onNotebookDragMove?(position)
         checkDragBounds(position: position)
       },
-      onDragEnd: { position in
+      onDragEnd: { position, completion in
         // Check if final position is outside bounds and fire callback immediately if needed.
         // This handles quick releases that happen before the boundsExitDelay fires.
         finalizeDragBounds(position: position)
-        // Always call parent drag end so DashboardView can reset drag state.
-        // DashboardView will check hasDragExitedOverlayBounds to decide whether to move.
-        onNotebookDragEnd?(position)
+        // Forward to parent with completion callback.
+        // Parent decides whether to animate return or remove immediately.
+        if let dragEnd = onNotebookDragEnd {
+          dragEnd(position, completion)
+        } else {
+          // No parent handler - animate return.
+          completion(true)
+        }
       }
     )
+    .frame(width: cardWidth, height: cardHeight)
     // Folder overlay cards are secondary views - use isSource: false to avoid conflicts
     // with dashboard cards when items move between folder and root during drag operations.
     .matchedGeometryEffect(
@@ -703,7 +609,13 @@ struct FolderOverlay: View {
       isSource: false
     )
     .transition(.scale.combined(with: .opacity))
-    .scaleEffect(isContextMenuActive ? 1.08 : 1.0, anchor: .center)
+    .scaleEffect(
+      isReturningFromDrag ? 1.1 : (isContextMenuActive ? 1.08 : 1.0),
+      anchor: .center
+    )
+    // Animate scale-down when returning from drag (matches context menu feel).
+    .animation(.spring(response: 0.28, dampingFraction: 0.72), value: isReturningFromDrag)
+    .animation(.spring(response: 0.28, dampingFraction: 0.72), value: isContextMenuActive)
     // Hide the card while it's being dragged (drag overlay shows the moving card).
     .opacity(isBeingDragged ? 0 : 1)
     // Prevent animation on visibility change to avoid ghost card effect.
@@ -711,18 +623,16 @@ struct FolderOverlay: View {
   }
 
   // Renders a PDF card in the folder grid.
-  // Uses FolderDraggablePDFCard which leverages UIKit's UIDragInteraction
-  // for accurate position tracking that's immune to parent view transforms.
+  // Uses PDFCardRepresentable which is a UIKit card reparented during drag.
   @ViewBuilder
   private func pdfItemCard(pdf: PDFDocumentMetadata, cardWidth: CGFloat, cardHeight: CGFloat)
     -> some View {
     let isContextMenuActive = contextMenuState?.matchesPDFDocument(pdf) == true
     let isBeingDragged = draggedPDFID == pdf.id
+    let isReturningFromDrag = returningFromDragPDFID == pdf.id
 
-    FolderDraggablePDFCard(
-      pdf: pdf,
-      cardWidth: cardWidth,
-      cardHeight: cardHeight,
+    PDFCardRepresentable(
+      pdfDocument: pdf,
       onTap: {
         onPDFTap(pdf)
       },
@@ -750,15 +660,21 @@ struct FolderOverlay: View {
         onPDFDragMove?(position)
         checkDragBounds(position: position)
       },
-      onDragEnd: { position in
+      onDragEnd: { position, completion in
         // Check if final position is outside bounds and fire callback immediately if needed.
         // This handles quick releases that happen before the boundsExitDelay fires.
         finalizeDragBounds(position: position)
-        // Always call parent drag end so DashboardView can reset drag state.
-        // DashboardView will check hasDragExitedOverlayBounds to decide whether to move.
-        onPDFDragEnd?(position)
+        // Forward to parent with completion callback.
+        // Parent decides whether to animate return or remove immediately.
+        if let dragEnd = onPDFDragEnd {
+          dragEnd(position, completion)
+        } else {
+          // No parent handler - animate return.
+          completion(true)
+        }
       }
     )
+    .frame(width: cardWidth, height: cardHeight)
     // Folder overlay cards are secondary views - use isSource: false to avoid conflicts
     // with dashboard cards when items move between folder and root during drag operations.
     .matchedGeometryEffect(
@@ -767,7 +683,13 @@ struct FolderOverlay: View {
       isSource: false
     )
     .transition(.scale.combined(with: .opacity))
-    .scaleEffect(isContextMenuActive ? 1.08 : 1.0, anchor: .center)
+    .scaleEffect(
+      isReturningFromDrag ? 1.1 : (isContextMenuActive ? 1.08 : 1.0),
+      anchor: .center
+    )
+    // Animate scale-down when returning from drag (matches context menu feel).
+    .animation(.spring(response: 0.28, dampingFraction: 0.72), value: isReturningFromDrag)
+    .animation(.spring(response: 0.28, dampingFraction: 0.72), value: isContextMenuActive)
     // Hide the card while it's being dragged (drag overlay shows the moving card).
     .opacity(isBeingDragged ? 0 : 1)
     // Prevent animation on visibility change to avoid ghost card effect.
@@ -812,7 +734,7 @@ struct FolderOverlay: View {
       return []
 
     case .lesson:
-      // Lessons inside folders not supported yet.
+      // Lessons inside folders not supported.
       return []
     }
   }
