@@ -51,24 +51,30 @@ InkOS/
 │   │   │       ├── ContextGatherer.swift        # Context extraction for AI
 │   │   │       └── FirebaseChatClient.swift     # Firebase integration
 │   │   │
-│   │   ├── Dashboard/                    # Notebook library and management UI
-│   │   │   ├── DashboardView.swift       # Main dashboard view
-│   │   │   ├── DashboardItem.swift       # Dashboard item model
-│   │   │   ├── DashboardComponents.swift # Reusable dashboard UI components
-│   │   │   ├── DashboardAlerts.swift     # Alert dialogs for dashboard actions
-│   │   │   ├── NotebookLibrary.swift     # Notebook data source
-│   │   │   ├── FolderCard.swift          # Folder display card
-│   │   │   ├── FolderOverlay.swift       # Folder contents overlay
-│   │   │   ├── FolderDropDelegate.swift  # Drag-and-drop folder handling
-│   │   │   ├── FolderDraggableCards.swift # Draggable card components for folders
-│   │   │   ├── MoveToFolderSheet.swift   # Move notebook to folder UI
-│   │   │   ├── ContextMenuOverlay.swift  # Context menu presentation overlay
-│   │   │   ├── UIKitDragWrapper.swift    # UIKit drag-and-drop bridge for SwiftUI
+│   │   ├── Dashboard/                    # Notebook library and management UI (UIKit-based)
+│   │   │   ├── CardFoundation.swift      # Card layout constants and base styles
+│   │   │   ├── CardUIComponents.swift    # Shared card UI components
+│   │   │   ├── DashboardCardRepresentable.swift  # UIViewRepresentable for card cells
+│   │   │   ├── DashboardCardView.swift   # Card view wrapper for dashboard items
+│   │   │   ├── DashboardItem.swift       # Dashboard item model (enum for notebooks/folders/PDFs/lessons)
+│   │   │   ├── DashboardModels.swift     # Centralized model definitions
+│   │   │   ├── NotebookLibrary.swift     # Notebook data source and state management
+│   │   │   ├── SearchOverlayRootView.swift  # Search overlay UI
+│   │   │   ├── SearchOverlayState.swift  # Search state management
 │   │   │   └── UIKit/                    # UIKit dashboard implementation
-│   │   │       ├── DashboardHostView.swift      # SwiftUI bridge
-│   │   │       ├── DashboardViewController.swift # Main UIKit controller
-│   │   │       └── Cells/                       # Collection view cells
-│   │   │           └── LessonCell.swift         # Lesson card cell
+│   │   │       ├── DashboardHostView.swift      # SwiftUI bridge for UIKit dashboard
+│   │   │       ├── DashboardLayout.swift        # Collection view layout configuration
+│   │   │       ├── DashboardViewController.swift # Main UIKit collection view controller
+│   │   │       ├── Cells/                       # Collection view cells
+│   │   │       │   ├── FolderCell.swift         # Folder card cell
+│   │   │       │   ├── LessonCell.swift         # Lesson card cell
+│   │   │       │   ├── NotebookCell.swift       # Notebook card cell
+│   │   │       │   └── PDFDocumentCell.swift    # PDF document card cell
+│   │   │       └── Overlays/                    # Folder overlay system
+│   │   │           ├── FolderOverlayCell.swift  # Cell for items inside folder overlay
+│   │   │           ├── FolderOverlayViewController.swift  # Folder contents overlay controller
+│   │   │           ├── FolderPresentationController.swift # Custom presentation for folder overlay
+│   │   │           └── FolderTransitionAnimator.swift     # Folder open/close animations
 │   │   │
 │   │   ├── Lesson/                       # Lesson generation and display
 │   │   │   ├── Components/               # Lesson UI components
@@ -149,8 +155,9 @@ InkOS/
 │   │   │
 │   │   └── Shared/                       # Shared UI components & utilities
 │   │       ├── ContextMenuView.swift     # Reusable context menu component
-│   │       ├── NotebookNotifications.swift
-│   │       └── UIComponents.swift
+│   │       ├── FileLogger.swift          # Debug logging utility
+│   │       ├── NotebookNotifications.swift # Notification names for notebook events
+│   │       └── UIComponents.swift        # Color extensions and shared UI modifiers
 │   │
 │   ├── Storage/                          # Persistence Layer (Actors)
 │   │   ├── BundleManager.swift           # Central actor for file system operations
@@ -288,6 +295,8 @@ InkOS/
 ├── Scripts/                              # Build & Utility Scripts
 │   ├── buildapp                          # Build executable
 │   ├── testapp                           # Test executable
+│   ├── test-ui                           # UI test runner script
+│   ├── run-ui-tests                      # Extended UI test runner with options
 │   ├── grablogs                          # Grab logs script
 │   └── retrieve_recognition-assets.sh    # Download recognition assets
 │
@@ -295,6 +304,9 @@ InkOS/
 │   ├── myscript_docs.md
 │   ├── myscript_headers.txt
 │   └── myscript-reference.txt
+│
+├── apple-hig/                            # Apple Human Interface Guidelines reference
+│   └── [various topic directories]       # HIG documentation by topic (buttons, colors, etc.)
 │
 ├── recognition-assets/                   # MyScript recognition data (binary)
 │   └── resources/
