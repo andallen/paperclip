@@ -28,23 +28,162 @@ struct BackgroundWhite: View {
   }
 }
 
-// View modifier that applies a glass background effect.
-extension View {
-  func glassBackground(cornerRadius: CGFloat) -> some View {
-    Group {
-      if #available(iOS 26.0, *) {
-        self
-          .glassEffect(.regular.interactive(), in: .rect(cornerRadius: cornerRadius))
-      } else {
-        // Falls back to a blurred material background on older iOS.
-        self
-          .background(
-            .ultraThinMaterial,
-            in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-          )
-      }
+// MARK: - Liquid Glass Effects
+
+// Style variants for liquid glass effects.
+// Use these presets for consistent glass appearance across the app.
+enum LiquidGlassStyle {
+  // Standard glass for overlays, panels, and cards.
+  // Non-interactive - no shimmer on tap.
+  case regular
+
+  // Interactive glass that responds to touch with shimmer effect.
+  // Use for buttons and tappable elements.
+  case interactive
+
+  // Clear glass with more transparency.
+  // Use for subtle floating elements that shouldn't dominate visually.
+  case clear
+
+  // Tinted glass with optional color overlay.
+  // Use sparingly for accent elements.
+  case tinted(Color)
+}
+
+// View modifier that applies a liquid glass background effect.
+// Uses iOS 26 glassEffect with ultraThinMaterial fallback.
+private struct LiquidGlassBackgroundModifier: ViewModifier {
+  let cornerRadius: CGFloat
+  let style: LiquidGlassStyle
+
+  func body(content: Content) -> some View {
+    if #available(iOS 26.0, *) {
+      content
+        .background(
+          RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+            .fill(Color.clear)
+            .glassEffect(glassForStyle, in: .rect(cornerRadius: cornerRadius))
+        )
+    } else {
+      content
+        .background(
+          .ultraThinMaterial,
+          in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+        )
     }
   }
+
+  @available(iOS 26.0, *)
+  private var glassForStyle: Glass {
+    switch style {
+    case .regular:
+      return .regular
+    case .interactive:
+      return .regular.interactive()
+    case .clear:
+      return .clear
+    case .tinted(let color):
+      return .regular.tint(color)
+    }
+  }
+}
+
+// View modifier that applies liquid glass directly to the view shape.
+// Use when the view itself should be the glass element, not just have a background.
+private struct LiquidGlassModifier: ViewModifier {
+  let cornerRadius: CGFloat
+  let style: LiquidGlassStyle
+
+  func body(content: Content) -> some View {
+    if #available(iOS 26.0, *) {
+      content
+        .glassEffect(glassForStyle, in: .rect(cornerRadius: cornerRadius))
+    } else {
+      content
+        .background(
+          .ultraThinMaterial,
+          in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+        )
+    }
+  }
+
+  @available(iOS 26.0, *)
+  private var glassForStyle: Glass {
+    switch style {
+    case .regular:
+      return .regular
+    case .interactive:
+      return .regular.interactive()
+    case .clear:
+      return .clear
+    case .tinted(let color):
+      return .regular.tint(color)
+    }
+  }
+}
+
+// Convenience view modifiers for liquid glass effects.
+extension View {
+  // Applies a liquid glass background with the specified corner radius and style.
+  // Default style is .regular (non-interactive).
+  func liquidGlassBackground(
+    cornerRadius: CGFloat,
+    style: LiquidGlassStyle = .regular
+  ) -> some View {
+    modifier(LiquidGlassBackgroundModifier(cornerRadius: cornerRadius, style: style))
+  }
+
+  // Applies liquid glass directly to the view.
+  // Use when the view should be the glass element.
+  func liquidGlass(
+    cornerRadius: CGFloat,
+    style: LiquidGlassStyle = .regular
+  ) -> some View {
+    modifier(LiquidGlassModifier(cornerRadius: cornerRadius, style: style))
+  }
+
+  // Legacy compatibility - applies a glass background effect.
+  // Prefer liquidGlassBackground for new code.
+  func glassBackground(cornerRadius: CGFloat) -> some View {
+    liquidGlassBackground(cornerRadius: cornerRadius, style: .interactive)
+  }
+}
+
+// MARK: - UIKit Liquid Glass Helpers
+
+// Applies liquid glass effect to a UIVisualEffectView.
+// Use this in UIKit view controllers for consistent glass appearance.
+func applyLiquidGlassEffect(
+  to visualEffectView: UIVisualEffectView,
+  style: LiquidGlassStyle = .regular
+) {
+  if #available(iOS 26.0, *) {
+    let glassEffect = UIGlassEffect(style: .regular)
+    switch style {
+    case .regular, .tinted:
+      glassEffect.isInteractive = false
+    case .interactive:
+      glassEffect.isInteractive = true
+    case .clear:
+      glassEffect.isInteractive = false
+    }
+    visualEffectView.effect = glassEffect
+  } else {
+    visualEffectView.effect = UIBlurEffect(style: .systemThinMaterial)
+  }
+}
+
+// Creates a configured UIVisualEffectView with liquid glass effect.
+func makeLiquidGlassView(
+  cornerRadius: CGFloat,
+  style: LiquidGlassStyle = .regular
+) -> UIVisualEffectView {
+  let glassView = UIVisualEffectView()
+  glassView.layer.cornerRadius = cornerRadius
+  glassView.layer.cornerCurve = .continuous
+  glassView.clipsToBounds = true
+  applyLiquidGlassEffect(to: glassView, style: style)
+  return glassView
 }
 
 // Shared color definitions.
@@ -72,79 +211,6 @@ extension LinearGradient {
     startPoint: .topLeading,
     endPoint: .bottomTrailing
   )
-}
-
-// Rounded rectangle with individually rounded corners.
-struct RoundedCornerShape: Shape {
-  struct Corner: OptionSet {
-    let rawValue: Int
-
-    static let topLeft = Corner(rawValue: 1 << 0)
-    static let topRight = Corner(rawValue: 1 << 1)
-    static let bottomLeft = Corner(rawValue: 1 << 2)
-    static let bottomRight = Corner(rawValue: 1 << 3)
-  }
-
-  var radius: CGFloat
-  let corners: Corner
-
-  var animatableData: CGFloat {
-    get { radius }
-    set { radius = newValue }
-  }
-
-  func path(in rect: CGRect) -> SwiftUI.Path {
-    let clampedRadius = min(radius, min(rect.width, rect.height) * 0.5)
-    let topLeft = corners.contains(.topLeft) ? clampedRadius : 0
-    let topRight = corners.contains(.topRight) ? clampedRadius : 0
-    let bottomLeft = corners.contains(.bottomLeft) ? clampedRadius : 0
-    let bottomRight = corners.contains(.bottomRight) ? clampedRadius : 0
-
-    var path = SwiftUI.Path()
-    path.move(to: CGPoint(x: rect.minX + topLeft, y: rect.minY))
-    path.addLine(to: CGPoint(x: rect.maxX - topRight, y: rect.minY))
-    if topRight > 0 {
-      path.addArc(
-        center: CGPoint(x: rect.maxX - topRight, y: rect.minY + topRight),
-        radius: topRight,
-        startAngle: .degrees(-90),
-        endAngle: .degrees(0),
-        clockwise: false
-      )
-    }
-    path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - bottomRight))
-    if bottomRight > 0 {
-      path.addArc(
-        center: CGPoint(x: rect.maxX - bottomRight, y: rect.maxY - bottomRight),
-        radius: bottomRight,
-        startAngle: .degrees(0),
-        endAngle: .degrees(90),
-        clockwise: false
-      )
-    }
-    path.addLine(to: CGPoint(x: rect.minX + bottomLeft, y: rect.maxY))
-    if bottomLeft > 0 {
-      path.addArc(
-        center: CGPoint(x: rect.minX + bottomLeft, y: rect.maxY - bottomLeft),
-        radius: bottomLeft,
-        startAngle: .degrees(90),
-        endAngle: .degrees(180),
-        clockwise: false
-      )
-    }
-    path.addLine(to: CGPoint(x: rect.minX, y: rect.minY + topLeft))
-    if topLeft > 0 {
-      path.addArc(
-        center: CGPoint(x: rect.minX + topLeft, y: rect.minY + topLeft),
-        radius: topLeft,
-        startAngle: .degrees(180),
-        endAngle: .degrees(270),
-        clockwise: false
-      )
-    }
-    path.closeSubpath()
-    return path
-  }
 }
 
 // MARK: - Animated Blur View
@@ -253,6 +319,81 @@ struct AnimatedBlurView: UIViewRepresentable {
       displayLink?.invalidate()
       animator?.stopAnimation(true)
     }
+  }
+}
+
+// MARK: - Rounded Corner Shape
+
+// Rounded rectangle with individually rounded corners.
+struct RoundedCornerShape: Shape {
+  struct Corner: OptionSet {
+    let rawValue: Int
+
+    static let topLeft = Corner(rawValue: 1 << 0)
+    static let topRight = Corner(rawValue: 1 << 1)
+    static let bottomLeft = Corner(rawValue: 1 << 2)
+    static let bottomRight = Corner(rawValue: 1 << 3)
+  }
+
+  var radius: CGFloat
+  let corners: Corner
+
+  var animatableData: CGFloat {
+    get { radius }
+    set { radius = newValue }
+  }
+
+  func path(in rect: CGRect) -> SwiftUI.Path {
+    let clampedRadius = min(radius, min(rect.width, rect.height) * 0.5)
+    let topLeft = corners.contains(.topLeft) ? clampedRadius : 0
+    let topRight = corners.contains(.topRight) ? clampedRadius : 0
+    let bottomLeft = corners.contains(.bottomLeft) ? clampedRadius : 0
+    let bottomRight = corners.contains(.bottomRight) ? clampedRadius : 0
+
+    var path = SwiftUI.Path()
+    path.move(to: CGPoint(x: rect.minX + topLeft, y: rect.minY))
+    path.addLine(to: CGPoint(x: rect.maxX - topRight, y: rect.minY))
+    if topRight > 0 {
+      path.addArc(
+        center: CGPoint(x: rect.maxX - topRight, y: rect.minY + topRight),
+        radius: topRight,
+        startAngle: .degrees(-90),
+        endAngle: .degrees(0),
+        clockwise: false
+      )
+    }
+    path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - bottomRight))
+    if bottomRight > 0 {
+      path.addArc(
+        center: CGPoint(x: rect.maxX - bottomRight, y: rect.maxY - bottomRight),
+        radius: bottomRight,
+        startAngle: .degrees(0),
+        endAngle: .degrees(90),
+        clockwise: false
+      )
+    }
+    path.addLine(to: CGPoint(x: rect.minX + bottomLeft, y: rect.maxY))
+    if bottomLeft > 0 {
+      path.addArc(
+        center: CGPoint(x: rect.minX + bottomLeft, y: rect.maxY - bottomLeft),
+        radius: bottomLeft,
+        startAngle: .degrees(90),
+        endAngle: .degrees(180),
+        clockwise: false
+      )
+    }
+    path.addLine(to: CGPoint(x: rect.minX, y: rect.minY + topLeft))
+    if topLeft > 0 {
+      path.addArc(
+        center: CGPoint(x: rect.minX + topLeft, y: rect.minY + topLeft),
+        radius: topLeft,
+        startAngle: .degrees(180),
+        endAngle: .degrees(270),
+        clockwise: false
+      )
+    }
+    path.closeSubpath()
+    return path
   }
 }
 
