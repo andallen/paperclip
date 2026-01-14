@@ -45,25 +45,6 @@ enum AIOverlayLocation {
   case note
 }
 
-// Represents a skill available in the skills box.
-// This is a placeholder model that mirrors SkillMetadata from the skills infrastructure.
-struct SkillItem: Identifiable {
-  let id: String
-  let displayName: String
-  let description: String
-  let iconName: String
-
-  // Placeholder skills list (will be replaced by SkillRegistry.shared.allSkills()).
-  static let availableSkills: [SkillItem] = [
-    SkillItem(
-      id: "graphing-calculator",
-      displayName: "Graphing Calculator",
-      description: "Plot equations and functions",
-      iconName: "function"
-    )
-  ]
-}
-
 // MARK: - Liquid Glass Modifier
 
 // Applies liquid glass effect on iOS 26+, falls back to ultraThinMaterial on earlier versions.
@@ -84,7 +65,7 @@ private struct LiquidGlassModifier: ViewModifier {
 
 // Displays a single skill row in the skills box.
 private struct SkillItemView: View {
-  let skill: SkillItem
+  let skill: SkillMetadata
   let onTap: () -> Void
 
   var body: some View {
@@ -289,6 +270,9 @@ struct AIChatOverlayContent: View {
   // Controls visibility of the skills box.
   @State private var isSkillsBoxVisible = false
 
+  // Available skills loaded from SkillRegistry.
+  @State private var availableSkills: [SkillMetadata] = []
+
   // Internal focus state to detect when input bar gains focus.
   @FocusState private var internalInputFocused: Bool
 
@@ -412,6 +396,10 @@ struct AIChatOverlayContent: View {
         selectedNoteContext = .thisPage
       }
     }
+    .task {
+      // Load available skills from SkillRegistry.
+      await loadSkills()
+    }
   }
 
   // Header containing hamburger menu and dropdown selectors.
@@ -464,10 +452,10 @@ struct AIChatOverlayContent: View {
         .padding(.top, 16)
         .padding(.bottom, 8)
 
-      // Scrollable list of available skills.
+      // Scrollable list of available skills from SkillRegistry.
       ScrollView {
         VStack(spacing: 0) {
-          ForEach(SkillItem.availableSkills) { skill in
+          ForEach(availableSkills) { skill in
             SkillItemView(skill: skill) {
               handleSkillTapped(skill)
             }
@@ -546,7 +534,7 @@ struct AIChatOverlayContent: View {
   }
 
   // Handle skill tap: insert skill prompt into chat, close skills box, and focus input.
-  private func handleSkillTapped(_ skill: SkillItem) {
+  private func handleSkillTapped(_ skill: SkillMetadata) {
     // Insert skill-specific prompt into chat input.
     text = "/\(skill.id) "
 
@@ -557,6 +545,14 @@ struct AIChatOverlayContent: View {
 
     // Focus the input bar so user can continue typing.
     internalInputFocused = true
+  }
+
+  // Load skills from SkillRegistry asynchronously.
+  private func loadSkills() async {
+    let skills = await SkillRegistry.shared.allSkills()
+    await MainActor.run {
+      availableSkills = skills
+    }
   }
 
   // Initializer with optional focus binding and location for context options.
