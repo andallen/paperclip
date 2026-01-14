@@ -1,0 +1,47 @@
+⏳ Waiting for test lock (another test may be running)...
+/Users/andrewallen/Desktop/swift_projects/InkOS-ai-back/Scripts/testapp: line 13: flock: command not found
+🔓 Lock acquired, starting tests...
+🧪 Building and Testing InkOS...
+2026-01-07 18:48:32.254 xcodebuild[5299:3209607] Writing error result bundle to /var/folders/ls/jqp9btrj3kd3x5b0lmr7mw6m0000gn/T/ResultBundle_2026-07-01_18-48-0032.xcresult
+xcodebuild: error: Unable to find a device matching the provided destination specifier:
+		{ platform:iOS, name:Andrew's iPhone }
+
+	The requested device could not be found because no available devices matched the request.
+
+	Available destinations for the "InkOS" scheme:
+		{ platform:macOS, arch:arm64, variant:Designed for [iPad,iPhone], id:00008112-000924813693A01E, name:My Mac }
+		{ platform:iOS, arch:arm64, id:00008120-001665CC21900032, name:Andrew’s iPad }
+		{ platform:iOS, arch:arm64, id:00008140-000A789E1EA1801C, name:Andrew’s iPhone }
+		{ platform:iOS, id:dvtdevice-DVTiPhonePlaceholder-iphoneos:placeholder, name:Any iOS Device }
+		{ platform:iOS Simulator, id:dvtdevice-DVTiOSDeviceSimulatorPlaceholder-iphonesimulator:placeholder, name:Any iOS Simulator Device }
+		{ platform:iOS Simulator, arch:arm64, id:2A25CDA1-7B8C-4F56-B401-D08FEACCA691, OS:26.2, name:iPad (A16) }
+		{ platform:iOS Simulator, arch:arm64, id:D5808000-FF21-49A4-A178-8ED117BDB102, OS:26.2, name:iPad Air 11-inch (M3) }
+		{ platform:iOS Simulator, arch:arm64, id:BF98A079-65D5-48B1-9ECA-890FBCDD3D2C, OS:26.2, name:iPad Air 13-inch (M3) }
+		{ platform:iOS Simulator, arch:arm64, id:92BFDDBE-8BE6-4F16-B267-A22194EB1C5D, OS:26.2, name:iPad Pro 11-inch (M5) }
+		{ platform:iOS Simulator, arch:arm64, id:0F8DB8D8-25C2-4081-A797-183E3B11F2B3, OS:26.2, name:iPad Pro 13-inch (M5) }
+		{ platform:iOS Simulator, arch:arm64, id:40AA0C27-2805-4971-82A0-875874542D71, OS:26.2, name:iPad mini (A17 Pro) }
+		{ platform:iOS Simulator, arch:arm64, id:A1D4B92F-144B-4AD8-9913-039412A97AEA, OS:26.2, name:iPhone 16e }
+		{ platform:iOS Simulator, arch:arm64, id:8BEEC726-9069-432E-86C8-BE91E6484CF8, OS:26.2, name:iPhone 17 }
+		{ platform:iOS Simulator, arch:arm64, id:D00F6367-631C-4E6C-A26F-6E991C5F95DF, OS:26.2, name:iPhone 17 Pro }
+		{ platform:iOS Simulator, arch:arm64, id:75504602-E1A2-4D86-9BFC-9B689DC696B0, OS:26.2, name:iPhone 17 Pro Max }
+		{ platform:iOS Simulator, arch:arm64, id:D1E627C6-2E64-4ED0-A84E-977ECE3CF959, OS:26.2, name:iPhone Air }
+
+----- xcbeautify -----
+Version: 3.1.2
+----------------------
+
+
+================================================================================================
+                                    TEST RESULTS SUMMARY
+================================================================================================
+
+Total Tests:  0
+Passed:       0
+Failed:       0
+
+Status:       ✅ ALL TESTS PASSED
+
+================================================================================================
+
+Full test output saved to ./Logs/test_logs.txt
+🧹 Cleaning up simulators...
