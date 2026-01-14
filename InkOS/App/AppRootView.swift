@@ -31,6 +31,9 @@ struct AppRootView: View {
         engineError = provider.engineErrorMessage
       }
 
+      // Register all available skills with the SkillRegistry.
+      await registerSkills()
+
       isInitializing = false
     }
   }
