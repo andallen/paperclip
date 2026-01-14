@@ -1,0 +1,152 @@
+🧪 Building and Testing InkOS...
+Testing failed:
+	Value of type 'EditorViewModel' has no member 'updateInputMode'
+	Cannot infer contextual base in reference to member 'auto'
+	Value of type 'EditorViewModel' has no member 'updateInputMode'
+	Cannot infer contextual base in reference to member 'auto'
+	Value of type 'EditorViewModel' has no member 'updateInputMode'
+	Cannot infer contextual base in reference to member 'auto'
+	Value of type 'EditorViewModel' has no member 'updateInputMode'
+	Cannot infer contextual base in reference to member 'auto'
+	Testing cancelled because the build failed.
+
+** TEST FAILED **
+
+
+The following build commands failed:
+	SwiftCompile normal arm64 Compiling\ EditorViewModelTests.swift,\ EngineProviderTests.swift,\ InputViewModelTests.swift /Users/andrewallen/Desktop/swift_projects/InkOS-ai-back/InkOSTests/Editor/EditorViewModelTests.swift /Users/andrewallen/Desktop/swift_projects/InkOS-ai-back/InkOSTests/Editor/EngineProviderTests.swift /Users/andrewallen/Desktop/swift_projects/InkOS-ai-back/InkOSTests/Editor/InputViewModelTests.swift (in target 'InkOSTests' from project 'InkOS')
+	SwiftCompile normal arm64 /Users/andrewallen/Desktop/swift_projects/InkOS-ai-back/InkOSTests/Editor/EditorViewModelTests.swift (in target 'InkOSTests' from project 'InkOS')
+	SwiftCompile normal arm64 /Users/andrewallen/Desktop/swift_projects/InkOS-ai-back/InkOSTests/Editor/EngineProviderTests.swift (in target 'InkOSTests' from project 'InkOS')
+	SwiftCompile normal arm64 /Users/andrewallen/Desktop/swift_projects/InkOS-ai-back/InkOSTests/Editor/InputViewModelTests.swift (in target 'InkOSTests' from project 'InkOS')
+	Testing workspace InkOS with scheme InkOS
+(5 failures)
+
+----- xcbeautify -----
+Version: 3.1.2
+----------------------
+
+note: Building targets in dependency order
+note: Target dependency graph (5 targets)
+note: Run script build phase 'Copy Recognition Assets' will be run during every build because the option to run the script phase "Based on dependency analysis" is unchecked. (in target 'InkOS' from project 'InkOS')
+[InkOS] Running script Copy Recognition Assets
+[InkOS] Processing Info.plist
+[InkOSTests] Processing empty-InkOSTests.plist
+[InkOSTests] Compiling IndexingCoordinatorTests.swift
+[InkOSTests] Compiling IndexingIntegrationTests.swift
+[InkOSTests] Compiling IndexingModelsTests.swift
+[InkOSTests] Compiling EditorViewModelTests.swift
+[x] /Users/andrewallen/Desktop/swift_projects/InkOS-ai-back/InkOSTests/Editor/EditorViewModelTests.swift:457:17: value of type 'EditorViewModel' has no member 'updateInputMode'
+      viewModel.updateInputMode(newInputMode: .auto)
+      ~~~~~~~~~ ^~~~~~~~~~~~~~~
+[x] /Users/andrewallen/Desktop/swift_projects/InkOS-ai-back/InkOSTests/Editor/EditorViewModelTests.swift:457:48: cannot infer contextual base in reference to member 'auto'
+      viewModel.updateInputMode(newInputMode: .auto)
+                                              ~^~~~
+[x] /Users/andrewallen/Desktop/swift_projects/InkOS-ai-back/InkOSTests/Editor/EditorViewModelTests.swift:477:17: value of type 'EditorViewModel' has no member 'updateInputMode'
+      viewModel.updateInputMode(newInputMode: .auto)
+      ~~~~~~~~~ ^~~~~~~~~~~~~~~
+[x] /Users/andrewallen/Desktop/swift_projects/InkOS-ai-back/InkOSTests/Editor/EditorViewModelTests.swift:477:48: cannot infer contextual base in reference to member 'auto'
+      viewModel.updateInputMode(newInputMode: .auto)
+                                              ~^~~~
+[x] /Users/andrewallen/Desktop/swift_projects/InkOS-ai-back/InkOSTests/Editor/EditorViewModelTests.swift:959:17: value of type 'EditorViewModel' has no member 'updateInputMode'
+      viewModel.updateInputMode(newInputMode: .auto)
+      ~~~~~~~~~ ^~~~~~~~~~~~~~~
+[x] /Users/andrewallen/Desktop/swift_projects/InkOS-ai-back/InkOSTests/Editor/EditorViewModelTests.swift:959:48: cannot infer contextual base in reference to member 'auto'
+      viewModel.updateInputMode(newInputMode: .auto)
+                                              ~^~~~
+[x] /Users/andrewallen/Desktop/swift_projects/InkOS-ai-back/InkOSTests/Editor/EditorViewModelTests.swift:1026:17: value of type 'EditorViewModel' has no member 'updateInputMode'
+      viewModel.updateInputMode(newInputMode: .auto)
+      ~~~~~~~~~ ^~~~~~~~~~~~~~~
+[x] /Users/andrewallen/Desktop/swift_projects/InkOS-ai-back/InkOSTests/Editor/EditorViewModelTests.swift:1026:48: cannot infer contextual base in reference to member 'auto'
+      viewModel.updateInputMode(newInputMode: .auto)
+                                              ~^~~~
+[InkOSTests] Compiling EngineProviderTests.swift
+[x] /Users/andrewallen/Desktop/swift_projects/InkOS-ai-back/InkOSTests/Editor/EditorViewModelTests.swift:457:17: value of type 'EditorViewModel' has no member 'updateInputMode'
+      viewModel.updateInputMode(newInputMode: .auto)
+      ~~~~~~~~~ ^~~~~~~~~~~~~~~
+[x] /Users/andrewallen/Desktop/swift_projects/InkOS-ai-back/InkOSTests/Editor/EditorViewModelTests.swift:457:48: cannot infer contextual base in reference to member 'auto'
+      viewModel.updateInputMode(newInputMode: .auto)
+                                              ~^~~~
+[x] /Users/andrewallen/Desktop/swift_projects/InkOS-ai-back/InkOSTests/Editor/EditorViewModelTests.swift:477:17: value of type 'EditorViewModel' has no member 'updateInputMode'
+      viewModel.updateInputMode(newInputMode: .auto)
+      ~~~~~~~~~ ^~~~~~~~~~~~~~~
+[x] /Users/andrewallen/Desktop/swift_projects/InkOS-ai-back/InkOSTests/Editor/EditorViewModelTests.swift:477:48: cannot infer contextual base in reference to member 'auto'
+      viewModel.updateInputMode(newInputMode: .auto)
+                                              ~^~~~
+[x] /Users/andrewallen/Desktop/swift_projects/InkOS-ai-back/InkOSTests/Editor/EditorViewModelTests.swift:959:17: value of type 'EditorViewModel' has no member 'updateInputMode'
+      viewModel.updateInputMode(newInputMode: .auto)
+      ~~~~~~~~~ ^~~~~~~~~~~~~~~
+[x] /Users/andrewallen/Desktop/swift_projects/InkOS-ai-back/InkOSTests/Editor/EditorViewModelTests.swift:959:48: cannot infer contextual base in reference to member 'auto'
+      viewModel.updateInputMode(newInputMode: .auto)
+                                              ~^~~~
+[x] /Users/andrewallen/Desktop/swift_projects/InkOS-ai-back/InkOSTests/Editor/EditorViewModelTests.swift:1026:17: value of type 'EditorViewModel' has no member 'updateInputMode'
+      viewModel.updateInputMode(newInputMode: .auto)
+      ~~~~~~~~~ ^~~~~~~~~~~~~~~
+[x] /Users/andrewallen/Desktop/swift_projects/InkOS-ai-back/InkOSTests/Editor/EditorViewModelTests.swift:1026:48: cannot infer contextual base in reference to member 'auto'
+      viewModel.updateInputMode(newInputMode: .auto)
+                                              ~^~~~
+[!]  /Users/andrewallen/Desktop/swift_projects/InkOS-ai-back/InkOSTests/Editor/EngineProviderTests.swift:29:22: 'is' test is always true
+    #expect(provider is AnyObject, "EngineProvider should be a reference type")
+                     ^
+[!]  /Users/andrewallen/Desktop/swift_projects/InkOS-ai-back/InkOSTests/Editor/EngineProviderTests.swift:206:27: comparing non-optional value of type 'IINKConfiguration' to 'nil' always returns true
+    #expect(configuration != nil, "Engine should have configuration")
+            ~~~~~~~~~~~~~ ^  ~~~
+[!]  /Users/andrewallen/Desktop/swift_projects/InkOS-ai-back/InkOSTests/Editor/EngineProviderTests.swift:218:22: comparing non-optional value of type 'EngineProvider' to 'nil' always returns true
+    #expect(provider != nil, "Provider should be accessible on MainActor")
+            ~~~~~~~~ ^  ~~~
+[!]  /Users/andrewallen/Desktop/swift_projects/InkOS-ai-back/InkOSTests/Editor/EngineProviderTests.swift:230:22: 'is' test is always true
+      #expect(engine is IINKEngine, "Engine should be IINKEngine type")
+                     ^
+[!]  /Users/andrewallen/Desktop/swift_projects/InkOS-ai-back/InkOSTests/Editor/EngineProviderTests.swift:419:28: comparing non-optional value of type 'IINKToolController' to 'nil' always returns true
+    #expect(toolController != nil, "Engine should create a tool controller")
+            ~~~~~~~~~~~~~~ ^  ~~~
+[InkOSTests] Compiling InputViewModelTests.swift
+[x] /Users/andrewallen/Desktop/swift_projects/InkOS-ai-back/InkOSTests/Editor/EditorViewModelTests.swift:457:17: value of type 'EditorViewModel' has no member 'updateInputMode'
+      viewModel.updateInputMode(newInputMode: .auto)
+      ~~~~~~~~~ ^~~~~~~~~~~~~~~
+[x] /Users/andrewallen/Desktop/swift_projects/InkOS-ai-back/InkOSTests/Editor/EditorViewModelTests.swift:457:48: cannot infer contextual base in reference to member 'auto'
+      viewModel.updateInputMode(newInputMode: .auto)
+                                              ~^~~~
+[x] /Users/andrewallen/Desktop/swift_projects/InkOS-ai-back/InkOSTests/Editor/EditorViewModelTests.swift:477:17: value of type 'EditorViewModel' has no member 'updateInputMode'
+      viewModel.updateInputMode(newInputMode: .auto)
+      ~~~~~~~~~ ^~~~~~~~~~~~~~~
+[x] /Users/andrewallen/Desktop/swift_projects/InkOS-ai-back/InkOSTests/Editor/EditorViewModelTests.swift:477:48: cannot infer contextual base in reference to member 'auto'
+      viewModel.updateInputMode(newInputMode: .auto)
+                                              ~^~~~
+[x] /Users/andrewallen/Desktop/swift_projects/InkOS-ai-back/InkOSTests/Editor/EditorViewModelTests.swift:959:17: value of type 'EditorViewModel' has no member 'updateInputMode'
+      viewModel.updateInputMode(newInputMode: .auto)
+      ~~~~~~~~~ ^~~~~~~~~~~~~~~
+[x] /Users/andrewallen/Desktop/swift_projects/InkOS-ai-back/InkOSTests/Editor/EditorViewModelTests.swift:959:48: cannot infer contextual base in reference to member 'auto'
+      viewModel.updateInputMode(newInputMode: .auto)
+                                              ~^~~~
+[x] /Users/andrewallen/Desktop/swift_projects/InkOS-ai-back/InkOSTests/Editor/EditorViewModelTests.swift:1026:17: value of type 'EditorViewModel' has no member 'updateInputMode'
+      viewModel.updateInputMode(newInputMode: .auto)
+      ~~~~~~~~~ ^~~~~~~~~~~~~~~
+[x] /Users/andrewallen/Desktop/swift_projects/InkOS-ai-back/InkOSTests/Editor/EditorViewModelTests.swift:1026:48: cannot infer contextual base in reference to member 'auto'
+      viewModel.updateInputMode(newInputMode: .auto)
+                                              ~^~~~
+[InkOSTests] Compiling ChunkingServiceTests.swift
+[InkOSTests] Compiling ContentExtractorTests.swift
+[InkOSTests] Compiling EmbeddingServiceTests.swift
+[InkOSTests] Compiling SearchIndexTests.swift
+[InkOSTests] Compiling NotebookModelTests.swift
+[InkOSTests] Compiling IndexingQueueTests.swift
+[InkOSTests] Compiling VectorStoreClientTests.swift
+[InkOSTests] Compiling VectorStoreModelsTests.swift
+[InkOSTests] Compiling DisplayViewModelTests.swift
+[InkOSTests] Compiling OffscreenRenderSurfacesTests.swift
+[InkOSTests] Compiling BundleManagerTests.swift
+[InkOSTests] Compiling BundleStorageTests.swift
+
+================================================================================================
+                                    TEST RESULTS SUMMARY
+================================================================================================
+
+Total Tests:  0
+Passed:       0
+Failed:       0
+
+Status:       ✅ ALL TESTS PASSED
+
+================================================================================================
+
+Full test output saved to ./Logs/test_logs.txt

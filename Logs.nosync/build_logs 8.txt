@@ -1,0 +1,12 @@
+
+----- xcbeautify -----
+Version: 3.1.2
+----------------------
+
+note: Building targets in dependency order
+note: Target dependency graph (3 targets)
+[x] error: Multiple commands produce '/Users/andrewallen/Desktop/swift_projects/InkOS-ai-back/Logs/DerivedData/Build/Intermediates.noindex/InkOS.build/Debug-iphonesimulator/InkOS.build/Objects-normal/arm64/Contract.stringsdata'
+[x] error: Multiple commands produce '/Users/andrewallen/Desktop/swift_projects/InkOS-ai-back/Logs/DerivedData/Build/Intermediates.noindex/InkOS.build/Debug-iphonesimulator/InkOS.build/Objects-normal/x86_64/Contract.stringsdata'
+note: Run script build phase 'Copy Recognition Assets' will be run during every build because the option to run the script phase "Based on dependency analysis" is unchecked. (in target 'InkOS' from project 'InkOS')
+[!] duplicate output file '/Users/andrewallen/Desktop/swift_projects/InkOS-ai-back/Logs/DerivedData/Build/Intermediates.noindex/InkOS.build/Debug-iphonesimulator/InkOS.build/Objects-normal/arm64/Contract.stringsdata' on task: SwiftDriver Compilation InkOS normal arm64 com.apple.xcode.tools.swift.compiler (in target 'InkOS' from project 'InkOS')
+[!] duplicate output file '/Users/andrewallen/Desktop/swift_projects/InkOS-ai-back/Logs/DerivedData/Build/Intermediates.noindex/InkOS.build/Debug-iphonesimulator/InkOS.build/Objects-normal/x86_64/Contract.stringsdata' on task: SwiftDriver Compilation InkOS normal x86_64 com.apple.xcode.tools.swift.compiler (in target 'InkOS' from project 'InkOS')
