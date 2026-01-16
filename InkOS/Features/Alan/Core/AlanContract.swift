@@ -591,14 +591,23 @@ struct AlanRequest: Sendable, Codable, Equatable {
   let messages: [ChatMessage]
   let notebookContext: NotebookContext
 
+  // Long-term memory context formatted for inclusion in system prompt.
+  let memoryContext: String?
+
   private enum CodingKeys: String, CodingKey {
     case messages
     case notebookContext = "notebook_context"
+    case memoryContext = "memory_context"
   }
 
-  init(messages: [ChatMessage], notebookContext: NotebookContext) {
+  init(
+    messages: [ChatMessage],
+    notebookContext: NotebookContext,
+    memoryContext: String? = nil
+  ) {
     self.messages = messages
     self.notebookContext = notebookContext
+    self.memoryContext = memoryContext
   }
 }
 

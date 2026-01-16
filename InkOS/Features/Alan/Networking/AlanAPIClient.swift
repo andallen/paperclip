@@ -51,12 +51,17 @@ actor AlanAPIClient {
   // The stream yields events as they arrive via SSE.
   func sendMessage(
     messages: [ChatMessage],
-    notebookContext: NotebookContext
+    notebookContext: NotebookContext,
+    memoryContext: String? = nil
   ) -> AsyncThrowingStream<AlanStreamEvent, Error> {
     AsyncThrowingStream { continuation in
       Task {
         do {
-          let request = AlanRequest(messages: messages, notebookContext: notebookContext)
+          let request = AlanRequest(
+            messages: messages,
+            notebookContext: notebookContext,
+            memoryContext: memoryContext
+          )
           let urlRequest = try buildRequest(
             url: endpoints.alanURL,
             body: request,

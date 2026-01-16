@@ -14,6 +14,9 @@ export {alan, alanSync} from "./alan/alanAgent";
 // Export subagent router endpoints
 export {executeSubagent, executeSubagentBatch} from "./subagents/subagentRouter";
 
+// Export memory update endpoint
+export {memoryUpdate} from "./memory/memorySubagent";
+
 // Set maximum instances for cost control
 setGlobalOptions({maxInstances: 10});
 

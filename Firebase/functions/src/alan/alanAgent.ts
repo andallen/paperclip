@@ -19,9 +19,23 @@ const AlanRequestSchema = z.object({
     current_blocks: z.array(z.any()).optional(),
     session_topic: z.string().optional(),
   }),
+  memory_context: z.string().optional(),
 });
 
 type AlanRequest = z.infer<typeof AlanRequestSchema>;
+
+/**
+ * Builds the complete system prompt including memory context.
+ */
+function buildSystemPrompt(memoryContext?: string): string {
+  if (!memoryContext || memoryContext.trim() === "") {
+    return ALAN_SYSTEM_PROMPT;
+  }
+
+  return `${ALAN_SYSTEM_PROMPT}
+
+${memoryContext}`;
+}
 
 /**
  * Main Alan tutoring agent endpoint.
@@ -71,6 +85,9 @@ export const alan = onRequest({cors: true, maxInstances: 10}, async (req, res) =
       parts: [{text: m.content}],
     }));
 
+    // Build system prompt with memory context.
+    const systemPrompt = buildSystemPrompt(request.memory_context);
+
     // Call Gemini with streaming.
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse&key=${apiKey}`;
 
@@ -78,7 +95,7 @@ export const alan = onRequest({cors: true, maxInstances: 10}, async (req, res) =
       method: "POST",
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
-        systemInstruction: {parts: [{text: ALAN_SYSTEM_PROMPT}]},
+        systemInstruction: {parts: [{text: systemPrompt}]},
         contents,
         generationConfig: {
           temperature: 0.7,
@@ -201,13 +218,16 @@ export const alanSync = onRequest({cors: true, maxInstances: 10}, async (req, re
       parts: [{text: m.content}],
     }));
 
+    // Build system prompt with memory context.
+    const systemPrompt = buildSystemPrompt(request.memory_context);
+
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
     const geminiResponse = await fetch(geminiUrl, {
       method: "POST",
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
-        systemInstruction: {parts: [{text: ALAN_SYSTEM_PROMPT}]},
+        systemInstruction: {parts: [{text: systemPrompt}]},
         contents,
         generationConfig: {
           temperature: 0.7,
