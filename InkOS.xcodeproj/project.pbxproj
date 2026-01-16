@@ -7,9 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		41A37C58D9454AC24022BC08 /* libPods-InkOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FAE72E6CE6B665ECB4F183CE /* libPods-InkOS.a */; };
+		1D8905EF74D61B1BF89BF0B1 /* libPods-InkOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 39CD78C03F589AC861477AC4 /* libPods-InkOS.a */; };
+		3FCAABBDCEB2882BDF4386E4 /* libPods-InkOSTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7652DFC84A5999840CE35B26 /* libPods-InkOSTests.a */; };
 		AE4C26BF2EF84C9A0089CC3C /* me.andy.allen.Trivial.c in Sources */ = {isa = PBXBuildFile; fileRef = AE4C26BE2EF84C9A0089CC3C /* me.andy.allen.Trivial.c */; };
-		DC020180631A0C08B2049EAE /* libPods-InkOSTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D15461011C3C1A3022313DC2 /* libPods-InkOSTests.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -30,17 +30,17 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		39CD78C03F589AC861477AC4 /* libPods-InkOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-InkOS.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		3C72F6D8DDA74BAAB09FB025 /* Pods-InkOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-InkOS.release.xcconfig"; path = "Target Support Files/Pods-InkOS/Pods-InkOS.release.xcconfig"; sourceTree = "<group>"; };
 		3D1AAC0C313519CAE29AE659 /* Pods-InkOSTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-InkOSTests.release.xcconfig"; path = "Target Support Files/Pods-InkOSTests/Pods-InkOSTests.release.xcconfig"; sourceTree = "<group>"; };
+		7652DFC84A5999840CE35B26 /* libPods-InkOSTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-InkOSTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		AE1AC10D2EFB3B9E00E6E4BA /* InkOSUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = InkOSUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AE4C26BE2EF84C9A0089CC3C /* me.andy.allen.Trivial.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = me.andy.allen.Trivial.c; path = /Users/andrewallen/Downloads/me.andy.allen.Trivial.c; sourceTree = "<absolute>"; };
 		AEAB2C832EF7BD3300424068 /* MyCertificate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MyCertificate.h; sourceTree = "<group>"; };
 		AEAFC2392EF4B85B00811728 /* InkOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = InkOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AECB52312F022B2A007CACA0 /* InkOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = InkOSTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B95CC48760412B82842147D7 /* Pods-InkOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-InkOS.debug.xcconfig"; path = "Target Support Files/Pods-InkOS/Pods-InkOS.debug.xcconfig"; sourceTree = "<group>"; };
-		D15461011C3C1A3022313DC2 /* libPods-InkOSTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-InkOSTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		EC99239A781B4BA5738A93B7 /* Pods-InkOSTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-InkOSTests.debug.xcconfig"; path = "Target Support Files/Pods-InkOSTests/Pods-InkOSTests.debug.xcconfig"; sourceTree = "<group>"; };
-		FAE72E6CE6B665ECB4F183CE /* libPods-InkOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-InkOS.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -99,7 +99,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				41A37C58D9454AC24022BC08 /* libPods-InkOS.a in Frameworks */,
+				1D8905EF74D61B1BF89BF0B1 /* libPods-InkOS.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -107,7 +107,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				DC020180631A0C08B2049EAE /* libPods-InkOSTests.a in Frameworks */,
+				3FCAABBDCEB2882BDF4386E4 /* libPods-InkOSTests.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -161,8 +161,8 @@
 		F2E3911B917C595F2660348C /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				FAE72E6CE6B665ECB4F183CE /* libPods-InkOS.a */,
-				D15461011C3C1A3022313DC2 /* libPods-InkOSTests.a */,
+				39CD78C03F589AC861477AC4 /* libPods-InkOS.a */,
+				7652DFC84A5999840CE35B26 /* libPods-InkOSTests.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
