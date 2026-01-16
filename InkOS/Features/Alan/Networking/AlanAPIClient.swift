@@ -52,7 +52,8 @@ actor AlanAPIClient {
   func sendMessage(
     messages: [ChatMessage],
     notebookContext: NotebookContext,
-    sessionModel: SessionModel? = nil
+    sessionModel: SessionModel? = nil,
+    memoryContext: String? = nil
   ) -> AsyncThrowingStream<AlanStreamEvent, Error> {
     AsyncThrowingStream { continuation in
       Task {
@@ -60,7 +61,8 @@ actor AlanAPIClient {
           let request = AlanRequest(
             messages: messages,
             notebookContext: notebookContext,
-            sessionModel: sessionModel
+            sessionModel: sessionModel,
+            memoryContext: memoryContext
           )
           let urlRequest = try buildRequest(
             url: endpoints.alanURL,

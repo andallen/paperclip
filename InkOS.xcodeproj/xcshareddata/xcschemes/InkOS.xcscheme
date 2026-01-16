@@ -34,9 +34,9 @@
             parallelizable = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "AE1AC10C2EFB3B9E00E6E4BA"
-               BuildableName = "InkOSUITests.xctest"
-               BlueprintName = "InkOSUITests"
+               BlueprintIdentifier = "AECB52302F022B2A007CACA0"
+               BuildableName = "InkOSTests.xctest"
+               BlueprintName = "InkOSTests"
                ReferencedContainer = "container:InkOS.xcodeproj">
             </BuildableReference>
          </TestableReference>
