@@ -1,82 +1,72 @@
+================================================================================================
+                                    TEST RESULTS SUMMARY
+================================================================================================
+
+Total Tests:  0
+Passed:       0
+Failed:       0
+
+Status:       ✅ ALL TESTS PASSED
+
+================================================================================================
+                                   DETAILED TEST OUTPUT
+================================================================================================
+
 
 ----- xcbeautify -----
 Version: 3.1.2
 ----------------------
 
 note: Building targets in dependency order
-note: Target dependency graph (5 targets)
+note: Target dependency graph (8 targets)
+[InkOS] Write Auxiliary File Script-0DDFAA30004964993C82F526.sh
+[InkOS] Write Auxiliary File OutputFileList-0DDFAA30004964993C82F526-Pods-InkOS-resources-Debug-output-files-b62f66133aa583bbf2677d9d78a1ba8b-resolved.xcfilelist
+[InkOS] Write Auxiliary File InputFileList-0DDFAA30004964993C82F526-Pods-InkOS-resources-Debug-input-files-b772ba569b781d45cd08683b92ba66d4-resolved.xcfilelist
 [InkOS] Write Auxiliary File Script-AEA6BC5A2EF8654800D18138.sh
-[Pods-InkOS] Write Auxiliary File Pods-InkOS-project-headers.hmap
+[InkOS] Write Auxiliary File Script-89BBA18F5E78F49FCF8CC369.sh
+[InkOS] Write Auxiliary File 7187679823f38a2a940e0043cdf9d637-common-args.resp
+[InkOS] Write Auxiliary File af3fcb34312c57c0f52879cdce924b91-common-args.resp
+[iosMath-mathFonts] Write Auxiliary File mathFonts.hmap
+[iosMath-mathFonts] Write Auxiliary File mathFonts.DependencyStaticMetadataFileList
+[iosMath-mathFonts] Write Auxiliary File mathFonts.DependencyMetadataFileList
+[iosMath-mathFonts] Write Auxiliary File mathFonts-project-headers.hmap
+[iosMath-mathFonts] Write Auxiliary File mathFonts-own-target-headers.hmap
+[iosMath-mathFonts] Write Auxiliary File mathFonts-generated-files.hmap
+[iosMath-mathFonts] Write Auxiliary File mathFonts-all-target-headers.hmap
+[iosMath-mathFonts] Write Auxiliary File mathFonts-all-non-framework-target-headers.hmap
+[iosMath] Write Auxiliary File iosMath.hmap
+[iosMath] Write Auxiliary File iosMath.DependencyStaticMetadataFileList
+[iosMath] Write Auxiliary File iosMath.DependencyMetadataFileList
+[iosMath] Write Auxiliary File iosMath-project-headers.hmap
+[iosMath] Write Auxiliary File iosMath-own-target-headers.hmap
+[iosMath] Write Auxiliary File iosMath-generated-files.hmap
+[iosMath] Write Auxiliary File iosMath-all-target-headers.hmap
+[iosMath] Write Auxiliary File iosMath-all-non-framework-target-headers.hmap
+[iosMath] Write Auxiliary File iosMath.LinkFileList
+[iosMath] Write Auxiliary File e6072d4f65d7061329687fe24e3d63a7-common-args.resp
+[Pods-InkOSTests] Write Auxiliary File Pods-InkOSTests.hmap
+[Pods-InkOSTests] Write Auxiliary File Pods-InkOSTests.DependencyStaticMetadataFileList
+[Pods-InkOSTests] Write Auxiliary File Pods-InkOSTests.DependencyMetadataFileList
+[Pods-InkOSTests] Write Auxiliary File Pods-InkOSTests-project-headers.hmap
+[Pods-InkOSTests] Write Auxiliary File Pods-InkOSTests-own-target-headers.hmap
+[Pods-InkOSTests] Write Auxiliary File Pods-InkOSTests-generated-files.hmap
+[Pods-InkOSTests] Write Auxiliary File Pods-InkOSTests-all-target-headers.hmap
+[Pods-InkOSTests] Write Auxiliary File Pods-InkOSTests-all-non-framework-target-headers.hmap
+[Pods-InkOSTests] Write Auxiliary File e6072d4f65d7061329687fe24e3d63a7-common-args.resp
+[Pods-InkOSTests] Write Auxiliary File Pods-InkOSTests.LinkFileList
 [Pods-InkOS] Write Auxiliary File Pods-InkOS.hmap
-[Pods-InkOS] Write Auxiliary File Pods-InkOS-own-target-headers.hmap
 [Pods-InkOS] Write Auxiliary File Pods-InkOS.DependencyStaticMetadataFileList
 [Pods-InkOS] Write Auxiliary File Pods-InkOS.DependencyMetadataFileList
+[Pods-InkOS] Write Auxiliary File Pods-InkOS-project-headers.hmap
+[Pods-InkOS] Write Auxiliary File Pods-InkOS-own-target-headers.hmap
 [Pods-InkOS] Write Auxiliary File Pods-InkOS-generated-files.hmap
 [Pods-InkOS] Write Auxiliary File Pods-InkOS-all-target-headers.hmap
 [Pods-InkOS] Write Auxiliary File Pods-InkOS-all-non-framework-target-headers.hmap
 [Pods-InkOS] Write Auxiliary File e6072d4f65d7061329687fe24e3d63a7-common-args.resp
 [Pods-InkOS] Write Auxiliary File Pods-InkOS.LinkFileList
-[InkOS] Write Auxiliary File Script-89BBA18F5E78F49FCF8CC369.sh
-[InkOS] Write Auxiliary File Script-0DDFAA30004964993C82F526.sh
-[Pods-InkOS] Write Auxiliary File Pods-InkOS.LinkFileList
-[Pods-InkOS] Write Auxiliary File e6072d4f65d7061329687fe24e3d63a7-common-args.resp
-[InkOS] Write Auxiliary File OutputFileList-0DDFAA30004964993C82F526-Pods-InkOS-resources-Debug-output-files-b62f66133aa583bbf2677d9d78a1ba8b-resolved.xcfilelist
-[InkOS] Write Auxiliary File InkOS_const_extract_protocols.json
-[InkOS] Write Auxiliary File InkOS.SwiftFileList
-[InkOS] Write Auxiliary File af3fcb34312c57c0f52879cdce924b91-common-args.resp
-[InkOS] Write Auxiliary File InkOS.SwiftConstValuesFileList
-[InkOS] Write Auxiliary File InkOS.LinkFileList
-[InkOS] Write Auxiliary File InkOS-OutputFileMap.json
-[InkOS] Write Auxiliary File 7187679823f38a2a940e0043cdf9d637-common-args.resp
-[InkOS] Write Auxiliary File InkOS_const_extract_protocols.json
-[InkOS] Write Auxiliary File af3fcb34312c57c0f52879cdce924b91-common-args.resp
-[InkOS] Write Auxiliary File InkOS.SwiftFileList
-[InkOS] Write Auxiliary File InkOS.SwiftConstValuesFileList
-[InkOS] Write Auxiliary File InkOS.LinkFileList
-[InkOS] Write Auxiliary File InkOS-OutputFileMap.json
-[InkOS] Write Auxiliary File 7187679823f38a2a940e0043cdf9d637-common-args.resp
-[InkOS] Write Auxiliary File InputFileList-0DDFAA30004964993C82F526-Pods-InkOS-resources-Debug-input-files-b772ba569b781d45cd08683b92ba66d4-resolved.xcfilelist
-[InkOS] Write Auxiliary File InkOS.hmap
-[InkOS] Write Auxiliary File InkOS.DependencyStaticMetadataFileList
-[InkOS] Write Auxiliary File InkOS.DependencyMetadataFileList
-[InkOS] Write Auxiliary File InkOS-project-headers.hmap
-[InkOS] Write Auxiliary File InkOS-own-target-headers.hmap
-[InkOS] Write Auxiliary File InkOS-generated-files.hmap
-[InkOS] Write Auxiliary File InkOS-all-target-headers.hmap
-[InkOS] Write Auxiliary File InkOS-all-non-framework-target-headers.hmap
-[InkOS] Write Auxiliary File InkOS-DebugDylibPath-normal-x86_64.txt
-[InkOS] Write Auxiliary File InkOS-DebugDylibPath-normal-arm64.txt
-[InkOS] Write Auxiliary File InkOS-DebugDylibInstallName-normal-x86_64.txt
-[InkOS] Write Auxiliary File InkOS-DebugDylibInstallName-normal-arm64.txt
-[iosMath-mathFonts] Write Auxiliary File mathFonts.DependencyStaticMetadataFileList
-[iosMath-mathFonts] Write Auxiliary File mathFonts.DependencyMetadataFileList
-[iosMath-mathFonts] Write Auxiliary File mathFonts.hmap
-[iosMath-mathFonts] Write Auxiliary File mathFonts-project-headers.hmap
-[iosMath-mathFonts] Write Auxiliary File mathFonts-own-target-headers.hmap
-[iosMath-mathFonts] Write Auxiliary File mathFonts-generated-files.hmap
-[iosMath-mathFonts] Write Auxiliary File mathFonts-all-non-framework-target-headers.hmap
-[iosMath-mathFonts] Write Auxiliary File mathFonts-all-target-headers.hmap
-[iosMath] Write Auxiliary File iosMath.hmap
-[iosMath] Write Auxiliary File iosMath.DependencyStaticMetadataFileList
-[iosMath] Write Auxiliary File iosMath-own-target-headers.hmap
-[iosMath] Write Auxiliary File iosMath.DependencyMetadataFileList
-[iosMath] Write Auxiliary File iosMath-project-headers.hmap
-[iosMath] Write Auxiliary File iosMath-all-target-headers.hmap
-[iosMath] Write Auxiliary File iosMath-generated-files.hmap
-[iosMath] Write Auxiliary File iosMath-all-non-framework-target-headers.hmap
-[iosMath] Write Auxiliary File iosMath.LinkFileList
-[iosMath] Write Auxiliary File e6072d4f65d7061329687fe24e3d63a7-common-args.resp
-[iosMath] Write Auxiliary File e6072d4f65d7061329687fe24e3d63a7-common-args.resp
-[iosMath] Write Auxiliary File iosMath.LinkFileList
 [MyScriptInteractiveInk-Runtime] Write Auxiliary File Script-4A7B4ECFEDB50C2F025F224FD29FFEA9.sh
 [MyScriptInteractiveInk-Runtime] Write Auxiliary File Script-39CDEF633587C8ABCC20EB5BD6520245.sh
 [MyScriptInteractiveInk-Runtime] Write Auxiliary File OutputFileList-39CDEF633587C8ABCC20EB5BD6520245-MyScriptInteractiveInk-Runtime-xcframeworks-output-files-4458a60848005b3fd2944b7932c8c473-resolved.xcfilelist
-[MyScriptInteractiveInk-Runtime] Write Auxiliary File e6072d4f65d7061329687fe24e3d63a7-common-args.resp
-[MyScriptInteractiveInk-Runtime] Write Auxiliary File MyScriptInteractiveInk-Runtime.SwiftFileList
-[MyScriptInteractiveInk-Runtime] Write Auxiliary File MyScriptInteractiveInk-Runtime.SwiftConstValuesFileList
-[MyScriptInteractiveInk-Runtime] Write Auxiliary File MyScriptInteractiveInk-Runtime_const_extract_protocols.json
-[MyScriptInteractiveInk-Runtime] Write Auxiliary File MyScriptInteractiveInk-Runtime.LinkFileList
-[MyScriptInteractiveInk-Runtime] Write Auxiliary File MyScriptInteractiveInk-Runtime-OutputFileMap.json
 [MyScriptInteractiveInk-Runtime] Write Auxiliary File e6072d4f65d7061329687fe24e3d63a7-common-args.resp
 [MyScriptInteractiveInk-Runtime] Write Auxiliary File MyScriptInteractiveInk-Runtime_const_extract_protocols.json
 [MyScriptInteractiveInk-Runtime] Write Auxiliary File MyScriptInteractiveInk-Runtime.SwiftFileList
@@ -92,23 +82,70 @@ note: Target dependency graph (5 targets)
 [MyScriptInteractiveInk-Runtime] Write Auxiliary File MyScriptInteractiveInk-Runtime-all-target-headers.hmap
 [MyScriptInteractiveInk-Runtime] Write Auxiliary File MyScriptInteractiveInk-Runtime-all-non-framework-target-headers.hmap
 [MyScriptInteractiveInk-Runtime] Write Auxiliary File InputFileList-39CDEF633587C8ABCC20EB5BD6520245-MyScriptInteractiveInk-Runtime-xcframeworks-input-files-0212064e1068a075dd1ad628b62ec2db-resolved.xcfilelist
-[iosMath-mathFonts] Copying latinmodern-math.otf
+[InkOSUITests] Write Auxiliary File empty-InkOSUITests.plist
+[InkOSUITests] Write Auxiliary File ProductTypeInfoPlistAdditions.plist
+[InkOSUITests] Write Auxiliary File InkOSUITests.SwiftFileList
+[InkOSUITests] Write Auxiliary File InkOSUITests.SwiftConstValuesFileList
+[InkOSUITests] Write Auxiliary File InkOSUITests_const_extract_protocols.json
+[InkOSUITests] Write Auxiliary File InkOSUITests.LinkFileList
+[InkOSUITests] Write Auxiliary File InkOSUITests-OutputFileMap.json
+[InkOSUITests] Write Auxiliary File InkOSUITests.hmap
+[InkOSUITests] Write Auxiliary File InkOSUITests.DependencyStaticMetadataFileList
+[InkOSUITests] Write Auxiliary File InkOSUITests.DependencyMetadataFileList
+[InkOSUITests] Write Auxiliary File InkOSUITests-project-headers.hmap
+[InkOSUITests] Write Auxiliary File InkOSUITests-own-target-headers.hmap
+[InkOSUITests] Write Auxiliary File InkOSUITests-generated-files.hmap
+[InkOSUITests] Write Auxiliary File InkOSUITests-all-target-headers.hmap
+[InkOSUITests] Write Auxiliary File InkOSUITests-all-non-framework-target-headers.hmap
+[InkOSUITests] Write Auxiliary File Entitlements-Simulated.plist
+[InkOSTests] Write Auxiliary File empty-InkOSTests.plist
+[InkOSTests] Write Auxiliary File Script-12CB4D4CBD5D64C8E35D38B7.sh
+[InkOSTests] Write Auxiliary File InkOSTests_const_extract_protocols.json
+[InkOSTests] Write Auxiliary File InkOSTests.SwiftFileList
+[InkOSTests] Write Auxiliary File InkOSTests.SwiftConstValuesFileList
+[InkOSTests] Write Auxiliary File InkOSTests.LinkFileList
+[InkOSTests] Write Auxiliary File InkOSTests-OutputFileMap.json
+[InkOSTests] Write Auxiliary File InkOSTests.hmap
+[InkOSTests] Write Auxiliary File InkOSTests.DependencyStaticMetadataFileList
+[InkOSTests] Write Auxiliary File InkOSTests.DependencyMetadataFileList
+[InkOSTests] Write Auxiliary File InkOSTests-project-headers.hmap
+[InkOSTests] Write Auxiliary File InkOSTests-own-target-headers.hmap
+[InkOSTests] Write Auxiliary File InkOSTests-generated-files.hmap
+[InkOSTests] Write Auxiliary File InkOSTests-all-target-headers.hmap
+[InkOSTests] Write Auxiliary File InkOSTests-all-non-framework-target-headers.hmap
+[InkOSTests] Write Auxiliary File 9a6c304d2697f8ea1825de2fc6e49e0c.sb
+[InkOS] Write Auxiliary File InkOS_const_extract_protocols.json
+[InkOS] Write Auxiliary File InkOS.SwiftFileList
+[InkOS] Write Auxiliary File InkOS.SwiftConstValuesFileList
+[InkOS] Write Auxiliary File InkOS.LinkFileList
+[InkOS] Write Auxiliary File InkOS-OutputFileMap.json
+[InkOS] Write Auxiliary File InkOS.hmap
+[InkOS] Write Auxiliary File InkOS.DependencyStaticMetadataFileList
+[InkOS] Write Auxiliary File InkOS.DependencyMetadataFileList
+[InkOS] Write Auxiliary File InkOS-project-headers.hmap
+[InkOS] Write Auxiliary File InkOS-own-target-headers.hmap
+[InkOS] Write Auxiliary File InkOS-generated-files.hmap
+[InkOS] Write Auxiliary File InkOS-all-target-headers.hmap
+[InkOS] Write Auxiliary File InkOS-all-non-framework-target-headers.hmap
+[InkOS] Write Auxiliary File InkOS-DebugDylibPath-normal-arm64.txt
+[InkOS] Write Auxiliary File InkOS-DebugDylibInstallName-normal-arm64.txt
+[InkOS] Write Auxiliary File Entitlements-Simulated.plist
 [iosMath-mathFonts] Processing ResourceBundle-mathFonts-iosMath-Info.plist
 [iosMath-mathFonts] Copying texgyretermes-math.otf
-[iosMath-mathFonts] Copying xits-math.otf
 [iosMath-mathFonts] Copying xits-math.plist
+[iosMath-mathFonts] Copying latinmodern-math.otf
+[iosMath-mathFonts] Copying xits-math.otf
 [iosMath-mathFonts] Copying texgyretermes-math.plist
 [iosMath-mathFonts] Copying latinmodern-math.plist
 [MyScriptInteractiveInk-Runtime] Running script [CP] Copy XCFrameworks
 [iosMath-mathFonts] RegisterExecutionPolicyException mathFonts.bundle
 [iosMath-mathFonts] Touching mathFonts.bundle
-[iosMath] Compiling MTFontMathTable.m
-[iosMath] Compiling MTFont.m
-[iosMath] Compiling MTFontManager.m
-[iosMath] Compiling iosMath-dummy.m
+[iosMath] Compiling MTMathListIndex.m
+[iosMath] Compiling MTMathAtomFactory.m
+[iosMath] Compiling NSColor+HexString.m
 [iosMath] Compiling UIColor+HexString.m
 [iosMath] Compiling NSView+backgroundColor.m
-[iosMath] Compiling NSColor+HexString.m
+[iosMath] Compiling iosMath-dummy.m
 [iosMath] Compiling NSBezierPath+addLineToPoint.m
 [iosMath] Compiling MTUnicode.m
 [iosMath] Compiling MTTypesetter.m
@@ -125,119 +162,43 @@ note: Target dependency graph (5 targets)
  1304 |     *glyphWidth = width;
       |                   ^~~~~
 [iosMath] Compiling MTMathUILabel.m
-[iosMath] Compiling MTMathListIndex.m
 [iosMath] Compiling MTMathListDisplay.m
 [!]  /Users/andrewallen/Desktop/swift_projects/Alan-d/Pods/iosMath/iosMath/render/MTMathListDisplay.m:22:28: a function declaration without a prototype is deprecated in all versions of C [-Wstrict-prototypes]
    22 | static BOOL isIos6Supported() {
       |                            ^
 [iosMath] Compiling MTMathListBuilder.m
 [iosMath] Compiling MTMathList.m
-[iosMath] Compiling MTMathAtomFactory.m
-[iosMath] Compiling MTLabel.m
-[iosMath] Compiling iosMath-dummy.m
-[iosMath] Compiling UIColor+HexString.m
-[iosMath] Compiling NSView+backgroundColor.m
-[iosMath] Compiling NSColor+HexString.m
-[iosMath] Compiling NSBezierPath+addLineToPoint.m
-[iosMath] Compiling MTUnicode.m
-[iosMath] Compiling MTTypesetter.m
-[!]  /Users/andrewallen/Desktop/swift_projects/Alan-d/Pods/iosMath/iosMath/render/internal/MTTypesetter.m:28:31: a function declaration without a prototype is deprecated in all versions of C [-Wstrict-prototypes]
-   28 | NSArray* getInterElementSpaces() {
-      |                               ^
-[!]  /Users/andrewallen/Desktop/swift_projects/Alan-d/Pods/iosMath/iosMath/render/internal/MTTypesetter.m:1302:20: variable 'ascent' may be uninitialized when used here [-Wconditional-uninitialized]
- 1302 |     *glyphAscent = ascent;
-      |                    ^~~~~~
-[!]  /Users/andrewallen/Desktop/swift_projects/Alan-d/Pods/iosMath/iosMath/render/internal/MTTypesetter.m:1303:21: variable 'descent' may be uninitialized when used here [-Wconditional-uninitialized]
- 1303 |     *glyphDescent = descent;
-      |                     ^~~~~~~
-[!]  /Users/andrewallen/Desktop/swift_projects/Alan-d/Pods/iosMath/iosMath/render/internal/MTTypesetter.m:1304:19: variable 'width' may be uninitialized when used here [-Wconditional-uninitialized]
- 1304 |     *glyphWidth = width;
-      |                   ^~~~~
-[iosMath] Compiling MTMathUILabel.m
-[iosMath] Compiling MTMathListIndex.m
-[iosMath] Compiling MTMathListDisplay.m
-[!]  /Users/andrewallen/Desktop/swift_projects/Alan-d/Pods/iosMath/iosMath/render/MTMathListDisplay.m:22:28: a function declaration without a prototype is deprecated in all versions of C [-Wstrict-prototypes]
-   22 | static BOOL isIos6Supported() {
-      |                            ^
-[iosMath] Compiling MTMathListBuilder.m
-[iosMath] Compiling MTMathList.m
-[iosMath] Compiling MTMathAtomFactory.m
-[iosMath] Building library libiosMath.a
 [iosMath] Compiling MTLabel.m
 [iosMath] Compiling MTFontMathTable.m
 [iosMath] Compiling MTFontManager.m
 [iosMath] Compiling MTFont.m
-[iosMath] Building library libiosMath.a
-[iosMath] Create Universal Binary libiosMath.a
 [MyScriptInteractiveInk-Runtime] Compiling IINK.swift
 [MyScriptInteractiveInk-Runtime] Compiling IINK.swift
-[MyScriptInteractiveInk-Runtime] Compiling IINK.swift
-[MyScriptInteractiveInk-Runtime] Compiling IINK.swift
-[MyScriptInteractiveInk-Runtime] Copy x86_64-apple-ios-simulator.abi.json -> MyScriptInteractiveInk_Runtime.abi.json
-[MyScriptInteractiveInk-Runtime] Copy x86_64-apple-ios-simulator.swiftdoc -> MyScriptInteractiveInk_Runtime.swiftdoc
-[MyScriptInteractiveInk-Runtime] Copy x86_64-apple-ios-simulator.swiftmodule -> MyScriptInteractiveInk_Runtime.swiftmodule
-[MyScriptInteractiveInk-Runtime] Copy arm64-apple-ios-simulator.swiftmodule -> MyScriptInteractiveInk_Runtime.swiftmodule
-[MyScriptInteractiveInk-Runtime] Copy x86_64-apple-ios-simulator.swiftsourceinfo -> MyScriptInteractiveInk_Runtime.swiftsourceinfo
 [MyScriptInteractiveInk-Runtime] Copy arm64-apple-ios-simulator.swiftdoc -> MyScriptInteractiveInk_Runtime.swiftdoc
 [MyScriptInteractiveInk-Runtime] Copy arm64-apple-ios-simulator.abi.json -> MyScriptInteractiveInk_Runtime.abi.json
+[MyScriptInteractiveInk-Runtime] Copy arm64-apple-ios-simulator.swiftmodule -> MyScriptInteractiveInk_Runtime.swiftmodule
 [MyScriptInteractiveInk-Runtime] Copy arm64-apple-ios-simulator.swiftsourceinfo -> MyScriptInteractiveInk_Runtime.swiftsourceinfo
 [MyScriptInteractiveInk-Runtime] Compiling MyScriptInteractiveInk-Runtime-dummy.m
-[MyScriptInteractiveInk-Runtime] Building library libMyScriptInteractiveInk-Runtime.a
-[MyScriptInteractiveInk-Runtime] Compiling MyScriptInteractiveInk-Runtime-dummy.m
-[MyScriptInteractiveInk-Runtime] Building library libMyScriptInteractiveInk-Runtime.a
-[MyScriptInteractiveInk-Runtime] Create Universal Binary libMyScriptInteractiveInk-Runtime.a
 [MyScriptInteractiveInk-Runtime] Running script Copy generated compatibility header
 [MyScriptInteractiveInk-Runtime] Extract App Intents Metadata
+[Pods-InkOSTests] Compiling Pods-InkOSTests-dummy.m
 [Pods-InkOS] Compiling Pods-InkOS-dummy.m
-[Pods-InkOS] Building library libPods-InkOS.a
-[Pods-InkOS] Compiling Pods-InkOS-dummy.m
-[Pods-InkOS] Building library libPods-InkOS.a
-[Pods-InkOS] Create Universal Binary libPods-InkOS.a
 [InkOS] Running script [CP] Check Pods Manifest.lock
+[InkOS] Copy libXCTestSwiftSupport.dylib -> libXCTestSwiftSupport.dylib
+[InkOS] Copy libXCTestBundleInject.dylib -> libXCTestBundleInject.dylib
+[InkOS] Copy XCUIAutomation.framework -> XCUIAutomation.framework
+[InkOS] Copy XCTest.framework -> XCTest.framework
+[InkOS] Copy XCUnit.framework -> XCUnit.framework
+[InkOS] Copy XCTestSupport.framework -> XCTestSupport.framework
+[InkOS] Copy XCTestCore.framework -> XCTestCore.framework
+[InkOS] Copy XCTAutomationSupport.framework -> XCTAutomationSupport.framework
+[InkOS] Copy Testing.framework -> Testing.framework
 [InkOS] Linking __preview.dylib
 [!] ld: search path '/var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.3.48.0.fNcRTW/Metal.xctoolchain/usr/lib/swift/iphonesimulator' not found
-[InkOS] Generate Asset Symbols Assets.xcassets
 [InkOS] Copying theme.css
-[InkOS] Linking __preview.dylib
-[!] ld: search path '/var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.3.48.0.fNcRTW/Metal.xctoolchain/usr/lib/swift/iphonesimulator' not found
-[InkOS] Create Universal Binary __preview.dylib
+[InkOS] Generate Asset Symbols Assets.xcassets
 note: Emplaced /Users/andrewallen/Desktop/swift_projects/Alan-d/Logs.nosync/DerivedData/Build/Products/Debug-iphonesimulator/InkOS.app/Assets.car (in target 'InkOS' from project 'InkOS')
 [InkOS] Processing Info.plist
-[InkOS] Compiling ImageLoader.swift
-[InkOS] Compiling ImagePainter.swift
-[InkOS] Compiling NSAttributedString+Helper.swift
-[InkOS] Compiling NSFileManager+Additions.swift
-[InkOS] Compiling Path.swift
-[InkOS] Compiling SynchronizedSwift.swift
-[InkOS] Compiling TextFormatHelper.swift
-[InkOS] Compiling UIComponents.swift
-[InkOS] Compiling InputViewController.swift
-[InkOS] Compiling InputViewModel.swift
-[InkOS] Compiling DisplayViewController.swift
-[InkOS] Compiling DisplayViewModel.swift
-[InkOS] Compiling Canvas.swift
-[InkOS] Compiling InputView.swift
-[InkOS] Compiling FirestoreMemoryStorage.swift
-[InkOS] Compiling MemoryAPIClient.swift
-[InkOS] Compiling MemoryContract.swift
-[InkOS] Compiling MemoryManager.swift
-[InkOS] Compiling NotebookContract.swift
-[InkOS] Compiling ContextMenuView.swift
-[InkOS] Compiling FileLogger.swift
-[InkOS] Compiling AlanEndpoints.swift
-[InkOS] Compiling SSEParser.swift
-[InkOS] Compiling BlockFactory.swift
-[InkOS] Compiling OrchestrationActor.swift
-[InkOS] Compiling OutputParser.swift
-[InkOS] Compiling AuthManager.swift
-[InkOS] Compiling EmbedContent.swift
-[InkOS] Compiling GraphicsContent.swift
-[InkOS] Compiling ImageContent.swift
-[InkOS] Compiling InputContent.swift
-[InkOS] Compiling TableContent.swift
-[InkOS] Compiling TextContent.swift
-[InkOS] Compiling BlockContent.swift
-[InkOS] Compiling BlockContract.swift
 [InkOS] Compiling AppRootView.swift
 [InkOS] Compiling BaseEditorViewController.swift
 [x] /Users/andrewallen/Desktop/swift_projects/Alan-d/InkOS/Editor/BaseEditorViewController.swift:22:37: cannot find type 'ToolPaletteView' in scope
@@ -317,13 +278,51 @@ note: Emplaced /Users/andrewallen/Desktop/swift_projects/Alan-d/Logs.nosync/Deri
 [InkOS] Compiling AlanContract.swift
 [InkOS] Compiling AlanError.swift
 [InkOS] Compiling AlanAPIClient.swift
-[InkOS] Compiling UIFont+Helper.swift
+[InkOS] Compiling ImageContent.swift
+[InkOS] Compiling InputContent.swift
+[InkOS] Compiling TableContent.swift
+[InkOS] Compiling TextContent.swift
+[InkOS] Compiling BlockContent.swift
+[InkOS] Compiling BlockContract.swift
+[InkOS] Compiling MemoryContract.swift
 [InkOS] Compiling EngineProvider.swift
 [InkOS] Compiling JIIXPersistenceService.swift
 [InkOS] Compiling BundleStorage.swift
 [InkOS] Compiling SDKProtocols.swift
 [InkOS] Compiling InkOSApp.swift
 [InkOS] Compiling GeneratedAssetSymbols.swift
+[InkOS] Compiling NotebookContract.swift
+[InkOS] Compiling ContextMenuView.swift
+[InkOS] Compiling FileLogger.swift
+[InkOS] Compiling UIComponents.swift
+[InkOS] Compiling InputViewController.swift
+[InkOS] Compiling InputViewModel.swift
+[InkOS] Compiling DisplayViewController.swift
+[InkOS] Compiling NSAttributedString+Helper.swift
+[InkOS] Compiling NSFileManager+Additions.swift
+[InkOS] Compiling Path.swift
+[InkOS] Compiling SynchronizedSwift.swift
+[InkOS] Compiling TextFormatHelper.swift
+[InkOS] Compiling UIFont+Helper.swift
+[InkOS] Compiling DisplayViewModel.swift
+[InkOS] Compiling Canvas.swift
+[InkOS] Compiling InputView.swift
+[InkOS] Compiling OffscreenRenderSurfaces.swift
+[InkOS] Compiling RenderView.swift
+[InkOS] Compiling ContextualActionsHelper.swift
+[InkOS] Compiling CTRun+Metrics.swift
+[InkOS] Compiling FontMetricsProvider.swift
+[InkOS] Compiling Helper.swift
+[InkOS] Compiling IInkUIRefImplUtils.swift
+[InkOS] Compiling ImageLoader.swift
+[InkOS] Compiling ImagePainter.swift
+[InkOS] Compiling AlanEndpoints.swift
+[InkOS] Compiling SSEParser.swift
+[InkOS] Compiling BlockFactory.swift
+[InkOS] Compiling OrchestrationActor.swift
+[InkOS] Compiling OutputParser.swift
+[InkOS] Compiling EmbedContent.swift
+[InkOS] Compiling GraphicsContent.swift
 note: Run script build phase 'Copy Recognition Assets' will be run during every build because the option to run the script phase "Based on dependency analysis" is unchecked. (in target 'InkOS' from project 'InkOS')
 [!]  /Users/andrewallen/Desktop/swift_projects/Alan-d/Pods/Pods.xcodeproj: The iOS Simulator deployment target 'IPHONEOS_DEPLOYMENT_TARGET' is set to 6.0, but the range of supported deployment target versions is 12.0 to 26.2.99. (in target 'iosMath-mathFonts' from project 'Pods')
 /Users/andrewallen/Desktop/swift_projects/Alan-d/Pods/Pods.xcodeproj: warning: The iOS Simulator deployment target 'IPHONEOS_DEPLOYMENT_TARGET' is set to 6.0, but the range of supported deployment target versions is 12.0 to 26.2.99. (in target 'iosMath' from project 'Pods')

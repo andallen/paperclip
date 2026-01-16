@@ -20,9 +20,23 @@ const AlanRequestSchema = z.object({
     session_topic: z.string().optional(),
   }),
   session_model: SessionModelSchema.optional(),
+  memory_context: z.string().optional(),
 });
 
 type AlanRequest = z.infer<typeof AlanRequestSchema>;
+
+/**
+ * Builds the complete system prompt including memory context.
+ */
+function buildSystemPrompt(memoryContext?: string): string {
+  if (!memoryContext || memoryContext.trim() === "") {
+    return ALAN_SYSTEM_PROMPT;
+  }
+
+  return `${ALAN_SYSTEM_PROMPT}
+
+${memoryContext}`;
+}
 
 /**
  * Main Alan tutoring agent endpoint.
@@ -72,8 +86,8 @@ export const alan = onRequest({cors: true, maxInstances: 10}, async (req, res) =
       parts: [{text: m.content}],
     }));
 
-    // Build system instruction with session model context.
-    let systemPrompt = ALAN_SYSTEM_PROMPT;
+    // Build system instruction with session model and memory context.
+    let systemPrompt = buildSystemPrompt(request.memory_context);
     if (request.session_model) {
       systemPrompt += `\n\n## Current Session Model\n\`\`\`json\n${JSON.stringify(request.session_model, null, 2)}\n\`\`\``;
     } else {
@@ -213,8 +227,8 @@ export const alanSync = onRequest({cors: true, maxInstances: 10}, async (req, re
       parts: [{text: m.content}],
     }));
 
-    // Build system instruction with session model context.
-    let systemPrompt = ALAN_SYSTEM_PROMPT;
+    // Build system instruction with session model and memory context.
+    let systemPrompt = buildSystemPrompt(request.memory_context);
     if (request.session_model) {
       systemPrompt += `\n\n## Current Session Model\n\`\`\`json\n${JSON.stringify(request.session_model, null, 2)}\n\`\`\``;
     } else {
