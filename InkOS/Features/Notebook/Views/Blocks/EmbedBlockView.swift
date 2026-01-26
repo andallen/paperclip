@@ -3,7 +3,7 @@
 // InkOS
 //
 // Placeholder for embed block rendering.
-// Will be implemented in a future phase with WebView for PhET, GeoGebra, etc.
+// Will be implemented in a future phase with WebView for PhET, Desmos, etc.
 //
 
 import SwiftUI

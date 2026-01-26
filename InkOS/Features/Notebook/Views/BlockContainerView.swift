@@ -117,11 +117,9 @@ struct BlockContainerView: View {
         .anchorPreference(key: FirstLineAnchor.self, value: .bounds) { anchor in
           shouldReportAnchor ? anchor : nil
         }
-    case .checkpoint(let content):
-      CheckpointBlockView(content: content)
-        .anchorPreference(key: FirstLineAnchor.self, value: .bounds) { anchor in
-          shouldReportAnchor ? anchor : nil
-        }
+    case .checkpoint:
+      // Checkpoints are invisible infrastructure - never render visually.
+      EmptyView()
     }
   }
 }

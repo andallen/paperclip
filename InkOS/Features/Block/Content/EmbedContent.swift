@@ -2,7 +2,7 @@
 // EmbedContent.swift
 // InkOS
 //
-// Embedded web content (PhET, GeoGebra, YouTube, Desmos, CircuitJS, etc.).
+// Embedded web content (PhET, YouTube, Desmos, CircuitJS, etc.).
 // Rendered via WKWebView.
 //
 
@@ -34,7 +34,6 @@ struct EmbedContent: Sendable, Codable, Equatable {
     case allowFullscreen = "allow_fullscreen"
     // Provider-specific keys.
     case phet
-    case geogebra
     case circuitjs
     case desmos
     case youtube
@@ -67,9 +66,6 @@ struct EmbedContent: Sendable, Codable, Equatable {
     case .phet:
       let config = try container.decode(PhETConfig.self, forKey: .phet)
       self.config = .phet(config)
-    case .geogebra:
-      let config = try container.decode(GeoGebraConfig.self, forKey: .geogebra)
-      self.config = .geogebra(config)
     case .circuitjs:
       let config = try container.decode(CircuitJSConfig.self, forKey: .circuitjs)
       self.config = .circuitjs(config)
@@ -96,8 +92,6 @@ struct EmbedContent: Sendable, Codable, Equatable {
     switch config {
     case .phet(let config):
       try container.encode(config, forKey: .phet)
-    case .geogebra(let config):
-      try container.encode(config, forKey: .geogebra)
     case .circuitjs(let config):
       try container.encode(config, forKey: .circuitjs)
     case .desmos(let config):
@@ -129,13 +123,6 @@ struct EmbedContent: Sendable, Codable, Equatable {
     )
   }
 
-  static func geogebra(materialId: String? = nil, appType: GeoGebraAppType = .classic) -> EmbedContent {
-    EmbedContent(
-      provider: .geogebra,
-      config: .geogebra(GeoGebraConfig(materialId: materialId, appType: appType))
-    )
-  }
-
   static func desmos(expressions: [DesmosExpression]) -> EmbedContent {
     EmbedContent(
       provider: .desmos,
@@ -156,7 +143,6 @@ struct EmbedContent: Sendable, Codable, Equatable {
 // Embed provider types.
 enum EmbedProvider: String, Sendable, Codable, Equatable {
   case phet
-  case geogebra
   case circuitjs
   case desmos
   case youtube
@@ -168,7 +154,6 @@ enum EmbedProvider: String, Sendable, Codable, Equatable {
 // Provider-specific configuration.
 enum EmbedConfig: Sendable, Equatable {
   case phet(PhETConfig)
-  case geogebra(GeoGebraConfig)
   case circuitjs(CircuitJSConfig)
   case desmos(DesmosConfig)
   case youtube(YouTubeConfig)
@@ -234,74 +219,6 @@ struct PhETConfig: Sendable, Codable, Equatable {
     self.locale = try container.decodeIfPresent(String.self, forKey: .locale) ?? "en"
     self.initialState = try container.decodeIfPresent([String: AnyCodable].self, forKey: .initialState)
   }
-}
-
-// MARK: - GeoGebraConfig
-
-// GeoGebra configuration.
-struct GeoGebraConfig: Sendable, Codable, Equatable {
-  // GeoGebra material ID from geogebra.org.
-  let materialId: String?
-
-  // App type.
-  let appType: GeoGebraAppType
-
-  // GeoGebra commands to execute on load.
-  let commands: [String]?
-
-  // Whether to show toolbar.
-  let showToolbar: Bool
-
-  // Whether to show menu bar.
-  let showMenuBar: Bool
-
-  // Whether to enable shift+drag zoom.
-  let enableShiftDragZoom: Bool
-
-  private enum CodingKeys: String, CodingKey {
-    case materialId = "material_id"
-    case appType = "app_type"
-    case commands
-    case showToolbar = "show_toolbar"
-    case showMenuBar = "show_menu_bar"
-    case enableShiftDragZoom = "enable_shift_drag_zoom"
-  }
-
-  init(
-    materialId: String? = nil,
-    appType: GeoGebraAppType = .classic,
-    commands: [String]? = nil,
-    showToolbar: Bool = false,
-    showMenuBar: Bool = false,
-    enableShiftDragZoom: Bool = true
-  ) {
-    self.materialId = materialId
-    self.appType = appType
-    self.commands = commands
-    self.showToolbar = showToolbar
-    self.showMenuBar = showMenuBar
-    self.enableShiftDragZoom = enableShiftDragZoom
-  }
-
-  init(from decoder: Decoder) throws {
-    let container = try decoder.container(keyedBy: CodingKeys.self)
-    self.materialId = try container.decodeIfPresent(String.self, forKey: .materialId)
-    self.appType = try container.decodeIfPresent(GeoGebraAppType.self, forKey: .appType) ?? .classic
-    self.commands = try container.decodeIfPresent([String].self, forKey: .commands)
-    self.showToolbar = try container.decodeIfPresent(Bool.self, forKey: .showToolbar) ?? false
-    self.showMenuBar = try container.decodeIfPresent(Bool.self, forKey: .showMenuBar) ?? false
-    self.enableShiftDragZoom = try container.decodeIfPresent(Bool.self, forKey: .enableShiftDragZoom) ?? true
-  }
-}
-
-// MARK: - GeoGebraAppType
-
-enum GeoGebraAppType: String, Sendable, Codable, Equatable {
-  case graphing
-  case geometry
-  case threeD = "3d"
-  case classic
-  case suite
 }
 
 // MARK: - CircuitJSConfig

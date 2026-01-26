@@ -230,7 +230,7 @@ extension TextContent {
       case .latex(_, let displayMode, _):
         // Display-mode LaTeX is section-level (centered equations).
         segmentRole = displayMode ? .section : .content
-      case .code, .pause:
+      case .code:
         segmentRole = .content
       }
 

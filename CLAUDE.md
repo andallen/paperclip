@@ -46,7 +46,7 @@ Alan/
 │   │   │   │   ├── ImageContent.swift           # Image block content
 │   │   │   │   ├── GraphicsContent.swift        # Interactive graphics (Chart.js, p5.js, etc.)
 │   │   │   │   ├── TableContent.swift           # Table block content
-│   │   │   │   ├── EmbedContent.swift           # Embedded content (PhET, GeoGebra, etc.)
+│   │   │   │   ├── EmbedContent.swift           # Embedded content (PhET, Desmos, etc.)
 │   │   │   │   ├── InputContent.swift           # User input block content
 │   │   │   │   └── CheckpointContent.swift      # Checkpoint block content
 │   │   │   │
@@ -281,7 +281,7 @@ Alan is the main tutoring agent that generates notebook content. It uses a subag
    - **Table** - Generates table content
    - **Image** - Searches educational image libraries (NASA, Wikimedia, museums, PubChem, etc.)
    - **Graphics** - Creates interactive visualizations (Chart.js, p5.js, Three.js, JSXGraph)
-   - **Embed** - Matches to embed providers (PhET, GeoGebra, Desmos, YouTube)
+   - **Embed** - Matches to embed providers (PhET, Desmos, YouTube)
 
 5. **Memory System** (`memory/`) - Manages long-term user context:
    - **memorySchema** - Defines memory types (facts, preferences, concepts)

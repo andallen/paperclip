@@ -262,7 +262,7 @@ struct RequestConstraints: Sendable, Codable, Equatable {
   // Preferred graphics engine (chartjs, p5, three, jsxgraph).
   let preferredEngine: String?
 
-  // Preferred embed provider (phet, geogebra, desmos, youtube).
+  // Preferred embed provider (phet, desmos, youtube).
   let preferredProvider: String?
 
   // Whether AI image generation is allowed.
@@ -516,7 +516,7 @@ enum VisualType: String, Sendable, Codable, Equatable {
   // Interactive visualizations (Chart.js, p5.js, Three.js).
   case graphics
 
-  // Embedded web tools (PhET, GeoGebra, Desmos, YouTube).
+  // Embedded web tools (PhET, Desmos, YouTube).
   case embed
 }
 

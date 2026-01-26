@@ -199,7 +199,7 @@ final class AlanContractTests: XCTestCase {
     let constraints = RequestConstraints(
       maxRows: 10,
       preferredEngine: nil,
-      preferredProvider: "geogebra"
+      preferredProvider: "desmos"
     )
 
     let encoder = JSONEncoder()
@@ -210,7 +210,7 @@ final class AlanContractTests: XCTestCase {
 
     XCTAssertEqual(decoded.maxRows, 10)
     XCTAssertNil(decoded.preferredEngine)
-    XCTAssertEqual(decoded.preferredProvider, "geogebra")
+    XCTAssertEqual(decoded.preferredProvider, "desmos")
   }
 
   // MARK: - TokenMetadata Tests

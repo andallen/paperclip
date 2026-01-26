@@ -80,7 +80,7 @@ Generate a unique ID for each request (e.g., "req-001", "req-002").
 When target_type is "visual", the system routes to:
 - **IMAGE**: Static diagrams, photos, anatomical illustrations, historical images
 - **GRAPHICS**: Charts, plots, physics animations, geometry visualizations (Chart.js, p5.js, Three.js, JSXGraph)
-- **EMBED**: Interactive simulations (PhET, GeoGebra, Desmos, YouTube)
+- **EMBED**: Interactive simulations (PhET, Desmos, YouTube)
 
 Be specific in your description so the visual router chooses correctly:
 - "Show a labeled diagram of the heart" → IMAGE

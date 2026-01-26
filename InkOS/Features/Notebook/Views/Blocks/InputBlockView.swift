@@ -2,8 +2,9 @@
 // InputBlockView.swift
 // InkOS
 //
-// Placeholder for input block rendering.
-// Will be implemented in a future phase with form controls and MyScript handwriting.
+// Input block rendering and inline input for user conversations with Alan.
+// InputBlockView is a placeholder for future form controls.
+// InlineInputView is the floating input shown when user taps the blob.
 //
 
 import SwiftUI
@@ -55,4 +56,59 @@ struct InputBlockView: View {
     case .numeric: return "number"
     }
   }
+}
+
+// MARK: - InlineInputView
+
+// Floating input view shown when user taps the blob.
+// Allows user to type a message to Alan.
+struct InlineInputView: View {
+  @Binding var text: String
+  let onSubmit: () -> Void
+  let onDismiss: () -> Void
+  @FocusState private var isFocused: Bool
+
+  var body: some View {
+    VStack(spacing: 12) {
+      TextField("Ask Alan anything...", text: $text, axis: .vertical)
+        .textFieldStyle(.roundedBorder)
+        .lineLimit(1...5)
+        .focused($isFocused)
+        .submitLabel(.send)
+        .onSubmit(onSubmit)
+        .font(NotebookTypography.body)
+
+      HStack {
+        Button("Cancel") { onDismiss() }
+          .foregroundColor(.secondary)
+          .font(NotebookTypography.body)
+        Spacer()
+        Button("Send") { onSubmit() }
+          .buttonStyle(.borderedProminent)
+          .disabled(text.isEmpty)
+          .font(NotebookTypography.body)
+      }
+    }
+    .padding()
+    .background(NotebookPalette.paper)
+    .cornerRadius(12)
+    .shadow(color: .black.opacity(0.1), radius: 8, y: 4)
+    .onAppear { isFocused = true }
+  }
+}
+
+// MARK: - Preview
+
+#Preview("Inline Input") {
+  VStack {
+    Spacer()
+    InlineInputView(
+      text: .constant(""),
+      onSubmit: {},
+      onDismiss: {}
+    )
+    .padding()
+    Spacer()
+  }
+  .background(NotebookPalette.paper)
 }

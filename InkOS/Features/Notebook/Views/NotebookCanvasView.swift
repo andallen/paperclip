@@ -30,12 +30,26 @@ struct NotebookCanvasView: View {
       // Content with blob positioned relative to anchor.
       // Blob is inside ScrollView so it scrolls naturally with content.
       LazyVStack(spacing: 0) {
-        ForEach(viewModel.document.blocks) { block in
+        ForEach(Array(viewModel.document.blocks.enumerated()), id: \.element.id) { index, block in
           BlockContainerView(
             block: block,
             animationState: viewModel.animationState[block.id] ?? .waiting,
             isMetaballTarget: block.id == viewModel.metaballTargetBlockId
           )
+
+          // Inject inline input after this block if it's the insertion point.
+          if let input = viewModel.activeInput, input.insertionIndex == index {
+            InlineInputView(
+              text: Binding(
+                get: { viewModel.activeInput?.text ?? "" },
+                set: { viewModel.activeInput?.text = $0 }
+              ),
+              onSubmit: { viewModel.submitInput() },
+              onDismiss: { viewModel.dismissInputBlock() }
+            )
+            .transition(.opacity.combined(with: .move(edge: .top)))
+            .padding(.vertical, 16)
+          }
         }
       }
       .padding(.horizontal, horizontalPadding)
@@ -56,22 +70,37 @@ struct NotebookCanvasView: View {
           // X position: align leftmost orbiting dot with text's left edge.
           // Frame is 100x100. Orbit radius is 0.55 in UV (-1 to 1), so ~55px diameter.
           // Leftmost dot = frame_left + 22.5. To align with text: blobX = padding + 27.5.
+          // Account for the larger tap target (140pt) centering.
           let blobX: CGFloat = horizontalPadding + 28
 
-          AlanPresenceView(state: viewModel.alanState)
-            .position(
-              x: blobX,
-              y: animatedBlobY
-            )
-            .accessibilityIdentifier("alan_presence_blob")
-            .onChange(of: targetY) { _, newY in
-              // Only animate when we have a valid anchor position.
-              // Prevents jumping to default when anchor is briefly nil during transitions.
-              guard let newY = newY else { return }
-              withAnimation(.spring(response: 0.15, dampingFraction: 0.85)) {
-                animatedBlobY = newY
-              }
+          // Blob with expanded tap target.
+          // Visual is 100pt, tap target is 140pt for easier interaction.
+          ZStack {
+            // Invisible tap target (140pt diameter).
+            Circle()
+              .fill(Color.clear)
+              .frame(width: 140, height: 140)
+              .contentShape(Circle())
+
+            // Visual blob (100pt frame).
+            AlanPresenceView(state: viewModel.alanState)
+          }
+          .onTapGesture {
+            viewModel.handleBlobTap()
+          }
+          .position(
+            x: blobX,
+            y: animatedBlobY
+          )
+          .accessibilityIdentifier("alan_presence_blob")
+          .onChange(of: targetY) { _, newY in
+            // Only animate when we have a valid anchor position.
+            // Prevents jumping to default when anchor is briefly nil during transitions.
+            guard let newY = newY else { return }
+            withAnimation(.spring(response: 0.15, dampingFraction: 0.85)) {
+              animatedBlobY = newY
             }
+          }
         }
       }
     }
@@ -79,7 +108,7 @@ struct NotebookCanvasView: View {
     .contentShape(Rectangle())
     .accessibilityIdentifier("notebook_canvas")
     .onTapGesture {
-      viewModel.advanceToNextBlock()
+      viewModel.handleContentTap()
     }
     .onAppear {
       viewModel.prepareFirstBlock()
