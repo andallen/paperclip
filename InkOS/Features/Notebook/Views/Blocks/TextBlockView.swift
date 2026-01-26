@@ -33,16 +33,15 @@ struct TextBlockView: View {
     // Note: Vertical spacing between blocks is handled by BlockContainerView.
   }
 
-  // Groups consecutive plain and pause segments together for inline rendering.
-  // Pauses stay inline so StreamingTextView can handle timing delays.
+  // Groups consecutive plain segments together for inline rendering.
   private var groupedSegments: [SegmentGroup] {
     var groups: [SegmentGroup] = []
     var currentInlineRun: [TextSegment] = []
 
     for segment in content.segments {
       switch segment {
-      case .plain, .pause:
-        // Plain text and pauses flow together inline.
+      case .plain:
+        // Plain text flows together inline.
         currentInlineRun.append(segment)
       default:
         // Flush any accumulated inline segments.
@@ -166,20 +165,15 @@ struct StreamingTextView: View {
   // Animation start time, set when entering animating state.
   @State private var animationStartTime: Date?
 
-  // Timing model: each character takes 1/cps seconds, pauses add their duration.
+  // Timing model: each character takes 1/cps seconds.
   // Add fade time at end so last character fully appears.
   private var totalDuration: Double {
     let fadeCharacters = 3
     let fadeDuration = Double(fadeCharacters) / charactersPerSecond
     var duration: Double = 0
     for segment in segments {
-      switch segment {
-      case .plain(let text, _):
+      if case .plain(let text, _) = segment {
         duration += Double(text.count) / charactersPerSecond
-      case .pause(let durationMs):
-        duration += Double(durationMs) / 1000.0
-      default:
-        break
       }
     }
     return duration + fadeDuration
@@ -264,14 +258,15 @@ struct StreamingTextView: View {
   // Avoids per-character iteration which caused stack overflow.
   private func streamingText(elapsed: Double) -> Text {
     let fadeCharacters = 3
+    let fullText = allPlainText
+    let totalCharacters = fullText.count
 
     // Calculate cursor position based on elapsed time.
+    // Cursor represents the character currently being "typed".
     var timeOffset: Double = 0
     var charIndex = 0
-    // Account for pauses by adjusting character position.
     for segment in segments {
-      switch segment {
-      case .plain(let text, _):
+      if case .plain(let text, _) = segment {
         let segmentDuration = Double(text.count) / charactersPerSecond
         if timeOffset + segmentDuration <= elapsed {
           timeOffset += segmentDuration
@@ -283,26 +278,30 @@ struct StreamingTextView: View {
           charIndex += charsInSegment
           break
         }
-      case .pause(let durationMs):
-        let pauseDuration = Double(durationMs) / 1000.0
-        if timeOffset + pauseDuration <= elapsed {
-          timeOffset += pauseDuration
-        } else {
-          break
-        }
-      default:
-        break
       }
     }
 
+    // After all characters are typed, the fade period continues.
+    // Calculate how many additional characters should be fully visible during fade.
+    let textDuration = Double(totalCharacters) / charactersPerSecond
+    let fadeProgress: Int
+    if elapsed > textDuration {
+      // Extra time past text completion advances visibility through the fade region.
+      let fadeElapsed = elapsed - textDuration
+      fadeProgress = min(fadeCharacters, Int(fadeElapsed * charactersPerSecond))
+    } else {
+      fadeProgress = 0
+    }
+
     // Visible region: characters fully faded in.
-    let visibleEnd = max(0, charIndex - fadeCharacters)
+    // During typing: charIndex - fadeCharacters are fully visible.
+    // During fade: progressively include remaining characters.
+    let visibleEnd = max(0, charIndex - fadeCharacters + fadeProgress)
     // Fading region: characters currently transitioning.
     let fadingStart = visibleEnd
-    let fadingEnd = charIndex
+    let fadingEnd = min(charIndex, totalCharacters)
 
     // Build text in chunks: visible (full opacity) + fading (partial opacity).
-    let fullText = allPlainText
     var result = Text("")
 
     // Add fully visible text.
@@ -452,10 +451,6 @@ struct BlockSegmentView: View {
         shouldAnimate: animationState == .animating,
         sequenceIndex: sequenceIndex
       )
-
-    case .pause:
-      // Pauses are timing-only, no visual representation.
-      EmptyView()
     }
   }
 }

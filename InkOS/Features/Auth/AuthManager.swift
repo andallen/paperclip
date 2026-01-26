@@ -125,7 +125,7 @@ final class DevAuthManager: AuthManagerProtocol {
 
 // Manages Sign in with Apple and Firebase Auth integration.
 @MainActor
-final class AuthManager: NSObject, AuthManagerProtocol {
+final class AuthManager: AuthManagerProtocol {
   // Current authentication state.
   private(set) var state: AuthState = .unknown
 
@@ -138,6 +138,9 @@ final class AuthManager: NSObject, AuthManagerProtocol {
   // Continuation for async Sign in with Apple flow.
   private var signInContinuation: CheckedContinuation<ASAuthorizationAppleIDCredential, Error>?
 
+  // Delegate helper for ASAuthorizationController callbacks.
+  private var delegateHelper: AuthControllerDelegate?
+
   // State publisher.
   var statePublisher: AsyncStream<AuthState> {
     AsyncStream { continuation in
@@ -146,8 +149,7 @@ final class AuthManager: NSObject, AuthManagerProtocol {
     }
   }
 
-  override init() {
-    super.init()
+  init() {
     refreshAuthState()
   }
 
@@ -167,14 +169,36 @@ final class AuthManager: NSObject, AuthManagerProtocol {
     request.requestedScopes = [.fullName, .email]
     request.nonce = sha256(nonce)
 
-    // Present authorization.
+    // Present authorization using delegate helper.
     let credential = try await withCheckedThrowingContinuation {
       (continuation: CheckedContinuation<ASAuthorizationAppleIDCredential, Error>) in
       self.signInContinuation = continuation
 
+      // Create delegate helper to handle callbacks.
+      let helper = AuthControllerDelegate(
+        onSuccess: { [weak self] credential in
+          self?.signInContinuation?.resume(returning: credential)
+          self?.signInContinuation = nil
+        },
+        onError: { [weak self] error in
+          if let authError = error as? ASAuthorizationError,
+            authError.code == .canceled
+          {
+            self?.signInContinuation?.resume(throwing: AuthError.signInCancelled)
+          } else {
+            self?.signInContinuation?.resume(throwing: AuthError.signInFailed(error.localizedDescription))
+          }
+          self?.signInContinuation = nil
+          Task { @MainActor in
+            self?.updateState(.signedOut)
+          }
+        }
+      )
+      self.delegateHelper = helper
+
       let authController = ASAuthorizationController(authorizationRequests: [request])
-      authController.delegate = self
-      authController.presentationContextProvider = self
+      authController.delegate = helper
+      authController.presentationContextProvider = helper
       authController.performRequests()
     }
 
@@ -257,46 +281,48 @@ final class AuthManager: NSObject, AuthManagerProtocol {
   }
 }
 
-// MARK: - ASAuthorizationControllerDelegate
+// MARK: - AuthControllerDelegate
 
-extension AuthManager: ASAuthorizationControllerDelegate {
-  nonisolated func authorizationController(
+// Private helper class for ASAuthorizationController delegate conformance.
+// Kept private so it doesn't get exported to Objective-C bridging header.
+private class AuthControllerDelegate: NSObject,
+  ASAuthorizationControllerDelegate,
+  ASAuthorizationControllerPresentationContextProviding
+{
+  // Callback when authorization succeeds.
+  private let onSuccess: (ASAuthorizationAppleIDCredential) -> Void
+
+  // Callback when authorization fails.
+  private let onError: (Error) -> Void
+
+  init(
+    onSuccess: @escaping (ASAuthorizationAppleIDCredential) -> Void,
+    onError: @escaping (Error) -> Void
+  ) {
+    self.onSuccess = onSuccess
+    self.onError = onError
+    super.init()
+  }
+
+  func authorizationController(
     controller: ASAuthorizationController,
     didCompleteWithAuthorization authorization: ASAuthorization
   ) {
-    Task { @MainActor in
-      if let credential = authorization.credential as? ASAuthorizationAppleIDCredential {
-        signInContinuation?.resume(returning: credential)
-        signInContinuation = nil
-      } else {
-        signInContinuation?.resume(throwing: AuthError.noCredential)
-        signInContinuation = nil
-      }
+    if let credential = authorization.credential as? ASAuthorizationAppleIDCredential {
+      onSuccess(credential)
+    } else {
+      onError(AuthError.noCredential)
     }
   }
 
-  nonisolated func authorizationController(
+  func authorizationController(
     controller: ASAuthorizationController,
     didCompleteWithError error: Error
   ) {
-    Task { @MainActor in
-      if let authError = error as? ASAuthorizationError,
-        authError.code == .canceled
-      {
-        signInContinuation?.resume(throwing: AuthError.signInCancelled)
-      } else {
-        signInContinuation?.resume(throwing: AuthError.signInFailed(error.localizedDescription))
-      }
-      signInContinuation = nil
-      updateState(.signedOut)
-    }
+    onError(error)
   }
-}
 
-// MARK: - ASAuthorizationControllerPresentationContextProviding
-
-extension AuthManager: ASAuthorizationControllerPresentationContextProviding {
-  nonisolated func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
+  func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
     // Return the key window for presentation.
     #if os(iOS)
       return UIApplication.shared.connectedScenes

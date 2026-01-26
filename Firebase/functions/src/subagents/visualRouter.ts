@@ -33,7 +33,6 @@ Given a request, determine the best type:
 
 3. EMBED: External interactive tools
    - PhET: physics simulations (projectile-motion, gravity-force-lab, circuit-construction-kit)
-   - GeoGebra: graphing calculator, geometry tools, 3D graphing
    - Desmos: advanced graphing calculator
    - YouTube: educational videos
    - CircuitJS: circuit simulations
@@ -78,7 +77,7 @@ export async function executeVisualRouter(
 
   if (request.constraints?.preferred_provider) {
     const provider = request.constraints.preferred_provider.toLowerCase();
-    if (["phet", "geogebra", "desmos", "youtube", "circuitjs"].includes(provider)) {
+    if (["phet", "desmos", "youtube", "circuitjs"].includes(provider)) {
       logger.info("Using preferred provider", {provider});
       const decision: VisualRouterDecision = {
         selected_type: "embed",
@@ -258,12 +257,12 @@ function inferEmbedProvider(concept: string, description: string): string {
 
   // Graphing.
   if (text.includes("graph") || text.includes("function") || text.includes("equation")) {
-    return text.includes("geogebra") ? "geogebra" : "desmos";
+    return "desmos";
   }
 
   // Geometry.
   if (text.includes("geometry") || text.includes("construction") || text.includes("triangle")) {
-    return "geogebra geometry";
+    return "desmos";
   }
 
   // Default to PhET.

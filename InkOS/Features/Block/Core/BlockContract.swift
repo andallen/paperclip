@@ -53,7 +53,7 @@ enum BlockType: String, Sendable, Codable, Equatable, CaseIterable {
   // Rows and columns of data. Rendered natively.
   case table
 
-  // Embedded web content (PhET, GeoGebra, YouTube, Desmos, etc.). Rendered via WebView.
+  // Embedded web content (PhET, YouTube, Desmos, etc.). Rendered via WebView.
   case embed
 
   // User input collection (text, handwriting, multiple choice, etc.). Rendered natively.

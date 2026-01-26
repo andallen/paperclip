@@ -77,6 +77,9 @@ extension NotebookDocument {
             alignment: .center
           )),
 
+        // Hidden checkpoint - pause point after the hook.
+        Block.checkpoint(),
+
         // SECTION 2: The Formula
         // Display-mode LaTeX is centered by default.
         Block.text(
@@ -120,6 +123,9 @@ extension NotebookDocument {
             ]
           )),
 
+        // Hidden checkpoint - pause point after the formula explanation.
+        Block.checkpoint(),
+
         // SECTION 3: The Insight
         // Title level for the question, centered for emphasis.
         Block.text(
@@ -150,6 +156,9 @@ extension NotebookDocument {
             ],
             alignment: .center
           )),
+
+        // Hidden checkpoint - pause point after the insight.
+        Block.checkpoint(),
 
         // SECTION 4: Worked Example
         // Transition back to left-aligned content for the walkthrough.
@@ -235,6 +244,9 @@ extension NotebookDocument {
             ],
             alignment: .center
           )),
+
+        // Hidden checkpoint - pause point after the worked example.
+        Block.checkpoint(),
 
         // Closing thought - returns to body level for reflection.
         Block.text(

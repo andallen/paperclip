@@ -1,6 +1,6 @@
 // embedSubagent.ts
 // Generates EmbedContent blocks for interactive external tools.
-// Supports PhET, GeoGebra, Desmos, CircuitJS, and YouTube.
+// Supports PhET, Desmos, CircuitJS, and YouTube.
 
 import * as logger from "firebase-functions/logger";
 import {
@@ -47,16 +47,6 @@ const PHET_SIMULATIONS: Record<string, string> = {
   "gene expression": "gene-expression-essentials",
 };
 
-// Known GeoGebra resources.
-const GEOGEBRA_RESOURCES: Record<string, string> = {
-  "graphing": "graphing",
-  "calculator": "graphing",
-  "geometry": "geometry",
-  "3d": "3d",
-  "cas": "cas",
-  "spreadsheet": "spreadsheet",
-};
-
 /**
  * Executes embed generation subagent.
  */
@@ -96,9 +86,6 @@ export async function executeEmbedSubagent(
     switch (provider) {
     case "phet":
       embedContent.phet = config;
-      break;
-    case "geogebra":
-      embedContent.geogebra = config;
       break;
     case "desmos":
       embedContent.desmos = config;
@@ -172,27 +159,6 @@ function inferEmbed(
         simulationMatched: simId,
       };
     }
-  }
-
-  // Check for GeoGebra.
-  if (searchText.includes("geogebra")) {
-    let resourceType = "graphing";
-    for (const [keyword, type] of Object.entries(GEOGEBRA_RESOURCES)) {
-      if (searchText.includes(keyword)) {
-        resourceType = type;
-        break;
-      }
-    }
-    return {
-      provider: "geogebra",
-      config: {
-        resource_type: resourceType,
-        show_toolbar: true,
-        show_menu_bar: false,
-        enable_right_click: false,
-      },
-      simulationMatched: `geogebra-${resourceType}`,
-    };
   }
 
   // Check for Desmos.
