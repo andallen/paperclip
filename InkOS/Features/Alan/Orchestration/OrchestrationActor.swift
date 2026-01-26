@@ -48,18 +48,6 @@ actor OrchestrationActor {
   // API client for Alan and subagent communication.
   private let apiClient: AlanAPIClient
 
-  // Memory manager for long-term learning persistence.
-  private var memoryManager: MemoryManager?
-
-  // Cached memory context for the current session.
-  private var currentMemoryContext: String?
-
-  // Session tracking for memory updates.
-  private var currentSessionId: String?
-  private var sessionTurnCount: Int = 0
-  private var sessionStartTime: Date?
-  private var topicsCovered: Set<String> = []
-
   // Delegate for orchestration events (stored as nonisolated to allow MainActor access).
   private nonisolated(unsafe) weak var _delegate: OrchestrationDelegate?
 
@@ -79,71 +67,6 @@ actor OrchestrationActor {
     self._delegate = delegate
   }
 
-  // MARK: - Memory Management
-
-  // Configures memory management for a user.
-  func configureMemory(userId: String) {
-    let storage = MemoryStorageFactory.createStorage()
-    let apiClient = MemoryAPIClient.current
-    memoryManager = MemoryManager(storage: storage, apiClient: apiClient, userId: userId)
-  }
-
-  // Starts a new session and loads memory.
-  func startSession(sessionId: String, topics: [String]) async {
-    currentSessionId = sessionId
-    sessionTurnCount = 0
-    sessionStartTime = Date()
-    topicsCovered = Set(topics)
-
-    // Load memory for the session topics.
-    guard let manager = memoryManager else { return }
-
-    do {
-      let nodes = try await manager.loadNodes(pathPrefixes: topics)
-      currentMemoryContext = await manager.formatForAlan(nodes: nodes)
-    } catch {
-      // Log error but continue without memory.
-      print("Failed to load memory: \(error)")
-      currentMemoryContext = nil
-    }
-  }
-
-  // Ends the current session and triggers memory update.
-  func endSession(sessionModel: SessionModel) async {
-    guard let manager = memoryManager,
-      let sessionId = currentSessionId,
-      let startTime = sessionStartTime
-    else { return }
-
-    let durationMinutes = Int(Date().timeIntervalSince(startTime) / 60)
-
-    let metadata = SessionMetadata(
-      sessionId: sessionId,
-      topicsCovered: Array(topicsCovered),
-      durationMinutes: durationMinutes,
-      turnCount: sessionTurnCount
-    )
-
-    do {
-      try await manager.triggerUpdate(sessionModel: sessionModel, metadata: metadata)
-    } catch {
-      // Log error but don't interrupt session end.
-      print("Failed to update memory: \(error)")
-    }
-
-    // Clear session state.
-    currentSessionId = nil
-    sessionTurnCount = 0
-    sessionStartTime = nil
-    topicsCovered.removeAll()
-    currentMemoryContext = nil
-  }
-
-  // Returns the current memory context for Alan.
-  func getMemoryContext() -> String? {
-    currentMemoryContext
-  }
-
   // MARK: - Message Processing
 
   // Sends a message to Alan and processes the response.
@@ -153,24 +76,16 @@ actor OrchestrationActor {
     notebookContext: NotebookContext,
     sessionModel: SessionModel? = nil
   ) async {
-    // Increment turn count.
-    sessionTurnCount += 1
-
-    // Track topics from notebook context.
-    if let topic = notebookContext.sessionTopic {
-      topicsCovered.insert(topic)
-    }
-
     // Build messages array with history and new message.
     var messages = conversationHistory
     messages.append(ChatMessage(role: .user, content: content))
 
-    // Start streaming response from Alan with memory context.
+    // Start streaming response from Alan.
     let stream = await apiClient.sendMessage(
       messages: messages,
       notebookContext: notebookContext,
       sessionModel: sessionModel,
-      memoryContext: currentMemoryContext
+      memoryContext: nil
     )
 
     // Process the stream.
