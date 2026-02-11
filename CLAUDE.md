@@ -79,6 +79,9 @@ Alan/
 │   │   │       ├── NotebookCanvasView.swift     # Main notebook canvas
 │   │   │       ├── BlockContainerView.swift     # Block layout container
 │   │   │       ├── PendingBlockView.swift       # Loading state for blocks
+│   │   │       ├── AttachmentPreviewGrid.swift  # Attachment preview thumbnails
+│   │   │       ├── CanvasInputView.swift        # Persistent bottom input bar
+│   │   │       ├── PencilKitToolbarView.swift   # PencilKit drawing toolbar
 │   │   │       │
 │   │   │       ├── AlanPresence/         # Alan avatar animation
 │   │   │       │   ├── AlanPresenceState.swift  # Presence state machine
@@ -88,12 +91,20 @@ Alan/
 │   │   │       │
 │   │   │       └── Blocks/               # Individual block views
 │   │   │           ├── TextBlockView.swift      # Text rendering with markdown
-│   │   │           ├── ImageBlockView.swift     # Image display
+│   │   │           ├── ImageBlockView.swift     # Image display (delegates to Image/)
 │   │   │           ├── TableBlockView.swift     # Table rendering
 │   │   │           ├── GraphicsBlockView.swift  # Interactive graphics
-│   │   │           ├── EmbedBlockView.swift     # Embedded content (iframes)
-│   │   │           ├── InputBlockView.swift     # User input fields
+│   │   │           ├── EmbedBlockView.swift     # Embedded content (WKWebView)
+│   │   │           ├── InputPreviewBlockView.swift # Input response preview
 │   │   │           ├── CheckpointBlockView.swift # Checkpoint markers
+│   │   │           │
+│   │   │           ├── Image/            # Modular image components
+│   │   │           │   ├── ImageAttributionView.swift  # Source attribution
+│   │   │           │   ├── ImageCaptionView.swift      # Image captions
+│   │   │           │   ├── ImageDisplayView.swift      # Main image display
+│   │   │           │   ├── ImageErrorView.swift        # Error states
+│   │   │           │   ├── ImageLoader.swift           # Async image loading
+│   │   │           │   └── ImageSkeletonView.swift     # Loading skeleton
 │   │   │           │
 │   │   │           └── Text/             # Text rendering components
 │   │   │               ├── PlainTextView.swift  # Plain text rendering
