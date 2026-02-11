@@ -4,7 +4,7 @@
 //
 // Core Block primitive types for the Alan educational content system.
 // A Block is the fundamental unit of content rendered on the canvas.
-// There are 6 primitive block types: text, image, graphics, table, embed, input.
+// There are 6 primitive block types: text, image, graphics, table, embed, checkpoint.
 //
 
 import Foundation
@@ -38,7 +38,7 @@ struct BlockID: Hashable, Sendable, Codable, Equatable, CustomStringConvertible 
 
 // MARK: - BlockType
 
-// The 7 primitive block types available in the system.
+// The 6 primitive block types available in the system.
 // Each type maps to a specific content schema and renderer.
 enum BlockType: String, Sendable, Codable, Equatable, CaseIterable {
   // Rich text with LaTeX, code, and kinetic typography. Rendered natively.
@@ -55,9 +55,6 @@ enum BlockType: String, Sendable, Codable, Equatable, CaseIterable {
 
   // Embedded web content (PhET, YouTube, Desmos, etc.). Rendered via WebView.
   case embed
-
-  // User input collection (text, handwriting, multiple choice, etc.). Rendered natively.
-  case input
 
   // Pause point requiring user interaction to continue. Rendered natively.
   case checkpoint
@@ -88,7 +85,7 @@ struct Block: Identifiable, Sendable, Equatable {
   // Unique block identifier.
   let id: BlockID
 
-  // Block type (text, image, graphics, table, embed, input).
+  // Block type (text, image, graphics, table, embed, checkpoint).
   let type: BlockType
 
   // Timestamp when block was created.
@@ -172,16 +169,6 @@ struct Block: Identifiable, Sendable, Equatable {
     content: EmbedContent
   ) -> Block {
     Block(id: id, type: .embed, createdAt: createdAt, status: status, content: .embed(content))
-  }
-
-  // Creates an input block.
-  static func input(
-    id: BlockID = BlockID(),
-    createdAt: Date = Date(),
-    status: BlockStatus = .ready,
-    content: InputContent
-  ) -> Block {
-    Block(id: id, type: .input, createdAt: createdAt, status: status, content: .input(content))
   }
 
   // Creates a checkpoint block.

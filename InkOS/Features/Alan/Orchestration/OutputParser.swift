@@ -12,7 +12,7 @@ import Foundation
 
 // Result of parsing Alan's output.
 struct ParsedOutput: Sendable {
-  // Direct blocks that can be inserted immediately (Text, Input).
+  // Direct blocks that can be inserted immediately (Text).
   let directBlocks: [Block]
 
   // Subagent requests that need additional processing (Table, Visual).
@@ -102,13 +102,11 @@ struct OutputParser {
 
   // MARK: - Private Parsing Helpers
 
-  // Parses direct block content (Text or Input).
+  // Parses direct block content (Text).
   private static func parseDirectBlock(_ content: UpdateContent) -> Block? {
     switch content {
     case .text(let textContent):
       return BlockFactory.createTextBlock(content: textContent)
-    case .input(let inputContent):
-      return BlockFactory.createInputBlock(content: inputContent)
     case .subagentRequest:
       // Subagent requests are not direct blocks.
       return nil
@@ -120,7 +118,7 @@ struct OutputParser {
     switch content {
     case .subagentRequest(let request):
       return request
-    case .text, .input:
+    case .text:
       // Direct blocks are not subagent requests.
       return nil
     }

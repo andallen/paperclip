@@ -6,6 +6,7 @@
 // Realistic tutoring scenarios demonstrating kinetic typography in context.
 // Uses design tokens for consistent typography hierarchy and spacing.
 // User controls pacing by tapping to advance through blocks.
+// Persistent canvas input at the bottom allows user to message Alan at any time.
 //
 
 import Foundation
@@ -13,7 +14,7 @@ import Foundation
 // MARK: - NotebookDocument Preview Extension
 
 extension NotebookDocument {
-  // Combined preview testing image and embed blocks.
+  // Combined preview testing image, embed, and input blocks.
   static var preview: NotebookDocument {
     NotebookDocument(
       title: "Block Testing",
@@ -33,7 +34,7 @@ extension NotebookDocument {
           content: TextContent(
             segments: [
               .plain(
-                text: "Embed Examples",
+                text: "The Pythagorean Theorem:",
                 style: TextStyle(size: .title, weight: .bold)
               )
             ]
@@ -48,24 +49,7 @@ extension NotebookDocument {
             caption: "Video: Pythagorean Theorem"
           )),
 
-        // Brief intro text
-        Block.text(
-          content: TextContent(
-            segments: [
-              .kinetic(
-                text: "Let's explore the Pythagorean Theorem.",
-                animation: .typewriter,
-                durationMs: 1500,
-                delayMs: 0,
-                style: TextStyle(size: .title, weight: .medium)
-              )
-            ]
-          )),
-
-        // Hidden checkpoint - pause point after the hook.
-        Block.checkpoint(),
-
-        // Display-mode LaTeX is centered by default.
+        // Formula.
         Block.text(
           content: TextContent(
             segments: [
@@ -73,6 +57,16 @@ extension NotebookDocument {
             ],
             alignment: .center
           )),
+
+        // Explanation text.
+        Block.text(
+          content: TextContent(
+            segments: [
+              .plain(
+                text: "Use the input below to ask questions or show your work."
+              )
+            ]
+          ))
       ]
     )
   }

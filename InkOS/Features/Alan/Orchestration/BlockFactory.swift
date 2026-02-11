@@ -29,16 +29,6 @@ struct BlockFactory {
     Block.text(content: TextContent.plain(text))
   }
 
-  // MARK: - Input Block Creation
-
-  // Creates an input block from InputContent.
-  static func createInputBlock(
-    content: InputContent,
-    status: BlockStatus = .ready
-  ) -> Block {
-    Block.input(status: status, content: content)
-  }
-
   // MARK: - Placeholder Block Creation
 
   // Creates a placeholder block for pending subagent requests.

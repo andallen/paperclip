@@ -6,6 +6,7 @@
 // Tracks animation state for each block and Alan's presence state.
 // User controls pacing by tapping to advance to the next block.
 // Alan's presence indicator reflects current activity (idle/thinking/outputting).
+// Persistent canvas input at bottom allows user to message Alan at any time.
 //
 
 import SwiftUI
@@ -22,20 +23,26 @@ enum BlockAnimationState: Equatable, Sendable {
   case complete
 }
 
-// MARK: - ActiveInputState
+// MARK: - InputPreview
 
-// State for the inline text input shown when user taps the blob.
-struct ActiveInputState {
-  // Index in the blocks array where the input should appear.
-  let insertionIndex: Int
-  // Current text in the input field.
-  var text: String = ""
+// A submitted user input displayed on the canvas for confirmation.
+struct InputPreview: Identifiable, Sendable {
+  let id: String
+  let response: InputResponse
+  let timestamp: Date
+
+  init(response: InputResponse, timestamp: Date = Date()) {
+    self.id = UUID().uuidString
+    self.response = response
+    self.timestamp = timestamp
+  }
 }
 
 // MARK: - NotebookViewModel
 
 // Observable state for the notebook canvas renderer.
 // User taps to advance through blocks at their own pace.
+// Persistent input at bottom allows messaging Alan at any time.
 @MainActor @Observable
 final class NotebookViewModel {
   // The notebook document being rendered.
@@ -51,8 +58,8 @@ final class NotebookViewModel {
   // Set immediately on tap so metaball moves before block is revealed.
   var metaballTargetBlockId: BlockID?
 
-  // State for the inline input shown when user taps the blob.
-  var activeInput: ActiveInputState?
+  // Submitted user inputs displayed on the canvas.
+  var inputPreviews: [InputPreview] = []
 
   // Queue of block IDs waiting to be revealed.
   private var animationQueue: [BlockID] = []
@@ -229,7 +236,6 @@ final class NotebookViewModel {
       animationState[blockId] = .complete
     }
     alanState = .idle
-    activeInput = nil
   }
 
   // Resets all animations to waiting state.
@@ -241,7 +247,6 @@ final class NotebookViewModel {
       animationState[block.id] = .waiting
     }
     alanState = .idle
-    activeInput = nil
   }
 
   // MARK: - Checkpoint Helpers
@@ -258,10 +263,8 @@ final class NotebookViewModel {
   // Finds the index of the next checkpoint in the animation queue.
   // Returns nil if there are no checkpoints remaining.
   private func findNextCheckpointIndex() -> Int? {
-    for (index, blockId) in animationQueue.enumerated() {
-      if isCheckpointBlock(blockId) {
-        return index
-      }
+    for (index, blockId) in animationQueue.enumerated() where isCheckpointBlock(blockId) {
+      return index
     }
     return nil
   }
@@ -269,58 +272,47 @@ final class NotebookViewModel {
   // MARK: - Tap Handlers
 
   // Handles tap on content area.
-  // Dismisses input if showing, otherwise advances to next checkpoint.
+  // Advances to next checkpoint.
   func handleContentTap() {
-    // Dismiss input if showing.
-    if activeInput != nil {
-      dismissInputBlock()
-      return
-    }
-
-    // Advance to next checkpoint.
     advanceToNextCheckpoint()
   }
 
   // Handles tap on the blob.
-  // Shows inline input if not already showing.
+  // Advances to next checkpoint (same as content tap).
   func handleBlobTap() {
-    // Don't show input during animation.
-    guard revealTask == nil || revealTask?.isCancelled == true else { return }
-
-    // Don't show if already showing.
-    guard activeInput == nil else { return }
-
-    showInputBlock()
+    advanceToNextCheckpoint()
   }
 
-  // MARK: - Inline Input
+  // MARK: - Canvas Input
 
-  // Shows the inline input block after the last revealed block.
-  func showInputBlock() {
-    // Find the index of the last revealed block.
-    let revealedBlocks = document.blocks.enumerated().filter { _, block in
-      let state = animationState[block.id] ?? .waiting
-      return state == .animating || state == .complete
+  // Submits input from the persistent canvas input.
+  // Creates a preview block and will send to Alan for processing.
+  func submitCanvasInput(_ response: InputResponse) {
+    // Skip empty submissions.
+    guard !response.isEmpty else { return }
+
+    // Create preview for visual confirmation.
+    let preview = InputPreview(response: response)
+    inputPreviews.append(preview)
+
+    // Log the submission.
+    print("[NotebookViewModel] Canvas input submitted:")
+    if let text = response.text {
+      print("  Text: \(text)")
+    }
+    if let handwritingData = response.handwritingImageData {
+      print("  Handwriting: \(handwritingData.count) bytes")
+    }
+    if let attachments = response.attachments {
+      print("  Attachments: \(attachments.count)")
     }
 
-    // Insert after the last revealed block, or at index 0 if none revealed.
-    let insertionIndex = revealedBlocks.last?.offset ?? -1
-
-    activeInput = ActiveInputState(insertionIndex: insertionIndex)
+    // Send response to Alan for processing.
+    // Alan integration will be implemented in a future update.
   }
 
-  // Dismisses the inline input block.
-  func dismissInputBlock() {
-    activeInput = nil
-  }
-
-  // Submits the input text.
-  // TODO: Send to Alan for processing.
-  func submitInput() {
-    guard let input = activeInput, !input.text.isEmpty else { return }
-
-    // TODO: Send input.text to Alan.
-
-    dismissInputBlock()
+  // Clears all input previews.
+  func clearInputPreviews() {
+    inputPreviews.removeAll()
   }
 }

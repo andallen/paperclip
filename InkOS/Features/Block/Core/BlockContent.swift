@@ -18,7 +18,6 @@ enum BlockContent: Sendable, Equatable {
   case graphics(GraphicsContent)
   case table(TableContent)
   case embed(EmbedContent)
-  case input(InputContent)
   case checkpoint(CheckpointContent)
 }
 
@@ -44,9 +43,6 @@ extension BlockContent: Codable {
     case .embed:
       let content = try EmbedContent(from: decoder)
       return .embed(content)
-    case .input:
-      let content = try InputContent(from: decoder)
-      return .input(content)
     case .checkpoint:
       let content = try CheckpointContent(from: decoder)
       return .checkpoint(content)
@@ -75,8 +71,6 @@ extension BlockContent: Codable {
     case .table(let content):
       try content.encode(to: encoder)
     case .embed(let content):
-      try content.encode(to: encoder)
-    case .input(let content):
       try content.encode(to: encoder)
     case .checkpoint(let content):
       try content.encode(to: encoder)
@@ -117,12 +111,6 @@ extension BlockContent {
     return nil
   }
 
-  // Returns the input content if this is an input block.
-  var inputContent: InputContent? {
-    if case .input(let content) = self { return content }
-    return nil
-  }
-
   // Returns the checkpoint content if this is a checkpoint block.
   var checkpointContent: CheckpointContent? {
     if case .checkpoint(let content) = self { return content }
@@ -135,7 +123,7 @@ extension BlockContent {
     switch self {
     case .text(let content):
       return content.streamingDurationMs
-    case .image, .graphics, .table, .embed, .input, .checkpoint:
+    case .image, .graphics, .table, .embed, .checkpoint:
       // Non-text blocks appear with a brief reveal animation.
       return 300
     }
