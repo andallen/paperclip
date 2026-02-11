@@ -3,7 +3,7 @@
 // InkOS
 //
 // SwiftUI view for rendering EmbedContent blocks via WKWebView.
-// Supports PhET, Desmos, YouTube, CircuitJS, and generic URL embeds.
+// Loads URLs directly from EmbedContent - no URL construction logic.
 //
 
 import SwiftUI
@@ -29,7 +29,7 @@ struct EmbedBlockView: View {
           loadError: $loadError
         )
         .frame(height: calculatedHeight)
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
 
         // Loading overlay.
         if isLoading {
@@ -79,6 +79,18 @@ struct EmbedBlockView: View {
     return width / (16.0 / 9.0)
   }
 
+  // Display name for loading indicator.
+  private var providerDisplayName: String {
+    guard let provider = content.provider else { return "Content" }
+    switch provider.lowercased() {
+    case "youtube": return "YouTube"
+    case "desmos": return "Desmos"
+    case "circuitjs": return "Circuit"
+    case "phet": return "PhET"
+    default: return provider.capitalized
+    }
+  }
+
   // MARK: - Subviews
 
   private var loadingOverlay: some View {
@@ -88,7 +100,7 @@ struct EmbedBlockView: View {
         VStack(spacing: 12) {
           ProgressView()
             .scaleEffect(1.2)
-          Text("Loading \(content.provider.displayName)...")
+          Text("Loading \(providerDisplayName)...")
             .font(.caption)
             .foregroundColor(.secondary)
         }
@@ -160,209 +172,48 @@ struct EmbedWebView: UIViewRepresentable {
     let webView = WKWebView(frame: .zero, configuration: config)
     webView.navigationDelegate = context.coordinator
     webView.allowsBackForwardNavigationGestures = false
-    webView.scrollView.isScrollEnabled = true
-    webView.scrollView.bounces = false
     webView.isOpaque = false
     webView.backgroundColor = .clear
     webView.scrollView.backgroundColor = .clear
+
+    // Gesture isolation strategy depends on provider.
+    // PhET uses HTML5 Canvas with custom touch handling that doesn't stop propagation.
+    // Disabling scroll entirely for PhET lets its internal gesture handling work.
+    let isInteractiveSimulation = content.provider?.lowercased() == "phet" ||
+                                   content.provider?.lowercased() == "circuitjs"
+
+    if isInteractiveSimulation {
+      // Disable WKWebView scrolling entirely - PhET/CircuitJS handle their own gestures.
+      webView.scrollView.isScrollEnabled = false
+      webView.scrollView.panGestureRecognizer.isEnabled = false
+      webView.scrollView.pinchGestureRecognizer?.isEnabled = false
+    } else {
+      // Standard embeds (Desmos, YouTube) - normal scroll behavior.
+      webView.scrollView.isScrollEnabled = true
+      webView.scrollView.bounces = false
+      webView.scrollView.delaysContentTouches = false
+      webView.scrollView.canCancelContentTouches = false
+    }
 
     return webView
   }
 
   func updateUIView(_ webView: WKWebView, context: Context) {
-    // Only load if URL changed or first load.
-    guard context.coordinator.currentURL != embedURL else { return }
-    context.coordinator.currentURL = embedURL
-
-    if let url = embedURL {
-      let request = URLRequest(url: url)
-      webView.load(request)
-    } else if let html = embedHTML {
-      webView.loadHTMLString(html, baseURL: nil)
-    } else {
+    // Parse URL from content.
+    guard let url = URL(string: content.url) else {
       DispatchQueue.main.async {
-        loadError = "Invalid embed configuration"
+        loadError = "Invalid URL: \(content.url)"
         isLoading = false
       }
-    }
-  }
-
-  // MARK: - URL Generation
-
-  private var embedURL: URL? {
-    switch content.config {
-    case .phet(let config):
-      return phetURL(config)
-    case .youtube(let config):
-      return youtubeURL(config)
-    case .desmos(let config):
-      return desmosURL(config)
-    case .circuitjs(let config):
-      return circuitjsURL(config)
-    case .url(let config):
-      return URL(string: config.src)
-    }
-  }
-
-  private var embedHTML: String? {
-    // For providers that need custom HTML (like Desmos with expressions).
-    switch content.config {
-    case .desmos(let config):
-      if config.expressions != nil {
-        return desmosHTML(config)
-      }
-      return nil
-    default:
-      return nil
-    }
-  }
-
-  private func phetURL(_ config: PhETConfig) -> URL? {
-    // PhET simulations are hosted at phet.colorado.edu.
-    // Format: https://phet.colorado.edu/sims/html/{simulation-id}/latest/{simulation-id}_{locale}.html
-    let baseURL = "https://phet.colorado.edu/sims/html/\(config.simulationId)/latest/\(config.simulationId)_\(config.locale).html"
-    return URL(string: baseURL)
-  }
-
-  private func youtubeURL(_ config: YouTubeConfig) -> URL? {
-    // YouTube embed URL with parameters.
-    var components = URLComponents(string: "https://www.youtube.com/embed/\(config.videoId)")
-    var queryItems: [URLQueryItem] = []
-
-    // Enable JS API for potential future interactions.
-    queryItems.append(URLQueryItem(name: "enablejsapi", value: "1"))
-
-    // Playback options.
-    queryItems.append(URLQueryItem(name: "playsinline", value: "1"))
-    queryItems.append(URLQueryItem(name: "rel", value: "0"))
-    queryItems.append(URLQueryItem(name: "modestbranding", value: "1"))
-
-    if config.autoplay {
-      queryItems.append(URLQueryItem(name: "autoplay", value: "1"))
+      return
     }
 
-    if !config.controls {
-      queryItems.append(URLQueryItem(name: "controls", value: "0"))
-    }
+    // Only load if URL changed.
+    guard context.coordinator.currentURL != url else { return }
+    context.coordinator.currentURL = url
 
-    if let start = config.startTime {
-      queryItems.append(URLQueryItem(name: "start", value: String(start)))
-    }
-
-    if let end = config.endTime {
-      queryItems.append(URLQueryItem(name: "end", value: String(end)))
-    }
-
-    components?.queryItems = queryItems
-    return components?.url
-  }
-
-  private func desmosURL(_ config: DesmosConfig) -> URL? {
-    // Desmos calculator URL based on type.
-    let calculatorPath: String
-    switch config.calculatorType {
-    case .graphing:
-      calculatorPath = "calculator"
-    case .scientific:
-      calculatorPath = "scientific"
-    case .fourfunction:
-      calculatorPath = "fourfunction"
-    case .geometry:
-      calculatorPath = "geometry"
-    }
-    return URL(string: "https://www.desmos.com/\(calculatorPath)")
-  }
-
-  private func desmosHTML(_ config: DesmosConfig) -> String {
-    // Generate HTML that uses Desmos API to set up expressions.
-    let expressionsJSON: String
-    if let expressions = config.expressions {
-      let encoder = JSONEncoder()
-      if let data = try? encoder.encode(expressions),
-         let json = String(data: data, encoding: .utf8) {
-        expressionsJSON = json
-      } else {
-        expressionsJSON = "[]"
-      }
-    } else {
-      expressionsJSON = "[]"
-    }
-
-    let settingsScript: String
-    if let settings = config.settings {
-      var settingsCode = ""
-      if let showGrid = settings.showGrid {
-        settingsCode += "calculator.updateSettings({ showGrid: \(showGrid) });\n"
-      }
-      if let xRange = settings.xRange, xRange.count == 2,
-         let yRange = settings.yRange, yRange.count == 2 {
-        settingsCode += "calculator.setMathBounds({ left: \(xRange[0]), right: \(xRange[1]), bottom: \(yRange[0]), top: \(yRange[1]) });\n"
-      }
-      settingsScript = settingsCode
-    } else {
-      settingsScript = ""
-    }
-
-    return """
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-      <script src="https://www.desmos.com/api/v1.8/calculator.js?apiKey=dcb31709b452b1cf9dc26972add0fda6"></script>
-      <style>
-        * { margin: 0; padding: 0; }
-        html, body { width: 100%; height: 100%; }
-        #calculator { width: 100%; height: 100%; }
-      </style>
-    </head>
-    <body>
-      <div id="calculator"></div>
-      <script>
-        var elt = document.getElementById('calculator');
-        var calculator = Desmos.GraphingCalculator(elt, {
-          expressions: true,
-          settingsMenu: false,
-          zoomButtons: true,
-          lockViewport: false
-        });
-
-        var expressions = \(expressionsJSON);
-        expressions.forEach(function(expr) {
-          calculator.setExpression({
-            id: expr.id || Math.random().toString(36),
-            latex: expr.latex,
-            color: expr.color || Desmos.Colors.BLUE,
-            hidden: expr.hidden || false
-          });
-        });
-
-        \(settingsScript)
-      </script>
-    </body>
-    </html>
-    """
-  }
-
-  private func circuitjsURL(_ config: CircuitJSConfig) -> URL? {
-    // CircuitJS hosted URL.
-    var components = URLComponents(string: "https://www.falstad.com/circuit/circuitjs.html")
-    var queryItems: [URLQueryItem] = []
-
-    if let circuitData = config.circuitData {
-      // Circuit data is passed as a URL-encoded string.
-      queryItems.append(URLQueryItem(name: "ctz", value: circuitData))
-    }
-
-    if !config.running {
-      queryItems.append(URLQueryItem(name: "running", value: "false"))
-    }
-
-    if !queryItems.isEmpty {
-      components?.queryItems = queryItems
-    }
-
-    return components?.url
+    let request = URLRequest(url: url)
+    webView.load(request)
   }
 
   // MARK: - Coordinator
@@ -395,7 +246,11 @@ struct EmbedWebView: UIViewRepresentable {
       }
     }
 
-    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+    func webView(
+      _ webView: WKWebView,
+      didFailProvisionalNavigation navigation: WKNavigation!,
+      withError error: Error
+    ) {
       DispatchQueue.main.async {
         self.parent.isLoading = false
         self.parent.loadError = error.localizedDescription
@@ -409,16 +264,15 @@ struct EmbedWebView: UIViewRepresentable {
       decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
     ) {
       // Allow the initial load and same-origin navigation.
-      if navigationAction.navigationType == .other ||
-         navigationAction.navigationType == .reload {
+      if navigationAction.navigationType == .other || navigationAction.navigationType == .reload {
         decisionHandler(.allow)
         return
       }
 
       // For link clicks, check if it's the same domain.
       if let url = navigationAction.request.url,
-         let currentHost = currentURL?.host,
-         url.host == currentHost {
+        let currentHost = currentURL?.host,
+        url.host == currentHost {
         decisionHandler(.allow)
       } else {
         // Open external links in Safari.
@@ -481,49 +335,31 @@ struct FullscreenEmbedView: View {
   }
 }
 
-// MARK: - EmbedProvider Extension
-
-extension EmbedProvider {
-  var displayName: String {
-    switch self {
-    case .phet: return "PhET Simulation"
-    case .circuitjs: return "Circuit"
-    case .desmos: return "Desmos"
-    case .youtube: return "YouTube"
-    case .url: return "Content"
-    }
-  }
-}
-
 // MARK: - Preview
 
 #if DEBUG
-struct EmbedBlockView_Previews: PreviewProvider {
-  static var previews: some View {
-    ScrollView {
-      VStack(spacing: 24) {
-        // YouTube embed.
-        EmbedBlockView(content: .youtube(
-          videoId: "dQw4w9WgXcQ",
-          startTime: 0
-        ))
+  struct EmbedBlockView_Previews: PreviewProvider {
+    static var previews: some View {
+      ScrollView {
+        VStack(spacing: 24) {
+          // YouTube embed - uses nocookie domain for privacy-enhanced embedding.
+          EmbedBlockView(
+            content: EmbedContent.url(
+              "https://www.youtube-nocookie.com/embed/CAkMUdeB06o",
+              provider: "youtube",
+              caption: "YouTube Video"
+            ))
 
-        // Desmos with expressions.
-        EmbedBlockView(content: .desmos(
-          expressions: [
-            DesmosExpression(latex: "y=x^2", color: "#2196F3"),
-            DesmosExpression(latex: "y=\\sin(x)", color: "#4CAF50"),
-          ]
-        ))
-
-        // PhET simulation.
-        EmbedBlockView(content: .phet(
-          simulationId: "projectile-motion",
-          locale: "en"
-        ))
+          // Desmos calculator.
+          EmbedBlockView(
+            content: EmbedContent.url(
+              "https://www.desmos.com/calculator",
+              provider: "desmos",
+              caption: "Desmos Graphing Calculator"
+            ))
+        }
+        .padding()
       }
-      .padding()
     }
   }
-}
 #endif
