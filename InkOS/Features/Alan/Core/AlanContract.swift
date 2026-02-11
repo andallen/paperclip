@@ -3,7 +3,7 @@
 // InkOS
 //
 // Core types for the Alan subagent architecture.
-// Alan is the main tutoring agent that outputs Text/Input blocks directly
+// Alan is the main tutoring agent that outputs Text blocks directly
 // and delegates Table/Visual blocks to specialized subagents.
 //
 
@@ -69,7 +69,7 @@ struct NotebookUpdate: Sendable, Codable, Equatable {
 
 // The type of notebook update.
 enum UpdateAction: String, Sendable, Codable, Equatable {
-  // Direct block insertion (Text, Input).
+  // Direct block insertion (Text).
   case append
 
   // Subagent request (Table, Visual).
@@ -79,10 +79,9 @@ enum UpdateAction: String, Sendable, Codable, Equatable {
 // MARK: - UpdateContent
 
 // The content of a notebook update.
-// Either a direct block content or a subagent request.
+// Either a direct text block content or a subagent request.
 enum UpdateContent: Sendable, Equatable {
   case text(TextContent)
-  case input(InputContent)
   case subagentRequest(SubagentRequest)
 }
 
@@ -95,7 +94,6 @@ extension UpdateContent: Codable {
 
   private enum ContentType: String, Codable {
     case text
-    case input
     case subagentRequest = "subagent_request"
   }
 
@@ -107,9 +105,6 @@ extension UpdateContent: Codable {
     case .text:
       let content = try TextContent(from: decoder)
       self = .text(content)
-    case .input:
-      let content = try InputContent(from: decoder)
-      self = .input(content)
     case .subagentRequest:
       let request = try SubagentRequest(from: decoder)
       self = .subagentRequest(request)
@@ -122,9 +117,6 @@ extension UpdateContent: Codable {
     switch self {
     case .text(let content):
       try container.encode(ContentType.text, forKey: .type)
-      try content.encode(to: encoder)
-    case .input(let content):
-      try container.encode(ContentType.input, forKey: .type)
       try content.encode(to: encoder)
     case .subagentRequest(let request):
       try container.encode(ContentType.subagentRequest, forKey: .type)

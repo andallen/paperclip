@@ -16,7 +16,7 @@ struct EmbedBlockView: View {
 
   var body: some View {
     VStack(spacing: 8) {
-      RoundedRectangle(cornerRadius: 8)
+      RoundedRectangle(cornerRadius: 16)
         .fill(Color.gray.opacity(0.1))
         .frame(height: 300)
         .overlay {

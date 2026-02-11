@@ -46,11 +46,11 @@ final class BlockTests: XCTestCase {
     XCTAssertTrue(allTypes.contains(.graphics))
     XCTAssertTrue(allTypes.contains(.table))
     XCTAssertTrue(allTypes.contains(.embed))
-    XCTAssertTrue(allTypes.contains(.input))
+    XCTAssertTrue(allTypes.contains(.checkpoint))
   }
 
   func testBlockTypeCodable() throws {
-    let types: [BlockType] = [.text, .image, .graphics, .table, .embed, .input]
+    let types: [BlockType] = [.text, .image, .graphics, .table, .embed, .checkpoint]
     let encoder = JSONEncoder()
     let decoder = JSONDecoder()
 
@@ -94,15 +94,6 @@ final class BlockTests: XCTestCase {
     XCTAssertEqual(block.type, .image)
     XCTAssertNotNil(block.content.imageContent)
     XCTAssertEqual(block.content.imageContent?.altText, "Example image")
-  }
-
-  func testBlockInputCreation() {
-    let content = InputContent.text(prompt: "Enter your name:", placeholder: "Name")
-    let block = Block.input(content: content)
-
-    XCTAssertEqual(block.type, .input)
-    XCTAssertNotNil(block.content.inputContent)
-    XCTAssertEqual(block.content.inputContent?.prompt, "Enter your name:")
   }
 
   // MARK: - Block Codable Tests
@@ -158,25 +149,6 @@ final class BlockTests: XCTestCase {
     XCTAssertEqual(block.type, decoded.type)
     XCTAssertEqual(block.content.tableContent?.columns.count, 2)
     XCTAssertEqual(block.content.tableContent?.rows.count, 2)
-  }
-
-  func testBlockInputCodable() throws {
-    let content = InputContent.multipleChoice(
-      prompt: "What is 2 + 2?",
-      options: [
-        ChoiceOption(id: "a", text: "3"),
-        ChoiceOption(id: "b", text: "4", correct: true),
-        ChoiceOption(id: "c", text: "5"),
-      ]
-    )
-    let block = Block.input(content: content)
-
-    let data = try block.toJSONData()
-    let decoded = try Block.fromJSONData(data)
-
-    XCTAssertEqual(block.type, decoded.type)
-    XCTAssertEqual(block.content.inputContent?.inputType, .multipleChoice)
-    XCTAssertEqual(block.content.inputContent?.prompt, "What is 2 + 2?")
   }
 
   // MARK: - JSON String Tests

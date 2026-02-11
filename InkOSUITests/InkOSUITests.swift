@@ -152,6 +152,75 @@ final class InkOSUITests: XCTestCase {
         return nil
     }
 
+    // MARK: - Canvas Input Tests
+
+    @MainActor
+    func testCanvasInputFixedPosition() throws {
+        // Verify the canvas input bar is fixed at the bottom of the screen
+        // and does NOT scroll with the content.
+
+        // Wait for app to load.
+        let canvas = app.scrollViews["notebook_canvas"]
+        XCTAssertTrue(canvas.waitForExistence(timeout: 10), "Notebook canvas should load")
+
+        // Find the canvas input view.
+        let inputView = app.otherElements["canvas_input_view"]
+        XCTAssertTrue(inputView.waitForExistence(timeout: 5), "Canvas input view should exist")
+
+        // Record initial position of the input view.
+        let initialFrame = inputView.frame
+        print("[Test] Initial input view frame: \(initialFrame)")
+        print("[Test] Initial input view Y: \(initialFrame.midY)")
+
+        // Take initial screenshot.
+        saveScreenshot(name: "input_initial")
+
+        // The input view should be near the bottom of the screen.
+        // iPad screen is typically ~1000+ points tall, input should be in bottom 200 points.
+        let screenHeight = app.frame.height
+        print("[Test] Screen height: \(screenHeight)")
+        print("[Test] Input view bottom Y: \(initialFrame.maxY)")
+
+        XCTAssertGreaterThan(initialFrame.minY, screenHeight - 250,
+            "Input view should be near bottom of screen (minY=\(initialFrame.minY), screenHeight=\(screenHeight))")
+
+        // Tap canvas to reveal some content.
+        canvas.tap()
+        Thread.sleep(forTimeInterval: 2.0)
+
+        // Tap again to reveal more content.
+        canvas.tap()
+        Thread.sleep(forTimeInterval: 2.0)
+
+        saveScreenshot(name: "input_after_content_revealed")
+
+        // Check if content was added.
+        let afterContentFrame = inputView.frame
+        print("[Test] After content revealed - input view frame: \(afterContentFrame)")
+
+        // Now try to scroll the content up.
+        canvas.swipeUp()
+        Thread.sleep(forTimeInterval: 0.5)
+
+        saveScreenshot(name: "input_after_scroll")
+
+        // Record position after scrolling.
+        let afterScrollFrame = inputView.frame
+        print("[Test] After scroll - input view frame: \(afterScrollFrame)")
+        print("[Test] Y position change: \(afterScrollFrame.midY - initialFrame.midY)")
+
+        // The key test: if the input bar is fixed, its Y position should NOT change
+        // when content scrolls. Allow small tolerance for layout adjustments.
+        let yPositionDelta = abs(afterScrollFrame.midY - initialFrame.midY)
+        print("[Test] Y position delta: \(yPositionDelta)")
+
+        XCTAssertLessThan(yPositionDelta, 10,
+            "Input view Y position should stay fixed when scrolling (delta=\(yPositionDelta)). " +
+            "Initial Y=\(initialFrame.midY), After scroll Y=\(afterScrollFrame.midY)")
+
+        print("[Test] RESULT: Input bar IS fixed at bottom - Y position stable within \(yPositionDelta) points")
+    }
+
     // MARK: - Blob Position Tests
 
     @MainActor

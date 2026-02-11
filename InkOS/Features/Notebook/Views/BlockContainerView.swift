@@ -75,8 +75,6 @@ struct BlockContainerView: View {
       return .interactive
     case .image, .graphics, .table, .embed:
       return .content
-    case .input:
-      return .interactive
     }
   }
 
@@ -109,11 +107,6 @@ struct BlockContainerView: View {
         }
     case .embed(let content):
       EmbedBlockView(content: content)
-        .anchorPreference(key: FirstLineAnchor.self, value: .bounds) { anchor in
-          shouldReportAnchor ? anchor : nil
-        }
-    case .input(let content):
-      InputBlockView(content: content)
         .anchorPreference(key: FirstLineAnchor.self, value: .bounds) { anchor in
           shouldReportAnchor ? anchor : nil
         }

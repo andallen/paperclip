@@ -208,14 +208,7 @@ final class NotebookDocumentTests: XCTestCase {
         source: .library(libraryId: "physics_energy_001"),
         caption: "Energy-mass equivalence"
       )),
-      Block.input(content: InputContent.multipleChoice(
-        prompt: "What does E represent?",
-        options: [
-          ChoiceOption(id: "a", text: "Energy", correct: true),
-          ChoiceOption(id: "b", text: "Electron"),
-          ChoiceOption(id: "c", text: "Earth"),
-        ]
-      )),
+      Block.checkpoint(),
     ]
 
     let doc = NotebookDocument(
@@ -230,6 +223,6 @@ final class NotebookDocumentTests: XCTestCase {
     XCTAssertEqual(decoded.blocks.count, 3)
     XCTAssertEqual(decoded.blocks[0].type, .text)
     XCTAssertEqual(decoded.blocks[1].type, .image)
-    XCTAssertEqual(decoded.blocks[2].type, .input)
+    XCTAssertEqual(decoded.blocks[2].type, .checkpoint)
   }
 }
