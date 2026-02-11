@@ -152,6 +152,52 @@ final class InkOSUITests: XCTestCase {
         return nil
     }
 
+    // MARK: - Diagnostic Test
+
+    @MainActor
+    func testAppLaunchDiagnostic() throws {
+        // Diagnostic test to understand black screen issue.
+        // Captures screenshot immediately after launch.
+
+        print("[Test] App launched - capturing initial state")
+        Thread.sleep(forTimeInterval: 2.0)
+        saveScreenshot(name: "app_launch_state")
+
+        // Print element hierarchy to understand what's visible.
+        print("[Test] Windows count: \(app.windows.count)")
+        print("[Test] ScrollViews count: \(app.scrollViews.count)")
+        print("[Test] StaticTexts count: \(app.staticTexts.count)")
+        print("[Test] Buttons count: \(app.buttons.count)")
+
+        // Check for notebook canvas.
+        let canvas = app.scrollViews["notebook_canvas"]
+        let canvasExists = canvas.waitForExistence(timeout: 5)
+        print("[Test] notebook_canvas exists: \(canvasExists)")
+
+        // Check for any scrollviews.
+        if app.scrollViews.count > 0 {
+            let firstScrollView = app.scrollViews.element(boundBy: 0)
+            print("[Test] First scrollview frame: \(firstScrollView.frame)")
+            print("[Test] First scrollview identifier: \(firstScrollView.identifier)")
+        }
+
+        // Check for static texts (would show if minimal preview loaded).
+        for i in 0..<min(app.staticTexts.count, 5) {
+            let text = app.staticTexts.element(boundBy: i)
+            print("[Test] StaticText \(i): '\(text.label)'")
+        }
+
+        // Check for blob.
+        let blob = app.otherElements["alan_presence_blob"]
+        print("[Test] alan_presence_blob exists: \(blob.exists)")
+
+        // Assert something is visible.
+        XCTAssertTrue(canvasExists || app.staticTexts.count > 0,
+            "Either canvas or text elements should be visible")
+
+        saveScreenshot(name: "app_diagnostic_final")
+    }
+
     // MARK: - Blob Position Tests
 
     @MainActor

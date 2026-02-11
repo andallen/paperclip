@@ -1,6 +1,7 @@
 // embedSubagent.ts
 // Generates EmbedContent blocks for interactive external tools.
 // Supports PhET, Desmos, CircuitJS, and YouTube.
+// Returns complete URLs; iOS simply displays them in WKWebView.
 
 import * as logger from "firebase-functions/logger";
 import {
@@ -47,8 +48,79 @@ const PHET_SIMULATIONS: Record<string, string> = {
   "gene expression": "gene-expression-essentials",
 };
 
+// URL builder functions for each provider.
+
+// Builds PhET simulation URL.
+function buildPhETUrl(simulationId: string, language: string = "en"): string {
+  return `https://phet.colorado.edu/sims/html/${simulationId}/latest/${simulationId}_${language}.html`;
+}
+
+// Builds Desmos calculator URL.
+function buildDesmosUrl(calculatorType: string = "graphing"): string {
+  const paths: Record<string, string> = {
+    graphing: "calculator",
+    scientific: "scientific",
+    fourfunction: "fourfunction",
+    geometry: "geometry",
+  };
+  return `https://www.desmos.com/${paths[calculatorType] || "calculator"}`;
+}
+
+// Builds YouTube embed URL with parameters.
+// Uses youtube-nocookie.com for privacy-enhanced embedding.
+function buildYouTubeUrl(
+  videoId: string,
+  startTime?: number,
+  autoplay: boolean = false
+): string {
+  // Use nocookie domain to avoid playback errors in WKWebView.
+  const base = `https://www.youtube-nocookie.com/embed/${videoId}`;
+
+  // Only add params if needed.
+  const params = new URLSearchParams();
+  if (startTime) params.set("start", String(startTime));
+  if (autoplay) params.set("autoplay", "1");
+
+  const paramString = params.toString();
+  return paramString ? `${base}?${paramString}` : base;
+}
+
+// Builds CircuitJS URL with optional circuit data.
+function buildCircuitJSUrl(circuitData?: string): string {
+  const base = "https://www.falstad.com/circuit/circuitjs.html";
+  if (circuitData) {
+    return `${base}?ctz=${encodeURIComponent(circuitData)}`;
+  }
+  return base;
+}
+
+// Returns aspect ratio for provider.
+function getAspectRatio(provider: string): number {
+  switch (provider) {
+  case "youtube":
+    return 16 / 9; // 1.777
+  case "phet":
+    return 16 / 10; // 1.6
+  case "desmos":
+    return 4 / 3; // 1.333
+  case "circuitjs":
+    return 16 / 10;
+  default:
+    return 16 / 9;
+  }
+}
+
+// Result from inferEmbed containing URL and metadata.
+interface EmbedResult {
+  provider: string;
+  url: string;
+  caption: string;
+  simulationMatched?: string;
+}
+
 /**
  * Executes embed generation subagent.
+ * Returns complete URLs ready for iOS WKWebView rendering.
  */
 export async function executeEmbedSubagent(
   request: SubagentRequest,
@@ -64,41 +136,24 @@ export async function executeEmbedSubagent(
   });
 
   try {
-    // Determine provider and configuration.
-    const {provider, config, simulationMatched} = inferEmbed(
+    // Determine provider and URL.
+    const embedResult = inferEmbed(
       request.concept,
       request.description,
       decision.specific_recommendation
     );
 
-    // Build EmbedContent.
-    const embedContent: Record<string, unknown> = {
-      provider,
+    // Build EmbedContent with complete URL.
+    const embedContent = {
+      url: embedResult.url,
+      provider: embedResult.provider,
       sizing: {
-        width: "full",
-        aspect_ratio: 1.5,
-        allow_fullscreen: true,
+        width: "100%",
+        aspect_ratio: getAspectRatio(embedResult.provider),
       },
-      caption: `Interactive: ${request.concept}`,
+      caption: embedResult.caption,
+      allow_fullscreen: true,
     };
-
-    // Add provider-specific configuration.
-    switch (provider) {
-    case "phet":
-      embedContent.phet = config;
-      break;
-    case "desmos":
-      embedContent.desmos = config;
-      break;
-    case "circuitjs":
-      embedContent.circuitjs = config;
-      break;
-    case "youtube":
-      embedContent.youtube = config;
-      break;
-    default:
-      embedContent.url = config;
-    }
 
     // Build complete Block.
     const block = {
@@ -113,14 +168,15 @@ export async function executeEmbedSubagent(
     const metadata: ResponseMetadata = {
       fulfillment_method: "embed_match",
       latency_ms: Date.now() - startTime,
-      provider,
-      simulation_matched: simulationMatched,
+      provider: embedResult.provider,
+      simulation_matched: embedResult.simulationMatched,
     };
 
     logger.info("Embed subagent completed", {
       blockId: block.id,
-      provider,
-      simulationMatched,
+      provider: embedResult.provider,
+      url: embedResult.url,
+      simulationMatched: embedResult.simulationMatched,
       latencyMs: metadata.latency_ms,
     });
 
@@ -137,43 +193,44 @@ export async function executeEmbedSubagent(
 }
 
 /**
- * Infers the embed provider and configuration from concept/description.
+ * Infers the embed provider and builds complete URL from concept/description.
+ * Returns URL ready for iOS WKWebView rendering.
  */
 function inferEmbed(
   concept: string,
   description: string,
   recommendation: string | undefined
-): {provider: string; config: Record<string, unknown>; simulationMatched?: string} {
+): EmbedResult {
   const searchText = `${concept} ${description} ${recommendation || ""}`.toLowerCase();
 
   // Check for PhET simulations.
   for (const [keyword, simId] of Object.entries(PHET_SIMULATIONS)) {
     if (searchText.includes(keyword)) {
+      // Format simulation name for caption (e.g., "projectile-motion" -> "Projectile Motion").
+      const simName = simId
+        .split("-")
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ");
+
       return {
         provider: "phet",
-        config: {
-          simulation_id: simId,
-          language: "en",
-          screen_index: 0,
-        },
+        url: buildPhETUrl(simId),
+        caption: `PhET: ${simName}`,
         simulationMatched: simId,
       };
     }
   }
 
   // Check for Desmos.
-  if (searchText.includes("desmos") || searchText.includes("graphing calculator") ||
-      (searchText.includes("graph") && searchText.includes("function"))) {
+  if (
+    searchText.includes("desmos") ||
+    searchText.includes("graphing calculator") ||
+    (searchText.includes("graph") && searchText.includes("function"))
+  ) {
     return {
       provider: "desmos",
-      config: {
-        calculator_type: "graphing",
-        expressions: true,
-        settings_menu: false,
-        show_grid: true,
-        show_x_axis: true,
-        show_y_axis: true,
-      },
+      url: buildDesmosUrl("graphing"),
+      caption: "Desmos Graphing Calculator",
       simulationMatched: "desmos-graphing",
     };
   }
@@ -182,37 +239,33 @@ function inferEmbed(
   if (searchText.includes("circuit") && !searchText.includes("phet")) {
     return {
       provider: "circuitjs",
-      config: {
-        show_sidebar: true,
-        allow_save: false,
-        euro_resistors: false,
-      },
+      url: buildCircuitJSUrl(),
+      caption: "Circuit Simulator",
       simulationMatched: "circuitjs",
     };
   }
 
   // Check for YouTube.
   if (searchText.includes("video") || searchText.includes("youtube")) {
+    // Extract video ID from description if present.
+    const videoIdMatch = description.match(
+      /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+    );
+    const videoId = videoIdMatch ? videoIdMatch[1] : "dQw4w9WgXcQ";
+
     return {
       provider: "youtube",
-      config: {
-        video_id: "dQw4w9WgXcQ", // Placeholder video ID.
-        start_time: 0,
-        autoplay: false,
-        controls: true,
-      },
-      simulationMatched: "youtube-placeholder",
+      url: buildYouTubeUrl(videoId),
+      caption: "Video",
+      simulationMatched: videoIdMatch ? `youtube-${videoId}` : "youtube-placeholder",
     };
   }
 
   // Default to PhET projectile motion as a safe fallback.
   return {
     provider: "phet",
-    config: {
-      simulation_id: "projectile-motion",
-      language: "en",
-      screen_index: 0,
-    },
+    url: buildPhETUrl("projectile-motion"),
+    caption: "PhET: Projectile Motion",
     simulationMatched: "projectile-motion",
   };
 }

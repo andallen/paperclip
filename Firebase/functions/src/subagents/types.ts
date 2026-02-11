@@ -99,6 +99,20 @@ export interface Block {
   content: unknown;
 }
 
+// EmbedContent interface (matches Swift EmbedContent).
+// Backend constructs complete URLs; iOS displays them in WKWebView.
+export interface EmbedContent {
+  url: string;
+  provider?: string;
+  sizing?: {
+    width?: string;
+    height?: number;
+    aspect_ratio?: number;
+  };
+  caption?: string;
+  allow_fullscreen?: boolean;
+}
+
 // Visual router decision.
 export interface VisualRouterDecision {
   selected_type: "image" | "graphics" | "embed";
