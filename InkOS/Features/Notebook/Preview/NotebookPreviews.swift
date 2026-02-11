@@ -20,13 +20,26 @@ extension NotebookDocument {
     NotebookDocument(
       title: "Understanding the Pythagorean Theorem",
       blocks: [
-        // BIG TEXT BLOCK FOR TESTING BLOB POSITIONING
+        // IMAGE TEST - Near top for quick visual verification
+        Block.image(
+          content: ImageContent(
+            source: .url(url: "https://picsum.photos/800/500"),
+            altText: "Random landscape photo",
+            caption: "A sample image from Lorem Picsum",
+            attribution: ImageAttribution(source: "Lorem Picsum", license: "Free to use"),
+            border: ImageBorder(enabled: true, color: "#E0E0E0", width: 1, radius: 12)
+          )),
+
+        // Brief intro text
         Block.text(
           content: TextContent(
             segments: [
-              .plain(
-                text: "This is a really long block of text that should wrap to multiple lines so we can test whether the blob indicator properly follows the currently visible text as it streams in character by character. The blob should start at the top and gradually move downward as each new line appears. If this is working correctly, you'll see the orbiting circles stay positioned just below the last line of visible text throughout the entire animation. This paragraph has been deliberately made very long to ensure we get plenty of line wraps to thoroughly test the behavior. Let's add even more text to make absolutely sure we have enough content to see the effect clearly across many lines of streaming text.",
-                style: TextStyle(size: .body)
+              .kinetic(
+                text: "Let's explore the Pythagorean Theorem.",
+                animation: .typewriter,
+                durationMs: 1500,
+                delayMs: 0,
+                style: TextStyle(size: .title, weight: .medium)
               )
             ]
           )),
