@@ -11,269 +11,65 @@ Alan/
 ├── InkOS/                                # App source root
 │   ├── InkOSApp.swift                    # App entry point
 │   ├── InkOS-Bridging-Header.h           # Exposes MyScript Obj-C headers to Swift
-│   ├── Info.plist                        # App configuration
-│   ├── theme.css                         # Styling for text rendering
-│   │
-│   ├── App/                              # High-level navigation
-│   │   └── AppRootView.swift             # Root view
+│   ├── App/                              # High-level navigation (AppRootView)
 │   │
 │   ├── Features/                         # Feature Modules
 │   │   ├── Alan/                         # Alan tutoring agent system
-│   │   │   ├── Core/                     # Core types and contracts
-│   │   │   │   ├── AlanContract.swift           # Request/response types, VisualIntent, SubagentRequest
-│   │   │   │   └── AlanError.swift              # Error types for Alan operations
-│   │   │   │
-│   │   │   ├── Networking/               # API communication
-│   │   │   │   ├── AlanAPIClient.swift          # HTTP client for Alan and subagents
-│   │   │   │   ├── AlanEndpoints.swift          # Firebase endpoint URLs
-│   │   │   │   └── SSEParser.swift              # Server-sent events parser for streaming
-│   │   │   │
-│   │   │   └── Orchestration/            # Response processing
-│   │   │       ├── OrchestrationActor.swift     # Coordinates Alan + subagent flow
-│   │   │       ├── BlockFactory.swift           # Creates blocks from subagent responses
-│   │   │       └── OutputParser.swift           # Parses Alan structured output
+│   │   │   ├── Core/                     # AlanContract, AlanError
+│   │   │   ├── Networking/               # AlanAPIClient, AlanEndpoints, SSEParser
+│   │   │   └── Orchestration/            # OrchestrationActor, BlockFactory, OutputParser
 │   │   │
-│   │   ├── Auth/                         # Authentication
-│   │   │   └── AuthManager.swift                # Firebase authentication manager
+│   │   ├── Auth/                         # AuthManager (Firebase auth)
 │   │   │
 │   │   ├── Block/                        # Block primitive system (content model)
-│   │   │   ├── Core/                     # Core block types
-│   │   │   │   ├── BlockContract.swift          # Block, BlockID, BlockType, BlockStatus
-│   │   │   │   └── BlockContent.swift           # BlockContent enum (type-erased content)
-│   │   │   │
-│   │   │   ├── Content/                  # Content type definitions
-│   │   │   │   ├── TextContent.swift            # Text block content
-│   │   │   │   ├── ImageContent.swift           # Image block content
-│   │   │   │   ├── GraphicsContent.swift        # Interactive graphics (Chart.js, p5.js, etc.)
-│   │   │   │   ├── TableContent.swift           # Table block content
-│   │   │   │   ├── EmbedContent.swift           # Embedded content (PhET, Desmos, etc.)
-│   │   │   │   ├── InputContent.swift           # User input block content
-│   │   │   │   └── CheckpointContent.swift      # Checkpoint block content
-│   │   │   │
-│   │   │   ├── Rendering/                # Block rendering utilities
-│   │   │   │   └── HTMLRenderer.swift           # HTML rendering for graphics content
-│   │   │   │
-│   │   │   └── Views/                    # Standalone block views
-│   │   │       └── GraphicsBlockView.swift      # Graphics block WebView rendering
+│   │   │   ├── Core/                     # BlockContract, BlockContent
+│   │   │   ├── Content/                  # Text, Image, Graphics, Table, Embed, Input, Checkpoint
+│   │   │   ├── Rendering/               # HTMLRenderer
+│   │   │   └── Views/                    # GraphicsBlockView
 │   │   │
-│   │   ├── Memory/                       # Long-term memory system
-│   │   │   ├── MemoryContract.swift             # Memory types and structures
-│   │   │   ├── MemoryManager.swift              # Client-side memory operations
-│   │   │   ├── MemoryAPIClient.swift            # Memory API communication
-│   │   │   └── FirestoreMemoryStorage.swift     # Local memory caching
+│   │   ├── Memory/                       # MemoryContract, MemoryManager, MemoryAPIClient
 │   │   │
 │   │   ├── Notebook/                     # Notebook UI and data models
-│   │   │   ├── Core/                     # Core notebook contracts
-│   │   │   │   └── NotebookContract.swift       # Notebook, Page, NotebookID
-│   │   │   │
-│   │   │   ├── Design/                   # Design system
-│   │   │   │   └── NotebookDesignTokens.swift   # Colors, fonts, spacing tokens
-│   │   │   │
-│   │   │   ├── Preview/                  # SwiftUI previews
-│   │   │   │   └── NotebookPreviews.swift       # Preview providers for notebook views
-│   │   │   │
-│   │   │   ├── ViewModels/               # View models
-│   │   │   │   └── NotebookViewModel.swift      # Notebook state and orchestration
-│   │   │   │
-│   │   │   └── Views/                    # UI components
-│   │   │       ├── NotebookCanvasView.swift     # Main notebook canvas
-│   │   │       ├── BlockContainerView.swift     # Block layout container
-│   │   │       ├── PendingBlockView.swift       # Loading state for blocks
-│   │   │       ├── AttachmentPreviewGrid.swift  # Attachment preview thumbnails
-│   │   │       ├── CanvasInputView.swift        # Persistent bottom input bar
-│   │   │       ├── PencilKitToolbarView.swift   # PencilKit drawing toolbar
-│   │   │       │
-│   │   │       ├── AlanPresence/         # Alan avatar animation
-│   │   │       │   ├── AlanPresenceState.swift  # Presence state machine
-│   │   │       │   ├── AlanPresenceView.swift   # Presence UI component
-│   │   │       │   ├── MetaballMetalView.swift  # Metal rendering for metaballs
-│   │   │       │   └── MetaballShader.metal     # Metal shader for animation
-│   │   │       │
-│   │   │       └── Blocks/               # Individual block views
-│   │   │           ├── TextBlockView.swift      # Text rendering with markdown
-│   │   │           ├── ImageBlockView.swift     # Image display (delegates to Image/)
-│   │   │           ├── TableBlockView.swift     # Table rendering
-│   │   │           ├── GraphicsBlockView.swift  # Interactive graphics
-│   │   │           ├── EmbedBlockView.swift     # Embedded content (WKWebView)
-│   │   │           ├── InputPreviewBlockView.swift # Input response preview
-│   │   │           ├── CheckpointBlockView.swift # Checkpoint markers
-│   │   │           │
-│   │   │           ├── Image/            # Modular image components
-│   │   │           │   ├── ImageAttributionView.swift  # Source attribution
-│   │   │           │   ├── ImageCaptionView.swift      # Image captions
-│   │   │           │   ├── ImageDisplayView.swift      # Main image display
-│   │   │           │   ├── ImageErrorView.swift        # Error states
-│   │   │           │   ├── ImageLoader.swift           # Async image loading
-│   │   │           │   └── ImageSkeletonView.swift     # Loading skeleton
-│   │   │           │
-│   │   │           └── Text/             # Text rendering components
-│   │   │               ├── PlainTextView.swift  # Plain text rendering
-│   │   │               ├── CodeBlockView.swift  # Syntax-highlighted code
-│   │   │               ├── LaTeXView.swift      # LaTeX math rendering
-│   │   │               ├── KineticTextView.swift # Animated text effects
-│   │   │               └── Animations/
-│   │   │                   └── TypewriterAnimationView.swift
+│   │   │   ├── Core/                     # NotebookContract
+│   │   │   ├── Design/                   # NotebookDesignTokens
+│   │   │   ├── ViewModels/               # NotebookViewModel
+│   │   │   └── Views/                    # Canvas, BlockContainer, Input, Toolbar
+│   │   │       ├── AlanPresence/         # Metal metaball avatar animation
+│   │   │       └── Blocks/              # Per-type block views
+│   │   │           ├── Image/            # Image subcomponents (display, loading, attribution)
+│   │   │           └── Text/             # Text subcomponents (plain, code, LaTeX, kinetic)
 │   │   │
-│   │   └── Shared/                       # Shared utilities
-│   │       ├── UIComponents.swift               # Color extensions, UI modifiers
-│   │       ├── FileLogger.swift                 # Debug logging utility
-│   │       └── ContextMenuView.swift            # Reusable context menu
+│   │   └── Shared/                       # UIComponents, FileLogger, ContextMenuView
 │   │
-│   ├── Editor/                           # Editor canvas components
-│   │   ├── EditorViewModel.swift                # Editor state management
-│   │   ├── EditorUIComponents.swift             # Tool palette and editor UI
-│   │   └── HomeButtonView.swift                 # Home navigation button
+│   ├── Editor/                           # EditorViewModel, EditorUIComponents
+│   ├── Storage/                          # BundleStorage, JIIXPersistence
 │   │
-│   ├── Storage/                          # Persistence Layer
-│   │   ├── BundleStorage.swift                  # Directory path helpers
-│   │   ├── SDKProtocols.swift                   # SDK protocol definitions
-│   │   └── JIIXPersistence/                     # JIIX format persistence
-│   │       └── JIIXPersistenceService.swift     # Persistence service
-│   │
-│   ├── Frameworks/
-│   │   └── Ink/                          # MyScript SDK Wrappers
-│   │       ├── EngineProvider.swift             # MyScript engine singleton
-│   │       │
-│   │       ├── Input/                    # Touch/Pen input handling
-│   │       │   ├── InputViewController.swift
-│   │       │   └── InputViewModel.swift
-│   │       │
-│   │       ├── Rendering/                # Display & rendering logic
-│   │       │   ├── DisplayViewController.swift
-│   │       │   └── DisplayViewModel.swift
-│   │       │
-│   │       ├── UIObjects/                # Core UI rendering components
-│   │       │   ├── Canvas.swift
-│   │       │   ├── InputView.swift
-│   │       │   ├── RenderView.swift
-│   │       │   └── OffscreenRenderSurfaces.swift
-│   │       │
-│   │       ├── SmartGuide/               # Text conversion guide UI
-│   │       │   ├── SmartGuideViewController.h
-│   │       │   └── SmartGuideViewController.mm
-│   │       │
-│   │       └── Utils/                    # Utility helpers
-│   │           ├── FontMetricsProvider.swift
-│   │           ├── ImageLoader.swift
-│   │           ├── ImagePainter.swift
-│   │           ├── TextFormatHelper.swift
-│   │           ├── IInkUIRefImplUtils.swift
-│   │           ├── ContextualActionsHelper.swift
-│   │           ├── Helper.swift
-│   │           ├── Path.swift
-│   │           ├── SynchronizedSwift.swift
-│   │           ├── UIFont+Helper.swift
-│   │           ├── NSFileManager+Additions.swift
-│   │           ├── NSAttributedString+Helper.swift
-│   │           └── CTRun+Metrics.swift
-│   │
-│   └── Assets.xcassets                   # App assets
+│   └── Frameworks/
+│       └── Ink/                          # MyScript SDK Wrappers
+│           ├── EngineProvider.swift       # MyScript engine singleton
+│           ├── Input/                    # Touch/Pen input handling
+│           ├── Rendering/               # Display & rendering logic
+│           ├── UIObjects/               # Canvas, InputView, RenderView
+│           ├── SmartGuide/              # Text conversion guide (Obj-C++)
+│           └── Utils/                    # Font, image, text helpers
 │
-├── InkOSTests/                           # Unit test suite
-│   ├── Features/
-│   │   ├── Alan/                         # Alan agent tests
-│   │   │   ├── AlanContractTests.swift          # Contract type tests
-│   │   │   └── SSEParserTests.swift             # SSE parsing tests
-│   │   ├── Block/                        # Block tests
-│   │   │   ├── BlockTests.swift                 # Core block tests
-│   │   │   └── TextContentTests.swift           # Text content tests
-│   │   ├── Memory/                       # Memory system tests
-│   │   │   └── MemoryContractTests.swift        # Memory contract tests
-│   │   └── Notebook/                     # Notebook tests
-│   │       └── NotebookDocumentTests.swift      # Notebook document tests
-│   │
-│   └── Rendering/
-│       ├── DisplayViewModelTests.swift
-│       └── OffscreenRenderSurfacesTests.swift
-│
-├── InkOSUITests/                         # UI test suite
-│   └── InkOSUITests.swift
+├── InkOSTests/                           # Unit tests (Alan, Block, Memory, Notebook, Rendering)
+├── InkOSUITests/                         # UI tests
 │
 ├── Firebase/                             # Firebase backend services
-│   ├── firebase.json                     # Firebase configuration
-│   ├── firestore.indexes.json            # Firestore index definitions
-│   └── functions/                        # Cloud Functions
-│       ├── src/                          # TypeScript source files
-│       │   ├── index.ts                         # Function exports
-│       │   ├── config.ts                        # Configuration
-│       │   ├── embeddings.ts                    # Embedding utilities
-│       │   ├── files.ts                         # File operations
-│       │   │
-│       │   ├── __tests__/                # Jest test suites
-│       │   │   ├── alan/                 # Alan agent tests
-│       │   │   │   ├── alanAgent.test.ts
-│       │   │   │   ├── outputSchema.test.ts
-│       │   │   │   └── sessionModelIntegration.test.ts
-│       │   │   └── memory/               # Memory system tests
-│       │   │       ├── llmProcessor.test.ts
-│       │   │       ├── memorySchema.test.ts
-│       │   │       ├── memorySubagent.test.ts
-│       │   │       └── rules.test.ts
-│       │   │
-│       │   ├── alan/                     # Alan agent endpoint
-│       │   │   ├── alanAgent.ts                 # Main Alan agent with Gemini
-│       │   │   ├── alanPrompts.ts               # System prompts for Alan
-│       │   │   └── outputSchema.ts              # Structured output schema
-│       │   │
-│       │   ├── memory/                   # Long-term memory system
-│       │   │   ├── memorySchema.ts              # Memory types and structures
-│       │   │   ├── memorySubagent.ts            # Memory operations endpoint
-│       │   │   ├── llmProcessor.ts              # LLM-based memory extraction
-│       │   │   └── rules.ts                     # Memory importance scoring
-│       │   │
-│       │   └── subagents/                # Subagent system
-│       │       ├── types.ts                     # Shared types (VisualIntent, SubagentRequest, etc.)
-│       │       ├── subagentRouter.ts            # Main router endpoint
-│       │       ├── visualRouter.ts              # Routes visual requests to subagents
-│       │       ├── tableSubagent.ts             # Table generation subagent
-│       │       ├── imageSubagent.ts             # Image search/generation subagent
-│       │       ├── graphicsSubagent.ts          # Interactive graphics subagent
-│       │       ├── embedSubagent.ts             # Embed provider subagent
-│       │       │
-│       │       └── apis/                 # External image library APIs
-│       │           ├── index.ts                 # API aggregator
-│       │           ├── types.ts                 # Shared API types
-│       │           ├── artInstituteChicago.ts   # Art Institute of Chicago API
-│       │           ├── libraryOfCongress.ts     # Library of Congress API
-│       │           ├── metMuseum.ts             # Metropolitan Museum API
-│       │           ├── nasa.ts                  # NASA Image Library API
-│       │           ├── pubchem.ts               # PubChem chemical structures API
-│       │           ├── smithsonian.ts           # Smithsonian Open Access API
-│       │           └── wikimedia.ts             # Wikimedia Commons API
-│       │
-│       ├── jest.config.js                # Jest test configuration
-│       ├── package.json                  # Node.js dependencies
-│       └── tsconfig.json                 # TypeScript configuration
+│   └── functions/src/
+│       ├── alan/                         # Alan agent (Gemini), prompts, output schema
+│       ├── memory/                       # Memory system (schema, subagent, LLM processor, rules)
+│       ├── subagents/                    # Router, visual router, table/image/graphics/embed subagents
+│       │   └── apis/                     # Image library APIs (NASA, Wikimedia, museums, PubChem, etc.)
+│       └── __tests__/                    # Jest test suites (alan/, memory/)
 │
-├── MyScriptCertificate/                  # License Key
-│   ├── MyCertificate.h
-│   └── me.andy.allen.Trivial.c
-│
-├── Scripts/                              # Build & Utility Scripts
-│   ├── buildapp                          # Build executable
-│   ├── testapp                           # Test executable
-│   ├── test-ui                           # UI test runner
-│   ├── run-ui-tests                      # Extended UI test runner
-│   ├── html-preview                      # HTML preview script
-│   └── retrieve_recognition-assets.sh    # Download recognition assets
-│
-├── Docs/                                 # Reference documentation
-│   ├── myscript_docs.md
-│   ├── myscript_headers.txt
-│   ├── myscript-reference.txt
-│   └── NotebookDesignSystem.md           # Notebook UI design specifications
-│
+├── Scripts/                              # buildapp, testapp, test-ui, run-ui-tests, html-preview
+├── Docs/                                 # MyScript docs, NotebookDesignSystem.md
 ├── apple-hig/                            # Apple Human Interface Guidelines reference
-│
-├── recognition-assets/                   # MyScript recognition data (binary)
-│   └── resources/
-│       ├── en_US/                        # English language resources
-│       ├── math/                         # Math recognition
-│       └── shape/                        # Shape recognition
-│
-├── Podfile                               # CocoaPods dependency specification
-├── Podfile.lock                          # Locked dependency versions
-└── Pods/                                 # CocoaPods dependencies (generated)
+├── recognition-assets/                   # MyScript recognition data (binary, do not edit)
+├── MyScriptCertificate/                  # License key files
+└── Podfile / Pods/                       # CocoaPods dependencies
 ```
 
 ## Architecture Overview
