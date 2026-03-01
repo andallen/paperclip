@@ -14,3 +14,8 @@ recognition-assets/
 Pods/
 buildServer.json
 .xcode-home/
+
+# Secrets and credentials
+GoogleService-Info.plist
+Firebase/functions/.env*
+*.env.local
