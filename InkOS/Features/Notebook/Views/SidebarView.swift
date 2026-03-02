@@ -62,6 +62,9 @@ struct SidebarView: View {
     }
     .frame(maxHeight: .infinity)
     .accessibilityIdentifier("sidebar_view")
+    .onChange(of: isPresented) { _, newValue in
+      if !newValue { searchFocused = false }
+    }
     .alert("Rename Session", isPresented: .init(
       get: { renamingSession != nil },
       set: { if !$0 { renamingSession = nil } }
@@ -103,8 +106,15 @@ struct SidebarView: View {
         searchFocused = false
         withAnimation(.easeInOut(duration: 0.25)) { isPresented = false }
       }) {
-        HamburgerIcon()
-          .frame(width: 32, height: 32)
+        VStack(alignment: .leading, spacing: 5) {
+          RoundedRectangle(cornerRadius: 1.5)
+            .fill(NotebookPalette.ink)
+            .frame(width: 22, height: 2.5)
+          RoundedRectangle(cornerRadius: 1.5)
+            .fill(NotebookPalette.ink)
+            .frame(width: 16, height: 2.5)
+        }
+        .frame(width: 32, height: 32)
       }
       .accessibilityIdentifier("sidebar_hamburger_close")
     }

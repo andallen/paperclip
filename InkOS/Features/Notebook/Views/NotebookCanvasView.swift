@@ -345,6 +345,6 @@ struct CanvasInputBar: View {
 
 #Preview {
   NotebookCanvasView(
-    viewModel: NotebookViewModel(document: .preview)
+    viewModel: NotebookViewModel(document: .sample)
   )
 }

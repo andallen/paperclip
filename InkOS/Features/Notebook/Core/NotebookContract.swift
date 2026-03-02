@@ -132,6 +132,15 @@ struct NotebookDocument: Identifiable, Sendable, Equatable, Codable {
   }
 }
 
+// MARK: - Preview Support
+
+extension NotebookDocument {
+  // Sample document for SwiftUI previews.
+  static var sample: NotebookDocument {
+    NotebookDocument(title: "Preview Notebook")
+  }
+}
+
 // MARK: - JSON Encoding Helpers
 
 extension NotebookDocument {

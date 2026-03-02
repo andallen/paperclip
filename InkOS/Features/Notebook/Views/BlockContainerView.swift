@@ -52,7 +52,7 @@ struct BlockContainerView: View {
       return content.dominantRole
     case .checkpoint:
       return .interactive
-    case .image, .graphics, .embed:
+    case .image, .graphics, .embed, .table:
       return .content
     }
   }
@@ -70,6 +70,8 @@ struct BlockContainerView: View {
       ImageBlockView(content: content)
     case .graphics(let content):
       GraphicsBlockView(content: content)
+    case .table(let content):
+      TableBlockView(content: content)
     case .embed(let content):
       EmbedBlockView(content: content)
     case .checkpoint(let content):

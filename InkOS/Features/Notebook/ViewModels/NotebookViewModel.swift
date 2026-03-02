@@ -83,12 +83,6 @@ final class NotebookViewModel {
   // Session service for saving.
   private var sessionService: SessionService?
 
-  // Memory manager for preference injection.
-  private var memoryManager: MemoryManager?
-
-  // Preferences store for learning preferences.
-  private var preferencesStore: PreferencesStore?
-
   // Blocks queued from Alan (waiting to be revealed by tap-to-advance).
   private var pendingBlocks: [Block] = []
 
@@ -98,15 +92,11 @@ final class NotebookViewModel {
   init(
     document: NotebookDocument,
     sessionData: SessionData? = nil,
-    sessionService: SessionService? = nil,
-    memoryManager: MemoryManager? = nil,
-    preferencesStore: PreferencesStore? = nil
+    sessionService: SessionService? = nil
   ) {
     self.document = document
     self.sessionData = sessionData
     self.sessionService = sessionService
-    self.memoryManager = memoryManager
-    self.preferencesStore = preferencesStore
     self.orchestration = OrchestrationActor()
 
     // Restore session state.
@@ -294,12 +284,6 @@ final class NotebookViewModel {
 
     guard !messageText.isEmpty else { return }
 
-    // Check for memory triggers.
-    if MemoryManager.containsRememberTrigger(messageText) {
-      let preference = MemoryManager.extractPreference(from: messageText)
-      memoryManager?.savePreference(preference, sessionId: sessionModel?.sessionId ?? "unknown")
-    }
-
     // Send to Alan.
     sendMessageToAlan(messageText)
   }
@@ -311,19 +295,6 @@ final class NotebookViewModel {
     isProcessing = true
     errorMessage = nil
 
-    // Build memory context.
-    var memoryContext: String?
-    if let prefsContext = preferencesStore?.formatForPrompt() {
-      memoryContext = prefsContext
-    }
-    if let memContext = memoryManager?.formatContextForPrompt() {
-      if memoryContext != nil {
-        memoryContext! += "\n\n" + memContext
-      } else {
-        memoryContext = memContext
-      }
-    }
-
     let notebookContext = NotebookContext(
       documentId: document.id.rawValue,
       sessionTopic: document.title
@@ -334,35 +305,14 @@ final class NotebookViewModel {
         content,
         conversationHistory: conversationHistory,
         notebookContext: notebookContext,
-        sessionModel: sessionModel,
-        memoryContext: memoryContext
+        sessionModel: sessionModel
       )
 
       // Add to conversation history after sending.
       conversationHistory.append(ChatMessage(role: .user, content: content))
     }
 
-    // Auto-generate session name after the first user message (skip if user already renamed).
-    if isFirstMessage && !(sessionData?.metadata.userRenamed ?? false) {
-      let capturedSessionId = sessionData?.metadata.id
-      Task {
-        let client = AlanAPIClient()
-        do {
-          let name = try await client.generateSessionName(message: content)
-          guard sessionData?.metadata.id == capturedSessionId else { return }
-          document.title = name
-          if var data = sessionData {
-            data.metadata.title = name
-            data.document.title = name
-            sessionData = data
-            sessionService?.saveSession(data)
-            sessionService?.refreshSessions()
-          }
-        } catch {
-          // Silent fallback — session keeps "New Chat" title.
-        }
-      }
-    }
+    // TODO: Auto-generate session name after first message once API endpoint is ready.
   }
 
   // Clears all input previews.
