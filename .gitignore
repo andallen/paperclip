@@ -12,6 +12,7 @@ DerivedData/
 Resources/
 recognition-assets/
 Pods/
+Pods_old/
 buildServer.json
 .xcode-home/
 

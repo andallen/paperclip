@@ -26,15 +26,36 @@ struct InputPreviewBlockView: View {
       // Header with "Sent" label and timestamp.
       header
 
-      // Handwriting image if present.
-      if let handwritingData = response.handwritingImageData,
-        let image = UIImage(data: handwritingData) {
-        handwritingView(image: image)
-      }
+      // Ordered segments when present (structured canvas submissions).
+      if let segments = response.segments, !segments.isEmpty {
+        ForEach(Array(segments.enumerated()), id: \.offset) { _, segment in
+          switch segment {
+          case .text(let text):
+            textView(text: text)
+          case .drawing(let data):
+            if let img = UIImage(data: data) {
+              handwritingView(image: img)
+            }
+          }
+        }
+      } else {
+        // Fallback: handwriting images if present.
+        if let images = response.handwritingImages, !images.isEmpty {
+          ForEach(Array(images.enumerated()), id: \.offset) { _, imageData in
+            if let image = UIImage(data: imageData) {
+              handwritingView(image: image)
+            }
+          }
+        } else if let handwritingData = response.handwritingImageData,
+          let image = UIImage(data: handwritingData)
+        {
+          handwritingView(image: image)
+        }
 
-      // Typed text if present.
-      if let text = response.text, !text.isEmpty {
-        textView(text: text)
+        // Typed text if present.
+        if let text = response.text, !text.isEmpty {
+          textView(text: text)
+        }
       }
 
       // Attachments if present.

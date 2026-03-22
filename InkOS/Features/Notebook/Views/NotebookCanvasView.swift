@@ -16,6 +16,7 @@
 
 import PhotosUI
 import SwiftUI
+import UniformTypeIdentifiers
 
 // MARK: - NotebookCanvasView
 
@@ -29,42 +30,62 @@ struct NotebookCanvasView: View {
   // Shared input view model for user input zone.
   @State private var inputViewModel = CanvasInputViewModel()
 
+  // Captured viewport height for sizing the drawing canvas.
+  @State private var viewportHeight: CGFloat = 800
+
   var body: some View {
     ZStack(alignment: .bottom) {
       // Main scrollable content with tap-to-advance.
       ScrollViewReader { scrollProxy in
         ScrollView {
-          LazyVStack(spacing: 0) {
-            // Alan's content blocks.
-            ForEach(viewModel.document.blocks, id: \.id) { block in
-              BlockContainerView(
-                block: block,
-                animationState: viewModel.animationState[block.id] ?? .waiting
-              )
-            }
+          VStack(spacing: 0) {
+            // Content blocks — padded for readability.
+            LazyVStack(spacing: 0) {
+              // Alan's content blocks.
+              ForEach(viewModel.document.blocks, id: \.id) { block in
+                BlockContainerView(
+                  block: block,
+                  animationState: viewModel.animationState[block.id] ?? .waiting
+                )
+              }
 
-            // User input preview blocks (submitted content).
-            ForEach(viewModel.inputPreviews) { preview in
-              InputPreviewBlockView(
-                response: preview.response,
-                timestamp: preview.timestamp
-              )
-              .padding(.top, NotebookSpacing.lg)
-              .id("preview_\(preview.id)")
+              // User input preview blocks (submitted content).
+              ForEach(viewModel.inputPreviews) { preview in
+                InputPreviewBlockView(
+                  response: preview.response,
+                  timestamp: preview.timestamp
+                )
+                .padding(.top, NotebookSpacing.lg)
+                .id("preview_\(preview.id)")
+              }
             }
+            .padding(.horizontal, horizontalPadding)
+            .padding(.top, hasContent ? 100 : 0)
 
-            // User input zone - drawing and text area below content.
+            // Active drawing canvas — full width, no horizontal padding.
             userInputZone
-              .padding(.top, NotebookSpacing.xl)
+              .padding(.top, hasContent ? NotebookSpacing.xl : 0)
               .id("input_zone")
           }
-          .padding(.horizontal, horizontalPadding)
-          .padding(.top, 100)
           .padding(.bottom, 160)  // Extra padding for fixed input bar
         }
-        .background(NotebookPalette.paper)
+        .background(
+          GeometryReader { geo in
+            NotebookPalette.paper
+              .onAppear { viewportHeight = geo.size.height }
+              .onChange(of: geo.size.height) { _, newHeight in
+                viewportHeight = newHeight
+              }
+          }
+        )
         .contentShape(Rectangle())
         .onTapGesture {
+          // Dismiss attachment menu if open.
+          if inputViewModel.showingAttachmentMenu {
+            withAnimation(.easeOut(duration: 0.15)) {
+              inputViewModel.showingAttachmentMenu = false
+            }
+          }
           viewModel.handleContentTap()
         }
         .onChange(of: viewModel.inputPreviews.count) { oldCount, newCount in
@@ -94,9 +115,21 @@ struct NotebookCanvasView: View {
           }
       }
 
-      // Glass pill toolbar centered at bottom of screen.
-      canvasInputBar
-        .padding(.bottom, 30)
+      // Bottom bar: swap between toolbar and trash zone during text box drag.
+      Group {
+        if inputViewModel.isDraggingTextBox {
+          TrashZoneView(
+            isHovering: inputViewModel.isOverTrashZone,
+            onFrameChange: { inputViewModel.trashZoneFrame = $0 }
+          )
+          .transition(.move(edge: .bottom).combined(with: .opacity))
+        } else {
+          canvasInputBar
+            .transition(.move(edge: .bottom).combined(with: .opacity))
+        }
+      }
+      .padding(.bottom, 30)
+      .animation(.spring(response: 0.35, dampingFraction: 0.8), value: inputViewModel.isDraggingTextBox)
     }
     .background(NotebookPalette.paper)
   }
@@ -105,8 +138,7 @@ struct NotebookCanvasView: View {
 
   // The drawing and text input area positioned below all content.
   private var userInputZone: some View {
-    UserInputZoneView(viewModel: inputViewModel)
-      .frame(minHeight: 200)
+    UserInputZoneView(viewModel: inputViewModel, availableHeight: viewportHeight)
   }
 
   // MARK: - Canvas Input Bar
@@ -130,7 +162,9 @@ struct NotebookCanvasView: View {
 
       Spacer()
 
-      Button(action: { viewModel.errorMessage = nil }) {
+      Button {
+        viewModel.errorMessage = nil
+      } label: {
         Image(systemName: "xmark")
           .font(.system(size: 12, weight: .bold))
           .foregroundColor(NotebookPalette.inkSubtle)
@@ -147,11 +181,51 @@ struct NotebookCanvasView: View {
     )
   }
 
+  // Whether there are any content blocks or input previews to display.
+  private var hasContent: Bool {
+    !viewModel.document.blocks.isEmpty || !viewModel.inputPreviews.isEmpty
+  }
+
   // Responsive horizontal padding based on size class.
   private var horizontalPadding: CGFloat {
     horizontalSizeClass == .regular
       ? NotebookLayout.horizontalPaddingRegular
       : NotebookLayout.horizontalPaddingCompact
+  }
+}
+
+// MARK: - TrashZoneView
+
+// Trash icon that appears when a text box is being dragged.
+// Enlarges with a fast diagonal shimmer across the whole circle on hover.
+// Releasing the text box over this view deletes the text box.
+struct TrashZoneView: View {
+  // Whether the dragged text box is hovering over this zone.
+  var isHovering: Bool
+  // Reports the view's frame in global coordinates for hit testing.
+  var onFrameChange: (CGRect) -> Void
+
+  var body: some View {
+    ZStack {
+      Circle()
+        .fill(isHovering ? Color.red.opacity(0.12) : Color(.systemGray5))
+        .frame(width: 56, height: 56)
+
+      Image(systemName: "trash")
+        .font(.system(size: 24, weight: .medium))
+        .foregroundStyle(isHovering ? .red : .secondary)
+    }
+    .scaleEffect(isHovering ? 1.4 : 1.0)
+    .background(
+      GeometryReader { geo in
+        Color.clear
+          .onAppear { onFrameChange(geo.frame(in: .global)) }
+          .onChange(of: geo.frame(in: .global)) { _, newFrame in
+            onFrameChange(newFrame)
+          }
+      }
+    )
+    .accessibilityIdentifier("trash_zone")
   }
 }
 
@@ -169,10 +243,17 @@ struct CanvasInputBar: View {
   // Photo picker selection.
   @State private var selectedPhotos: [PhotosPickerItem] = []
 
+  // Whether the document picker sheet is showing.
+  @State private var showingDocumentPicker = false
+
+  // Whether the photo picker sheet is showing.
+  @State private var showingPhotoPicker = false
+
   // Sequential fade-in animation state.
   @State private var pencilIconVisible = false
   @State private var keyboardIconVisible = false
   @State private var paperclipIconVisible = false
+
   @State private var sendButtonVisible = false
 
   // Alert state for errors.
@@ -180,6 +261,45 @@ struct CanvasInputBar: View {
 
   var body: some View {
     VStack(spacing: 0) {
+      // Floating attachment menu (appears above toolbar).
+      if viewModel.showingAttachmentMenu {
+        VStack(spacing: 0) {
+          Button {
+            viewModel.showingAttachmentMenu = false
+            showingPhotoPicker = true
+          } label: {
+            Label("Photo Library", systemImage: "photo.on.rectangle")
+              .font(.system(size: 16))
+              .foregroundStyle(NotebookPalette.ink)
+              .frame(maxWidth: .infinity, alignment: .leading)
+              .padding(.horizontal, 16)
+              .padding(.vertical, 12)
+              .contentShape(Rectangle())
+          }
+
+          Divider()
+
+          Button {
+            viewModel.showingAttachmentMenu = false
+            showingDocumentPicker = true
+          } label: {
+            Label("Choose File", systemImage: "doc")
+              .font(.system(size: 16))
+              .foregroundStyle(NotebookPalette.ink)
+              .frame(maxWidth: .infinity, alignment: .leading)
+              .padding(.horizontal, 16)
+              .padding(.vertical, 12)
+              .contentShape(Rectangle())
+          }
+        }
+        .frame(width: 220)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .shadow(color: .black.opacity(0.15), radius: 12, y: -4)
+        .padding(.bottom, 8)
+        .transition(.opacity.combined(with: .scale(scale: 0.9, anchor: .bottom)))
+        .accessibilityIdentifier("attachment_menu")
+      }
+
       // Attachment preview grid (if any attachments).
       if !viewModel.attachments.isEmpty {
         AttachmentPreviewGrid(attachments: viewModel.attachments) { attachment in
@@ -194,7 +314,19 @@ struct CanvasInputBar: View {
     }
     .accessibilityElement(children: .contain)
     .accessibilityIdentifier("canvas_input_bar")
+    .photosPicker(
+      isPresented: $showingPhotoPicker,
+      selection: $selectedPhotos,
+      maxSelectionCount: max(1, AttachmentLimits.maxFileCount - viewModel.attachments.count),
+      matching: .any(of: [.images, .screenshots])
+    )
+    .sheet(isPresented: $showingDocumentPicker) {
+      DocumentPickerView { urls in
+        loadSelectedDocuments(urls)
+      }
+    }
     .onChange(of: selectedPhotos) { _, newItems in
+      guard !newItems.isEmpty else { return }
       Task {
         await loadSelectedPhotos(newItems)
       }
@@ -228,52 +360,54 @@ struct CanvasInputBar: View {
   }
 
   private var glassPillToolbar: some View {
-    HStack(spacing: 24) {
+    // Read mode eagerly so @Observable tracks this dependency.
+    let currentMode = viewModel.mode
+
+    return HStack(spacing: 24) {
       // Pencil mode button.
-      Button {
-        withAnimation(.easeInOut(duration: 0.2)) {
+      Image(systemName: "pencil.tip")
+        .font(.system(size: 22, weight: .medium))
+        .foregroundStyle(currentMode == .pencil ? Color.black : NotebookPalette.inkFaint)
+        .frame(width: 44, height: 44)
+        .contentShape(Rectangle())
+        .onTapGesture {
           viewModel.switchToPencilMode()
         }
-      } label: {
-        Image(systemName: "pencil.tip")
-          .font(.system(size: 22, weight: .medium))
-          .foregroundColor(
-            viewModel.mode == .pencil ? NotebookPalette.ink : NotebookPalette.inkSubtle)
-      }
-      .opacity(pencilIconVisible ? 1 : 0)
-      .accessibilityLabel("Pencil mode")
-      .accessibilityValue(viewModel.mode == .pencil ? "selected" : "")
-      .accessibilityIdentifier("pencil_mode_button")
+        .opacity(pencilIconVisible ? 1 : 0)
+        .accessibilityLabel("Pencil mode")
+        .accessibilityValue(currentMode == .pencil ? "selected" : "")
+        .accessibilityIdentifier("pencil_mode_button")
+        .accessibilityAddTraits(.isButton)
 
       // Keyboard mode button.
-      Button {
-        withAnimation(.easeInOut(duration: 0.2)) {
+      Image(systemName: "keyboard")
+        .font(.system(size: 22, weight: .medium))
+        .foregroundStyle(currentMode == .keyboard ? Color.black : NotebookPalette.inkFaint)
+        .frame(width: 44, height: 44)
+        .contentShape(Rectangle())
+        .onTapGesture {
           viewModel.switchToKeyboardMode()
         }
-      } label: {
-        Image(systemName: "keyboard")
-          .font(.system(size: 22, weight: .medium))
-          .foregroundColor(
-            viewModel.mode == .keyboard ? NotebookPalette.ink : NotebookPalette.inkSubtle)
-      }
-      .opacity(keyboardIconVisible ? 1 : 0)
-      .accessibilityLabel("Keyboard mode")
-      .accessibilityValue(viewModel.mode == .keyboard ? "selected" : "")
-      .accessibilityIdentifier("keyboard_mode_button")
+        .opacity(keyboardIconVisible ? 1 : 0)
+        .accessibilityLabel("Keyboard mode")
+        .accessibilityValue(currentMode == .keyboard ? "selected" : "")
+        .accessibilityIdentifier("keyboard_mode_button")
+        .accessibilityAddTraits(.isButton)
 
-      // Paperclip attachment picker.
-      PhotosPicker(
-        selection: $selectedPhotos,
-        maxSelectionCount: max(1, AttachmentLimits.maxFileCount - viewModel.attachments.count),
-        matching: .any(of: [.images, .screenshots])
-      ) {
-        Image(systemName: "paperclip")
-          .font(.system(size: 22, weight: .medium))
-          .foregroundColor(NotebookPalette.inkSubtle)
-      }
-      .opacity(paperclipIconVisible ? 1 : 0)
-      .accessibilityLabel("Attach image")
-      .accessibilityIdentifier("paperclip_button")
+      // Paperclip attachment button.
+      Image(systemName: "paperclip")
+        .font(.system(size: 22, weight: .medium))
+        .foregroundStyle(NotebookPalette.inkFaint)
+        .frame(width: 44, height: 44)
+        .contentShape(Rectangle())
+        .onTapGesture {
+          withAnimation(.easeOut(duration: 0.15)) {
+            viewModel.showingAttachmentMenu.toggle()
+          }
+        }
+        .opacity(paperclipIconVisible ? 1 : 0)
+        .accessibilityLabel("Attach file")
+        .accessibilityIdentifier("paperclip_button")
 
       // Send button.
       Button {
@@ -285,7 +419,7 @@ struct CanvasInputBar: View {
             .frame(width: 36, height: 36)
           Image(systemName: "arrow.up")
             .font(.system(size: 16, weight: .bold))
-            .foregroundColor(.white)
+            .foregroundStyle(.white)
         }
       }
       .disabled(!viewModel.canSubmit)
@@ -295,7 +429,7 @@ struct CanvasInputBar: View {
     }
     .padding(.horizontal, 20)
     .padding(.vertical, 12)
-    .glassEffect(.regular.interactive(), in: .capsule)
+    .glassEffect(.regular, in: .capsule)
   }
 
   private func submitInput() {
@@ -324,11 +458,15 @@ struct CanvasInputBar: View {
         continue
       }
 
+      // Detect actual image format from magic bytes.
+      let (mimeType, ext) = detectImageFormat(data)
+      let timestamp = Int(Date().timeIntervalSince1970)
+
       newAttachments.append(
         CanvasInputViewModel.AttachmentData(
           data: data,
-          filename: "image_\(Date().timeIntervalSince1970).png",
-          mimeType: "image/png"
+          filename: "image_\(timestamp).\(ext)",
+          mimeType: mimeType
         ))
     }
 
@@ -338,6 +476,163 @@ struct CanvasInputBar: View {
     }
 
     selectedPhotos = []
+  }
+
+  // Loads document files selected from the document picker.
+  private func loadSelectedDocuments(_ urls: [URL]) {
+    var newAttachments: [CanvasInputViewModel.AttachmentData] = []
+
+    for url in urls {
+      // Start accessing the security-scoped resource.
+      guard url.startAccessingSecurityScopedResource() else {
+        viewModel.currentError = .loadFailed(filename: url.lastPathComponent)
+        showingError = true
+        continue
+      }
+      defer { url.stopAccessingSecurityScopedResource() }
+
+      guard let data = try? Data(contentsOf: url) else {
+        viewModel.currentError = .loadFailed(filename: url.lastPathComponent)
+        showingError = true
+        continue
+      }
+
+      let mimeType = mimeTypeForURL(url)
+
+      // Validate per-type size limits.
+      let maxSize = AttachmentLimits.maxSizeForMimeType(mimeType)
+      if data.count > maxSize {
+        let sizeMB = Double(data.count) / (1024 * 1024)
+        viewModel.currentError = .fileTooLarge(filename: url.lastPathComponent, sizeMB: sizeMB)
+        showingError = true
+        continue
+      }
+
+      newAttachments.append(
+        CanvasInputViewModel.AttachmentData(
+          data: data,
+          filename: url.lastPathComponent,
+          mimeType: mimeType
+        ))
+    }
+
+    if !newAttachments.isEmpty {
+      if let error = viewModel.addAttachments(newAttachments) {
+        viewModel.currentError = error
+        showingError = true
+      }
+    }
+  }
+
+  // Detects image format from magic bytes. Returns (mimeType, extension).
+  private func detectImageFormat(_ data: Data) -> (String, String) {
+    guard data.count >= 4 else { return ("image/png", "png") }
+
+    let bytes = [UInt8](data.prefix(4))
+
+    // JPEG: FF D8 FF
+    if bytes[0] == 0xFF, bytes[1] == 0xD8, bytes[2] == 0xFF {
+      return ("image/jpeg", "jpg")
+    }
+
+    // PNG: 89 50 4E 47
+    if bytes[0] == 0x89, bytes[1] == 0x50, bytes[2] == 0x4E, bytes[3] == 0x47 {
+      return ("image/png", "png")
+    }
+
+    // GIF: 47 49 46
+    if bytes[0] == 0x47, bytes[1] == 0x49, bytes[2] == 0x46 {
+      return ("image/gif", "gif")
+    }
+
+    // WebP: RIFF....WEBP
+    if bytes[0] == 0x52, bytes[1] == 0x49, bytes[2] == 0x46, bytes[3] == 0x46,
+      data.count >= 12
+    {
+      let webpBytes = [UInt8](data[8..<12])
+      if webpBytes == [0x57, 0x45, 0x42, 0x50] {
+        return ("image/webp", "webp")
+      }
+    }
+
+    // HEIC: check for ftyp box with heic/heix brands
+    if data.count >= 12 {
+      let ftypBytes = [UInt8](data[4..<8])
+      if ftypBytes == [0x66, 0x74, 0x79, 0x70] {
+        return ("image/heic", "heic")
+      }
+    }
+
+    // Default to PNG.
+    return ("image/png", "png")
+  }
+
+  // Maps a file URL extension to a MIME type string.
+  private func mimeTypeForURL(_ url: URL) -> String {
+    let ext = url.pathExtension.lowercased()
+    switch ext {
+    case "pdf": return "application/pdf"
+    case "png": return "image/png"
+    case "jpg", "jpeg": return "image/jpeg"
+    case "gif": return "image/gif"
+    case "webp": return "image/webp"
+    case "heic", "heif": return "image/heic"
+    case "txt": return "text/plain"
+    case "csv": return "text/plain"
+    case "md": return "text/plain"
+    case "json": return "text/plain"
+    case "xml": return "text/plain"
+    case "html", "htm": return "text/plain"
+    case "swift", "py", "js", "ts", "java", "c", "cpp", "h", "hpp",
+      "rb", "go", "rs", "kt", "m", "mm", "css", "scss", "yaml", "yml",
+      "toml", "sh", "bash", "zsh":
+      return "text/plain"
+    default: return "application/octet-stream"
+    }
+  }
+}
+
+// MARK: - DocumentPickerView
+
+// UIViewControllerRepresentable wrapper for UIDocumentPickerViewController.
+// Supports picking PDFs, text files, and source code files.
+struct DocumentPickerView: UIViewControllerRepresentable {
+  // Callback with selected file URLs.
+  var onPick: ([URL]) -> Void
+
+  func makeUIViewController(context: Context) -> UIDocumentPickerViewController {
+    let types: [UTType] = [
+      .pdf,
+      .plainText,
+      .commaSeparatedText,
+      .json,
+      .xml,
+      .html,
+      .sourceCode,
+    ]
+
+    let picker = UIDocumentPickerViewController(forOpeningContentTypes: types, asCopy: true)
+    picker.allowsMultipleSelection = true
+    picker.delegate = context.coordinator
+    return picker
+  }
+
+  func updateUIViewController(_: UIDocumentPickerViewController, context _: Context) {}
+
+  func makeCoordinator() -> Coordinator {
+    Coordinator(onPick: onPick)
+  }
+
+  class Coordinator: NSObject, UIDocumentPickerDelegate {
+    let onPick: ([URL]) -> Void
+
+    init(onPick: @escaping ([URL]) -> Void) {
+      self.onPick = onPick
+    }
+
+    func documentPicker(_: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
+      onPick(urls)
+    }
   }
 }
 

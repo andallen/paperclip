@@ -21,6 +21,12 @@ const AlanRequestSchema = z.object({
   }),
   session_model: SessionModelSchema.optional(),
   memory_context: z.string().optional(),
+  custom_instructions: z.string().optional(),
+  file_references: z.array(z.object({
+    fileUri: z.string(),
+    mimeType: z.string(),
+    displayName: z.string().optional(),
+  })).optional(),
 });
 
 type AlanRequest = z.infer<typeof AlanRequestSchema>;
@@ -28,14 +34,18 @@ type AlanRequest = z.infer<typeof AlanRequestSchema>;
 /**
  * Builds the complete system prompt including memory context.
  */
-function buildSystemPrompt(memoryContext?: string): string {
-  if (!memoryContext || memoryContext.trim() === "") {
-    return ALAN_SYSTEM_PROMPT;
+function buildSystemPrompt(memoryContext?: string, customInstructions?: string): string {
+  let prompt = ALAN_SYSTEM_PROMPT;
+
+  if (memoryContext && memoryContext.trim() !== "") {
+    prompt += `\n\n${memoryContext}`;
   }
 
-  return `${ALAN_SYSTEM_PROMPT}
+  if (customInstructions && customInstructions.trim() !== "") {
+    prompt += `\n\n## User Preferences\n${customInstructions}`;
+  }
 
-${memoryContext}`;
+  return prompt;
 }
 
 /**
@@ -81,13 +91,29 @@ export const alan = onRequest({cors: true, maxInstances: 10}, async (req, res) =
 
   try {
     // Build Gemini request.
-    const contents = request.messages.map((m) => ({
-      role: m.role === "assistant" ? "model" : "user",
-      parts: [{text: m.content}],
-    }));
+    const contents = request.messages.map((m, index) => {
+      const parts: Array<{text: string} | {fileData: {mimeType: string; fileUri: string}}> =
+        [{text: m.content}];
+
+      // Attach file references to the last user message.
+      if (
+        m.role === "user" &&
+        index === request.messages.length - 1 &&
+        request.file_references?.length
+      ) {
+        for (const ref of request.file_references) {
+          parts.push({fileData: {mimeType: ref.mimeType, fileUri: ref.fileUri}});
+        }
+      }
+
+      return {
+        role: m.role === "assistant" ? "model" : "user",
+        parts,
+      };
+    });
 
     // Build system instruction with session model and memory context.
-    let systemPrompt = buildSystemPrompt(request.memory_context);
+    let systemPrompt = buildSystemPrompt(request.memory_context, request.custom_instructions);
     if (request.session_model) {
       systemPrompt += `\n\n## Current Session Model\n\`\`\`json\n${JSON.stringify(request.session_model, null, 2)}\n\`\`\``;
     } else {
@@ -222,13 +248,29 @@ export const alanSync = onRequest({cors: true, maxInstances: 10}, async (req, re
   }
 
   try {
-    const contents = request.messages.map((m) => ({
-      role: m.role === "assistant" ? "model" : "user",
-      parts: [{text: m.content}],
-    }));
+    const contents = request.messages.map((m, index) => {
+      const parts: Array<{text: string} | {fileData: {mimeType: string; fileUri: string}}> =
+        [{text: m.content}];
+
+      // Attach file references to the last user message.
+      if (
+        m.role === "user" &&
+        index === request.messages.length - 1 &&
+        request.file_references?.length
+      ) {
+        for (const ref of request.file_references) {
+          parts.push({fileData: {mimeType: ref.mimeType, fileUri: ref.fileUri}});
+        }
+      }
+
+      return {
+        role: m.role === "assistant" ? "model" : "user",
+        parts,
+      };
+    });
 
     // Build system instruction with session model and memory context.
-    let systemPrompt = buildSystemPrompt(request.memory_context);
+    let systemPrompt = buildSystemPrompt(request.memory_context, request.custom_instructions);
     if (request.session_model) {
       systemPrompt += `\n\n## Current Session Model\n\`\`\`json\n${JSON.stringify(request.session_model, null, 2)}\n\`\`\``;
     } else {

@@ -274,22 +274,45 @@ final class NotebookViewModel {
 
     // Build the message text from the input response.
     var messageText = ""
-    if let text = response.text, !text.isEmpty {
-      messageText = text
-    } else if response.handwritingImageData != nil {
-      messageText = "[Handwriting submitted]"
-    } else if let attachments = response.attachments, !attachments.isEmpty {
-      messageText = "[Image attached]"
+
+    // If segments exist, build message from segment types.
+    if let segments = response.segments, !segments.isEmpty {
+      let parts: [String] = segments.compactMap { segment in
+        switch segment {
+        case .text(let text): return text
+        case .drawing: return "[Handwriting submitted]"
+        }
+      }
+      messageText = parts.joined(separator: "\n")
+    } else {
+      // Existing logic for non-segment responses.
+      if let text = response.text, !text.isEmpty {
+        messageText = text
+      }
+      // Append handwriting indicator if any drawing images exist.
+      if response.handwritingImageData != nil {
+        if !messageText.isEmpty {
+          messageText += "\n"
+        }
+        messageText += "[Handwriting submitted]"
+      }
+    }
+
+    // Append attachment indicator if no other content was built.
+    if messageText.isEmpty, let attachments = response.attachments, !attachments.isEmpty {
+      let filenames = attachments.map { $0.filename }.joined(separator: ", ")
+      messageText = "[Files attached: \(filenames)]"
     }
 
     guard !messageText.isEmpty else { return }
 
-    // Send to Alan.
-    sendMessageToAlan(messageText)
+    // Send to Alan with attachments.
+    sendMessageToAlan(messageText, attachments: response.attachments)
   }
 
   // Sends a text message to Alan via the orchestration layer.
-  private func sendMessageToAlan(_ content: String) {
+  // Optionally includes file attachments to upload to the Gemini Files API.
+  private func sendMessageToAlan(_ content: String, attachments: [InputAttachment]? = nil) {
     let isFirstMessage = conversationHistory.isEmpty
 
     isProcessing = true
@@ -300,12 +323,20 @@ final class NotebookViewModel {
       sessionTopic: document.title
     )
 
+    // Read custom instructions from UserDefaults at call time.
+    let customInstructions: String? = {
+      let raw = UserDefaults.standard.string(forKey: "customInstructions") ?? ""
+      return raw.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : raw
+    }()
+
     Task {
       await orchestration.sendMessage(
         content,
         conversationHistory: conversationHistory,
         notebookContext: notebookContext,
-        sessionModel: sessionModel
+        sessionModel: sessionModel,
+        customInstructions: customInstructions,
+        attachments: attachments
       )
 
       // Add to conversation history after sending.

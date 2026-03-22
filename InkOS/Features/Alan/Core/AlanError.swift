@@ -36,6 +36,9 @@ enum AlanError: Error, LocalizedError, Sendable, Equatable {
   // Request was cancelled.
   case cancelled
 
+  // File upload to Gemini Files API failed.
+  case uploadFailed(filename: String, reason: String)
+
   // API key or configuration is missing.
   case configurationError(detail: String)
 
@@ -57,6 +60,8 @@ enum AlanError: Error, LocalizedError, Sendable, Equatable {
       return "Stream interrupted: \(reason)"
     case .cancelled:
       return "Operation was cancelled"
+    case .uploadFailed(let filename, let reason):
+      return "Upload failed for \(filename): \(reason)"
     case .configurationError(let detail):
       return "Configuration error: \(detail)"
     }
@@ -65,7 +70,7 @@ enum AlanError: Error, LocalizedError, Sendable, Equatable {
   // Whether this error is retryable.
   var isRetryable: Bool {
     switch self {
-    case .networkError, .timeout, .streamInterrupted:
+    case .networkError, .timeout, .streamInterrupted, .uploadFailed:
       return true
     case .serverError(let code, _):
       // Retry on 5xx errors and rate limiting (429).

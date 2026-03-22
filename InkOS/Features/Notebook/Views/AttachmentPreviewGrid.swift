@@ -23,6 +23,17 @@ enum AttachmentLimits {
   // Maximum number of files per submission.
   static let maxFileCount: Int = 5
 
+  // Returns the maximum allowed size in bytes for a given MIME type.
+  static func maxSizeForMimeType(_ mimeType: String) -> Int {
+    if mimeType == "application/pdf" {
+      return 50 * 1024 * 1024  // 50 MB for PDFs
+    } else if mimeType.hasPrefix("text/") {
+      return 1 * 1024 * 1024  // 1 MB for text files
+    } else {
+      return maxFileSizeBytes  // 20 MB default
+    }
+  }
+
   // Preview thumbnail size.
   static let previewSize: CGFloat = 80
 
@@ -154,8 +165,22 @@ struct AttachmentPreview: View {
     }
   }
 
-  // Returns appropriate icon based on MIME type.
+  // Returns appropriate icon based on MIME type and file extension.
   private var documentIcon: String {
+    // Check for specific file types by extension first.
+    let ext = fileExtension.lowercased()
+    let codeExtensions = [
+      "swift", "py", "js", "ts", "java", "c", "cpp", "h", "go", "rs", "rb", "kt", "m", "mm",
+      "css", "scss", "html", "htm", "xml", "json", "yaml", "yml", "sh",
+    ]
+
+    if ext == "csv" {
+      return "tablecells"
+    }
+    if codeExtensions.contains(ext) {
+      return "chevron.left.forwardslash.chevron.right"
+    }
+
     switch attachment.mimeType {
     case "application/pdf":
       return "doc.fill"

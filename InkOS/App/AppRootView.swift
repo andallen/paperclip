@@ -6,6 +6,7 @@ struct AppRootView: View {
   @State private var sessionService = SessionService()
   @State private var viewModel: NotebookViewModel
   @State private var showSidebar = false
+  @State private var showSettings = false
 
   init() {
     let sessionService = SessionService()
@@ -25,16 +26,18 @@ struct AppRootView: View {
 
   var body: some View {
     ZStack(alignment: .topLeading) {
-      // Main notebook canvas (ignores safe area for edge-to-edge paper).
+      // Main notebook canvas (ignores container safe area for edge-to-edge paper,
+      // but respects keyboard safe area so the toolbar stays above the keyboard).
       NotebookCanvasView(viewModel: viewModel)
-        .ignoresSafeArea()
+        .ignoresSafeArea(.container)
 
       // Hamburger menu button (top-left, respects safe area).
-      if !showSidebar {
-        hamburgerButton
-          .padding(.top, 20)
-          .padding(.leading, 20)
-      }
+      // Always in hierarchy so offset animation works. Slides left when sidebar opens.
+      hamburgerButton
+        .padding(.top, 20)
+        .padding(.leading, 20)
+        .offset(x: showSidebar ? -80 : 0)
+        .animation(.easeInOut(duration: 0.25), value: showSidebar)
 
       // Invisible dismiss layer (only when sidebar is open).
       // Dismisses keyboard and closes sidebar on tap.
@@ -51,11 +54,14 @@ struct AppRootView: View {
       // Sidebar panel (always in hierarchy, offset to slide in/out).
       sidebarPanel
     }
+    .sheet(isPresented: $showSettings) {
+      SettingsView()
+    }
   }
 
   // MARK: - Hamburger Button
 
-  // Custom two-line hamburger icon: top line longer than bottom.
+  // Circular liquid glass hamburger button with custom two-line icon.
   private var hamburgerButton: some View {
     Button {
       withAnimation(.easeInOut(duration: 0.25)) { showSidebar = true }
@@ -63,13 +69,14 @@ struct AppRootView: View {
       VStack(alignment: .leading, spacing: 5) {
         RoundedRectangle(cornerRadius: 1.5)
           .fill(NotebookPalette.ink)
-          .frame(width: 22, height: 2.5)
+          .frame(width: 20, height: 2.5)
         RoundedRectangle(cornerRadius: 1.5)
           .fill(NotebookPalette.ink)
-          .frame(width: 16, height: 2.5)
+          .frame(width: 14, height: 2.5)
       }
       .frame(width: 44, height: 44)
     }
+    .glassEffect(.regular.interactive(), in: .circle)
     .accessibilityLabel("Open sidebar")
     .accessibilityIdentifier("hamburger_open_button")
   }
@@ -92,6 +99,13 @@ struct AppRootView: View {
         let session = sessionService.createSession(title: "New Chat")
         switchToSession(session)
         withAnimation(.easeInOut(duration: 0.25)) { showSidebar = false }
+      },
+      onOpenSettings: {
+        withAnimation(.easeInOut(duration: 0.25)) { showSidebar = false }
+        // Brief delay so sidebar closes before sheet presents.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+          showSettings = true
+        }
       }
     )
     .frame(width: sidebarWidth)

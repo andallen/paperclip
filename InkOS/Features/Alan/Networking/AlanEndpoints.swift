@@ -30,6 +30,11 @@ struct AlanEndpoints {
     baseURL.appendingPathComponent("executeSkill")
   }
 
+  // File upload endpoint (Gemini Files API proxy).
+  var uploadFileURL: URL {
+    baseURL.appendingPathComponent("uploadFile")
+  }
+
   // Creates endpoints with the given base URL.
   init(baseURL: URL) {
     self.baseURL = baseURL

@@ -267,6 +267,129 @@ final class InkOSUITests: XCTestCase {
         print("[Test] RESULT: Input bar IS fixed at bottom - Y position stable within \(yPositionDelta) points")
     }
 
+    // MARK: - Toolbar Mode Switching Tests
+
+    @MainActor
+    func testToolbarModeSwitching() throws {
+        // Test that tapping pencil and keyboard icons properly toggles the selected state.
+
+        // Wait for app to load.
+        let canvas = app.scrollViews["notebook_canvas"]
+        XCTAssertTrue(canvas.waitForExistence(timeout: 10), "Notebook canvas should load")
+
+        // Find toolbar buttons.
+        let pencilButton = app.buttons["pencil_mode_button"]
+        let keyboardButton = app.buttons["keyboard_mode_button"]
+
+        XCTAssertTrue(pencilButton.waitForExistence(timeout: 5), "Pencil button should exist")
+        XCTAssertTrue(keyboardButton.waitForExistence(timeout: 5), "Keyboard button should exist")
+
+        // Log all buttons in the input bar.
+        let inputBar = app.otherElements["canvas_input_bar"]
+        print("[Test] canvas_input_bar exists: \(inputBar.exists)")
+        if inputBar.exists {
+            print("[Test] canvas_input_bar frame: \(inputBar.frame)")
+            let buttons = inputBar.buttons
+            print("[Test] Buttons in input bar: \(buttons.count)")
+            for i in 0..<buttons.count {
+                let btn = buttons.element(boundBy: i)
+                print("[Test]   Button[\(i)]: id=\(btn.identifier), label=\(btn.label), value=\(btn.value ?? "nil"), frame=\(btn.frame), enabled=\(btn.isEnabled), hittable=\(btn.isHittable)")
+            }
+        }
+
+        // Screenshot initial state (pencil should be selected).
+        saveScreenshot(name: "toolbar_01_initial_pencil_selected")
+        print("[Test] === INITIAL STATE ===")
+        print("[Test] Pencil: value=\(pencilButton.value ?? "nil"), hittable=\(pencilButton.isHittable), enabled=\(pencilButton.isEnabled)")
+        print("[Test] Keyboard: value=\(keyboardButton.value ?? "nil"), hittable=\(keyboardButton.isHittable), enabled=\(keyboardButton.isEnabled)")
+
+        // Tap keyboard button.
+        print("[Test] === TAPPING KEYBOARD ===")
+        print("[Test] Keyboard button frame: \(keyboardButton.frame)")
+        keyboardButton.tap()
+        Thread.sleep(forTimeInterval: 2.0)
+
+        saveScreenshot(name: "toolbar_02_after_keyboard_tap")
+        print("[Test] === AFTER KEYBOARD TAP ===")
+        print("[Test] Pencil: value=\(pencilButton.value ?? "nil"), hittable=\(pencilButton.isHittable)")
+        print("[Test] Keyboard: value=\(keyboardButton.value ?? "nil"), hittable=\(keyboardButton.isHittable)")
+
+        // Check if mode actually changed by verifying accessibility values.
+        var pencilValue = pencilButton.value as? String ?? ""
+        var keyboardValue = keyboardButton.value as? String ?? ""
+        print("[Test] Expected: pencil='', keyboard='selected'")
+        print("[Test] Actual:   pencil='\(pencilValue)', keyboard='\(keyboardValue)'")
+
+        XCTAssertEqual(keyboardValue, "selected",
+            "Keyboard should be selected after tapping it")
+        XCTAssertNotEqual(pencilValue, "selected",
+            "Pencil should NOT be selected after tapping keyboard")
+
+        // Toolbar should remain hittable even with the keyboard up
+        // (keyboard safe area pushes toolbar above the keyboard).
+        let pencilAfterKeyboard = app.buttons["pencil_mode_button"]
+        print("[Test] Pencil hittable with keyboard up: \(pencilAfterKeyboard.isHittable)")
+        print("[Test] Pencil frame with keyboard up: \(pencilAfterKeyboard.frame)")
+        saveScreenshot(name: "toolbar_02b_keyboard_up")
+
+        // Switch back to pencil (should work even with keyboard visible).
+        print("[Test] === TAPPING PENCIL (switch back, keyboard may be up) ===")
+        XCTAssertTrue(pencilAfterKeyboard.waitForExistence(timeout: 5), "Pencil should exist")
+        if pencilAfterKeyboard.isHittable {
+            pencilAfterKeyboard.tap()
+        } else {
+            // Fallback: dismiss keyboard first if toolbar is still covered.
+            print("[Test] Pencil not hittable, dismissing keyboard first")
+            app.scrollViews["notebook_canvas"].tap()
+            Thread.sleep(forTimeInterval: 1.0)
+            app.buttons["pencil_mode_button"].tap()
+        }
+        Thread.sleep(forTimeInterval: 2.0)
+
+        saveScreenshot(name: "toolbar_03_after_pencil_tap")
+        pencilValue = (app.buttons["pencil_mode_button"].value as? String) ?? ""
+        keyboardValue = (app.buttons["keyboard_mode_button"].value as? String) ?? ""
+        print("[Test] === AFTER PENCIL TAP ===")
+        print("[Test] Expected: pencil='selected', keyboard=''")
+        print("[Test] Actual:   pencil='\(pencilValue)', keyboard='\(keyboardValue)'")
+
+        XCTAssertEqual(pencilValue, "selected",
+            "Pencil should be selected after tapping it back")
+
+        // Third round: keyboard again, then pencil directly (no keyboard dismiss).
+        print("[Test] === TAPPING KEYBOARD (second time) ===")
+        app.buttons["keyboard_mode_button"].tap()
+        Thread.sleep(forTimeInterval: 2.0)
+
+        pencilValue = (app.buttons["pencil_mode_button"].value as? String) ?? ""
+        keyboardValue = (app.buttons["keyboard_mode_button"].value as? String) ?? ""
+        print("[Test] After second keyboard tap: pencil='\(pencilValue)', keyboard='\(keyboardValue)'")
+        XCTAssertEqual(keyboardValue, "selected", "Keyboard selected on second tap")
+
+        // Try to tap pencil directly with keyboard up.
+        let pencilDirect = app.buttons["pencil_mode_button"]
+        print("[Test] Pencil hittable (round 2): \(pencilDirect.isHittable)")
+        if pencilDirect.isHittable {
+            pencilDirect.tap()
+        } else {
+            print("[Test] Still not hittable with keyboard up, dismissing first")
+            app.scrollViews["notebook_canvas"].tap()
+            Thread.sleep(forTimeInterval: 1.0)
+            app.buttons["pencil_mode_button"].tap()
+        }
+        Thread.sleep(forTimeInterval: 2.0)
+
+        saveScreenshot(name: "toolbar_05_pencil_final")
+        pencilValue = (app.buttons["pencil_mode_button"].value as? String) ?? ""
+        keyboardValue = (app.buttons["keyboard_mode_button"].value as? String) ?? ""
+        print("[Test] === FINAL STATE ===")
+        print("[Test] Expected: pencil='selected', keyboard=''")
+        print("[Test] Actual:   pencil='\(pencilValue)', keyboard='\(keyboardValue)'")
+
+        XCTAssertEqual(pencilValue, "selected",
+            "Pencil should be selected on final switch")
+    }
+
     // MARK: - Blob Position Tests
 
     @MainActor
@@ -331,6 +454,67 @@ final class InkOSUITests: XCTestCase {
         print("  Mid Y: \(midFrame.midY)")
         print("  Late Y: \(lateFrame.midY)")
         print("  X position (minX): \(initialFrame.minX)")
+    }
+
+    // MARK: - Attachment Menu Tests
+
+    @MainActor
+    func testPaperclipMenuAppearsAboveToolbar() throws {
+        // Criteria:
+        // 1. Tapping paperclip button shows the attachment menu
+        // 2. The toolbar (canvas_input_bar) remains visible while menu is open
+        // 3. Tapping outside dismisses the menu
+
+        // Wait for canvas to load.
+        let canvas = app.scrollViews["notebook_canvas"]
+        XCTAssertTrue(canvas.waitForExistence(timeout: 10), "Notebook canvas should load")
+
+        // Find the paperclip button.
+        let paperclipButton = app.buttons["paperclip_button"]
+        XCTAssertTrue(paperclipButton.waitForExistence(timeout: 5), "Paperclip button should exist")
+        print("[Test] Paperclip button exists: \(paperclipButton.exists), frame: \(paperclipButton.frame)")
+
+        // Verify the toolbar is visible before tap.
+        let inputBar = app.otherElements["canvas_input_bar"]
+        XCTAssertTrue(inputBar.exists, "Toolbar should be visible before tap")
+
+        // Save screenshot before tap.
+        saveScreenshot(name: "paperclip_before_tap")
+
+        // CRITERION 1: Tap the paperclip — menu should appear.
+        paperclipButton.tap()
+        Thread.sleep(forTimeInterval: 0.5)
+
+        saveScreenshot(name: "paperclip_after_tap")
+
+        let attachmentMenu = app.otherElements["attachment_menu"]
+        let menuExists = attachmentMenu.waitForExistence(timeout: 3)
+        print("[Test] Attachment menu exists after tap: \(menuExists)")
+
+        // Debug: dump the view hierarchy if menu doesn't appear.
+        if !menuExists {
+            print("[Test] DEBUG — All buttons: \(app.buttons.allElementsBoundByIndex.map { ($0.identifier, $0.label) })")
+            print("[Test] DEBUG — All otherElements: \(app.otherElements.allElementsBoundByIndex.map { ($0.identifier, $0.label) })")
+        }
+
+        XCTAssertTrue(menuExists, "Attachment menu should appear after tapping paperclip")
+
+        // CRITERION 2: Toolbar should STILL be visible.
+        XCTAssertTrue(inputBar.exists, "Toolbar should remain visible while menu is open")
+        print("[Test] Toolbar visible while menu open: \(inputBar.exists)")
+
+        // CRITERION 3: Tap outside to dismiss the menu.
+        canvas.tap()
+        Thread.sleep(forTimeInterval: 0.5)
+
+        saveScreenshot(name: "paperclip_after_dismiss")
+
+        let menuAfterDismiss = app.otherElements["attachment_menu"].exists
+        print("[Test] Menu exists after dismiss tap: \(menuAfterDismiss)")
+        XCTAssertFalse(menuAfterDismiss, "Menu should disappear after tapping outside")
+
+        // Toolbar should still be there.
+        XCTAssertTrue(inputBar.exists, "Toolbar should still be visible after menu dismiss")
     }
 
 }

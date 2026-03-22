@@ -45,6 +45,77 @@ actor AlanAPIClient {
     self.session = URLSession(configuration: config)
   }
 
+  // MARK: - File Upload
+
+  // Request body for the uploadFile endpoint.
+  private struct UploadFileRequest: Encodable {
+    let base64Data: String
+    let mimeType: String
+    let displayName: String
+  }
+
+  // Response from the uploadFile endpoint.
+  private struct UploadFileResponse: Decodable {
+    let fileUri: String
+    let mimeType: String
+    let name: String
+    let expiresAt: String?
+  }
+
+  // Uploads a file attachment to the Gemini Files API via the backend proxy.
+  // Returns a FileReference that can be included in an AlanRequest.
+  func uploadFile(attachment: InputAttachment) async throws -> FileReference {
+    let base64 = attachment.data.base64EncodedString()
+    let uploadRequest = UploadFileRequest(
+      base64Data: base64,
+      mimeType: attachment.mimeType,
+      displayName: attachment.filename
+    )
+
+    var urlRequest = URLRequest(url: endpoints.uploadFileURL)
+    urlRequest.httpMethod = "POST"
+    urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    urlRequest.setValue("application/json", forHTTPHeaderField: "Accept")
+    // Allow extra time for large file processing.
+    urlRequest.timeoutInterval = 120
+
+    do {
+      urlRequest.httpBody = try encoder.encode(uploadRequest)
+    } catch {
+      throw AlanError.decodingError(context: "Failed to encode upload request: \(error)")
+    }
+
+    let (data, response) = try await session.data(for: urlRequest)
+
+    guard let httpResponse = response as? HTTPURLResponse else {
+      throw AlanError.invalidResponse(reason: "Not an HTTP response")
+    }
+
+    guard httpResponse.statusCode == 200 else {
+      // Try to extract error message from response body.
+      let errorMessage: String
+      if let body = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+        let msg = body["error"] as? String
+      {
+        errorMessage = msg
+      } else {
+        errorMessage = "Status \(httpResponse.statusCode)"
+      }
+      throw AlanError.uploadFailed(filename: attachment.filename, reason: errorMessage)
+    }
+
+    do {
+      let uploadResponse = try decoder.decode(UploadFileResponse.self, from: data)
+      return FileReference(
+        fileUri: uploadResponse.fileUri,
+        mimeType: uploadResponse.mimeType,
+        displayName: attachment.filename
+      )
+    } catch {
+      throw AlanError.decodingError(context: "Failed to decode upload response: \(error)")
+    }
+  }
+
   // MARK: - Alan Chat
 
   // Sends a message to Alan and returns a stream of events.
@@ -53,7 +124,9 @@ actor AlanAPIClient {
     messages: [ChatMessage],
     notebookContext: NotebookContext,
     sessionModel: SessionModel? = nil,
-    memoryContext: String? = nil
+    memoryContext: String? = nil,
+    customInstructions: String? = nil,
+    fileReferences: [FileReference]? = nil
   ) -> AsyncThrowingStream<AlanStreamEvent, Error> {
     AsyncThrowingStream { continuation in
       Task {
@@ -62,7 +135,9 @@ actor AlanAPIClient {
             messages: messages,
             notebookContext: notebookContext,
             sessionModel: sessionModel,
-            memoryContext: memoryContext
+            memoryContext: memoryContext,
+            customInstructions: customInstructions,
+            fileReferences: fileReferences
           )
           let urlRequest = try buildRequest(
             url: endpoints.alanURL,

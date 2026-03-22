@@ -533,6 +533,33 @@ enum ChatRole: String, Sendable, Codable, Equatable {
   case assistant
 }
 
+// MARK: - FileReference
+
+// A reference to a file uploaded to the Gemini Files API.
+// Used to attach documents and images to Alan requests.
+struct FileReference: Sendable, Codable, Equatable {
+  // URI returned by the Gemini Files API.
+  let fileUri: String
+
+  // MIME type of the uploaded file.
+  let mimeType: String
+
+  // Human-readable name for the file.
+  let displayName: String?
+
+  private enum CodingKeys: String, CodingKey {
+    case fileUri = "file_uri"
+    case mimeType = "mime_type"
+    case displayName = "display_name"
+  }
+
+  init(fileUri: String, mimeType: String, displayName: String? = nil) {
+    self.fileUri = fileUri
+    self.mimeType = mimeType
+    self.displayName = displayName
+  }
+}
+
 // MARK: - NotebookContext
 
 // Context about the current notebook for Alan.
@@ -734,23 +761,35 @@ struct AlanRequest: Sendable, Codable, Equatable {
   // Long-term memory context formatted for inclusion in system prompt.
   let memoryContext: String?
 
+  // User-defined custom instructions to include in the system prompt.
+  let customInstructions: String?
+
+  // References to files uploaded via the Gemini Files API.
+  let fileReferences: [FileReference]?
+
   private enum CodingKeys: String, CodingKey {
     case messages
     case notebookContext = "notebook_context"
     case sessionModel = "session_model"
     case memoryContext = "memory_context"
+    case customInstructions = "custom_instructions"
+    case fileReferences = "file_references"
   }
 
   init(
     messages: [ChatMessage],
     notebookContext: NotebookContext,
     sessionModel: SessionModel? = nil,
-    memoryContext: String? = nil
+    memoryContext: String? = nil,
+    customInstructions: String? = nil,
+    fileReferences: [FileReference]? = nil
   ) {
     self.messages = messages
     self.notebookContext = notebookContext
     self.sessionModel = sessionModel
     self.memoryContext = memoryContext
+    self.customInstructions = customInstructions
+    self.fileReferences = fileReferences
   }
 }
 

@@ -70,26 +70,70 @@ actor OrchestrationActor {
   // MARK: - Message Processing
 
   // Sends a message to Alan and processes the response.
+  // If attachments are provided, uploads each to the Gemini Files API first.
   func sendMessage(
     _ content: String,
     conversationHistory: [ChatMessage],
     notebookContext: NotebookContext,
-    sessionModel: SessionModel? = nil
+    sessionModel: SessionModel? = nil,
+    customInstructions: String? = nil,
+    attachments: [InputAttachment]? = nil
   ) async {
     // Build messages array with history and new message.
     var messages = conversationHistory
     messages.append(ChatMessage(role: .user, content: content))
+
+    // Upload attachments in parallel if provided.
+    var fileReferences: [FileReference]?
+    if let attachments = attachments, !attachments.isEmpty {
+      fileReferences = await uploadAttachments(attachments)
+    }
 
     // Start streaming response from Alan.
     let stream = await apiClient.sendMessage(
       messages: messages,
       notebookContext: notebookContext,
       sessionModel: sessionModel,
-      memoryContext: nil
+      memoryContext: nil,
+      customInstructions: customInstructions,
+      fileReferences: fileReferences
     )
 
     // Process the stream.
     await processAlanStream(stream)
+  }
+
+  // Uploads attachments in parallel, returning file references for successful uploads.
+  // Reports individual upload failures via the delegate but continues with remaining files.
+  private func uploadAttachments(_ attachments: [InputAttachment]) async -> [FileReference] {
+    await withTaskGroup(of: (String, Result<FileReference, AlanError>).self) { group in
+      for attachment in attachments {
+        group.addTask {
+          do {
+            let ref = try await self.apiClient.uploadFile(attachment: attachment)
+            return (attachment.filename, .success(ref))
+          } catch let error as AlanError {
+            return (attachment.filename, .failure(error))
+          } catch {
+            return (
+              attachment.filename,
+              .failure(.uploadFailed(filename: attachment.filename, reason: error.localizedDescription))
+            )
+          }
+        }
+      }
+
+      var refs: [FileReference] = []
+      for await (_, result) in group {
+        switch result {
+        case .success(let ref):
+          refs.append(ref)
+        case .failure(let error):
+          await notifyError(error)
+        }
+      }
+      return refs
+    }
   }
 
   // Processes Alan's streaming response.
