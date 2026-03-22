@@ -2,40 +2,40 @@
 // SidebarView.swift
 // InkOS
 //
-// Floating sidebar for session management.
-// Shows session list with search, compose button, and hamburger close.
-// Long-press on sessions for rename/delete context menu.
+// Floating sidebar for note management.
+// Shows note list with search, compose button, and hamburger close.
+// Long-press on notes for rename/delete context menu.
 //
 
 import SwiftUI
 
 // MARK: - SidebarView
 
-// Sidebar overlay for browsing and managing sessions.
+// Sidebar overlay for browsing and managing notes.
 struct SidebarView: View {
-  @Bindable var sessionService: SessionService
+  @Bindable var noteService: NoteService
   @Binding var isPresented: Bool
-  var activeSessionId: String?
+  var activeNoteId: String?
 
   // Callbacks.
-  var onSelectSession: ((SessionData) -> Void)?
-  var onNewSession: (() -> Void)?
+  var onSelectNote: ((NoteData) -> Void)?
+  var onNewNote: (() -> Void)?
   var onOpenSettings: (() -> Void)?
 
   @State private var searchText = ""
   @FocusState private var searchFocused: Bool
 
   // Rename state for context menu.
-  @State private var renamingSession: SessionMetadata?
+  @State private var renamingNote: NoteMetadata?
   @State private var renameText = ""
 
-  // Sessions filtered by search query.
-  private var filteredSessions: [SessionMetadata] {
+  // Notes filtered by search query.
+  private var filteredNotes: [NoteMetadata] {
     if searchText.isEmpty {
-      return sessionService.sessions
+      return noteService.notes
     }
     let query = searchText.lowercased()
-    return sessionService.sessions.filter {
+    return noteService.notes.filter {
       $0.title.lowercased().contains(query)
     }
   }
@@ -45,11 +45,11 @@ struct SidebarView: View {
       // Top row: search, compose, and hamburger close.
       topBar
 
-      // Session list.
+      // Note list.
       ScrollView {
         LazyVStack(spacing: 2) {
-          ForEach(filteredSessions) { session in
-            sessionRow(session)
+          ForEach(filteredNotes) { note in
+            noteRow(note)
           }
         }
         .padding(.horizontal, 8)
@@ -65,43 +65,42 @@ struct SidebarView: View {
     .onChange(of: isPresented) { _, newValue in
       if !newValue { searchFocused = false }
     }
-    .alert("Rename Session", isPresented: .init(
-      get: { renamingSession != nil },
-      set: { if !$0 { renamingSession = nil } }
+    .alert("Rename Note", isPresented: .init(
+      get: { renamingNote != nil },
+      set: { if !$0 { renamingNote = nil } }
     )) {
-      TextField("Session name", text: $renameText)
-      Button("Cancel", role: .cancel) { renamingSession = nil }
+      TextField("Note name", text: $renameText)
+      Button("Cancel", role: .cancel) { renamingNote = nil }
       Button("Rename") {
-        if let session = renamingSession, !renameText.isEmpty {
-          sessionService.renameSession(id: session.id, newTitle: renameText)
+        if let note = renamingNote, !renameText.isEmpty {
+          noteService.renameNote(id: note.id, newTitle: renameText)
         }
-        renamingSession = nil
+        renamingNote = nil
       }
     } message: {
-      Text("Enter a new name for this session.")
+      Text("Enter a new name for this note.")
     }
   }
 
   // MARK: - Top Bar
 
-  // Combined search field, compose button, and hamburger close.
   private var topBar: some View {
     HStack(spacing: 10) {
       searchField
 
-      // New session.
+      // New note.
       Button(action: {
         searchFocused = false
-        onNewSession?()
+        onNewNote?()
       }) {
         Image(systemName: "square.and.pencil")
           .font(.system(size: 18, weight: .medium))
           .foregroundColor(NotebookPalette.ink)
           .frame(width: 32, height: 32)
       }
-      .accessibilityIdentifier("sidebar_new_session_button")
+      .accessibilityIdentifier("sidebar_new_note_button")
 
-      // Close sidebar via hamburger icon.
+      // Close sidebar.
       Button(action: {
         searchFocused = false
         withAnimation(.easeInOut(duration: 0.25)) { isPresented = false }
@@ -149,19 +148,17 @@ struct SidebarView: View {
     )
   }
 
-  // MARK: - Session Row
+  // MARK: - Note Row
 
-  // Session row with title only (no date subtitle).
-  // Long-press shows rename/delete context menu.
-  private func sessionRow(_ session: SessionMetadata) -> some View {
+  private func noteRow(_ note: NoteMetadata) -> some View {
     Button(action: {
       searchFocused = false
-      if let data = sessionService.loadSession(id: session.id) {
-        onSelectSession?(data)
+      if let data = noteService.loadNote(id: note.id) {
+        onSelectNote?(data)
       }
     }) {
       HStack {
-        Text(session.title)
+        Text(note.title)
           .font(NotebookTypography.body)
           .foregroundColor(NotebookPalette.ink)
           .lineLimit(1)
@@ -174,23 +171,23 @@ struct SidebarView: View {
       .background(
         RoundedRectangle(cornerRadius: 8)
           .fill(
-            activeSessionId == session.id
+            activeNoteId == note.id
               ? NotebookPalette.ink.opacity(0.06)
               : Color.clear
           )
       )
     }
     .buttonStyle(.plain)
-    .accessibilityIdentifier("sidebar_session_row_\(session.id)")
+    .accessibilityIdentifier("sidebar_note_row_\(note.id)")
     .contextMenu {
       Button {
-        renameText = session.title
-        renamingSession = session
+        renameText = note.title
+        renamingNote = note
       } label: {
         Label("Rename", systemImage: "pencil")
       }
       Button(role: .destructive) {
-        sessionService.deleteSession(id: session.id)
+        noteService.deleteNote(id: note.id)
       } label: {
         Label("Delete", systemImage: "trash")
       }

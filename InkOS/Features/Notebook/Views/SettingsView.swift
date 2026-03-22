@@ -16,7 +16,7 @@ struct SettingsView: View {
             .foregroundStyle(NotebookPalette.ink)
 
           // Description text.
-          Text("These instructions are included with every message you send to Alan.")
+          Text("Personal preferences for your notebook.")
             .font(NotebookTypography.caption)
             .foregroundStyle(NotebookPalette.inkFaint)
 

@@ -5,27 +5,27 @@ Version: 3.1.2
 
 note: Building targets in dependency order
 note: Target dependency graph (37 targets)
-[leveldb-library-leveldb_Privacy] Processing ResourceBundle-leveldb_Privacy-leveldb-library-Info.plist
-[nanopb-nanopb_Privacy] Processing ResourceBundle-nanopb_Privacy-nanopb-Info.plist
 [iosMath-mathFonts] Processing ResourceBundle-mathFonts-iosMath-Info.plist
-[GoogleUtilities-GoogleUtilities_Privacy] Processing ResourceBundle-GoogleUtilities_Privacy-GoogleUtilities-Info.plist
-[gRPC-C++-grpcpp] Processing ResourceBundle-grpcpp-gRPC-C++-Info.plist
+[nanopb-nanopb_Privacy] Processing ResourceBundle-nanopb_Privacy-nanopb-Info.plist
+[leveldb-library-leveldb_Privacy] Processing ResourceBundle-leveldb_Privacy-leveldb-library-Info.plist
 [gRPC-Core-grpc] Processing ResourceBundle-grpc-gRPC-Core-Info.plist
+[gRPC-C++-grpcpp] Processing ResourceBundle-grpcpp-gRPC-C++-Info.plist
 [abseil-xcprivacy] Processing ResourceBundle-xcprivacy-abseil-Info.plist
 [GTMSessionFetcher-GTMSessionFetcher_Core_Privacy] Processing ResourceBundle-GTMSessionFetcher_Core_Privacy-GTMSessionFetcher-Info.plist
+[GoogleUtilities-GoogleUtilities_Privacy] Processing ResourceBundle-GoogleUtilities_Privacy-GoogleUtilities-Info.plist
 [FirebaseFirestore-FirebaseFirestore_Privacy] Processing ResourceBundle-FirebaseFirestore_Privacy-FirebaseFirestore-Info.plist
 [FirebaseCoreInternal-FirebaseCoreInternal_Privacy] Processing ResourceBundle-FirebaseCoreInternal_Privacy-FirebaseCoreInternal-Info.plist
 [gRPC-C++-gRPCCertificates-Cpp] Processing ResourceBundle-gRPCCertificates-Cpp-gRPC-C++-Info.plist
 [BoringSSL-GRPC-openssl_grpc] Processing ResourceBundle-openssl_grpc-BoringSSL-GRPC-Info.plist
-[FirebaseFirestoreInternal-FirebaseFirestoreInternal_Privacy] Processing ResourceBundle-FirebaseFirestoreInternal_Privacy-FirebaseFirestoreInternal-Info.plist
-[FirebaseAuth-FirebaseAuth_Privacy] Processing ResourceBundle-FirebaseAuth_Privacy-FirebaseAuth-Info.plist
 [FirebaseCoreExtension-FirebaseCoreExtension_Privacy] Processing ResourceBundle-FirebaseCoreExtension_Privacy-FirebaseCoreExtension-Info.plist
 [FirebaseCore-FirebaseCore_Privacy] Processing ResourceBundle-FirebaseCore_Privacy-FirebaseCore-Info.plist
+[FirebaseFirestoreInternal-FirebaseFirestoreInternal_Privacy] Processing ResourceBundle-FirebaseFirestoreInternal_Privacy-FirebaseFirestoreInternal-Info.plist
+[FirebaseAuth-FirebaseAuth_Privacy] Processing ResourceBundle-FirebaseAuth_Privacy-FirebaseAuth-Info.plist
 note: Run script build phase 'Copy Recognition Assets' will be run during every build because the option to run the script phase "Based on dependency analysis" is unchecked. (in target 'InkOS' from project 'InkOS')
+[InkOS] Compiling NotebookCanvasView.swift
 [!]  /Users/andrewallen/Desktop/swift_projects/InkOS/InkOS/Features/Block/Content/GraphicsContent.swift:493:7: stored property 'value' of 'Sendable'-conforming struct 'AnyCodable' has non-Sendable type 'Any'; this is an error in the Swift 6 language mode
   let value: Any
       ^
-[InkOS] Compiling NotebookCanvasView.swift
 [InkOS] Copy arm64-apple-ios-simulator.swiftsourceinfo -> InkOS.swiftsourceinfo
 [InkOS] Copy arm64-apple-ios-simulator.swiftmodule -> InkOS.swiftmodule
 [InkOS] Copy arm64-apple-ios-simulator.abi.json -> InkOS.abi.json
@@ -34,9 +34,9 @@ note: Run script build phase 'Copy Recognition Assets' will be run during every 
   let value: Any
       ^
 [InkOS] Compiling NotebookCanvasView.swift
+[InkOS] Copy x86_64-apple-ios-simulator.swiftsourceinfo -> InkOS.swiftsourceinfo
 [InkOS] Copy x86_64-apple-ios-simulator.swiftmodule -> InkOS.swiftmodule
 [InkOS] Copy x86_64-apple-ios-simulator.abi.json -> InkOS.abi.json
-[InkOS] Copy x86_64-apple-ios-simulator.swiftsourceinfo -> InkOS.swiftsourceinfo
 [InkOS] Linking InkOS.debug.dylib
 [!] ld: search path '/var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.3.7003.10.yyxi0q/Metal.xctoolchain/usr/lib/swift/iphonesimulator' not found
 [InkOS] Linking InkOS.debug.dylib
@@ -44,8 +44,8 @@ note: Run script build phase 'Copy Recognition Assets' will be run during every 
 note: Using stub executor library with Swift entry point. (in target 'InkOS' from project 'InkOS')
 [InkOS] Linking InkOS
 [!] ld: search path '/var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.3.7003.10.yyxi0q/Metal.xctoolchain/usr/lib/swift/iphonesimulator' not found
-[InkOS] Create Universal Binary InkOS.debug.dylib
 note: Using stub executor library with Swift entry point. (in target 'InkOS' from project 'InkOS')
+[InkOS] Create Universal Binary InkOS.debug.dylib
 [InkOS] Linking InkOS
 [!] ld: search path '/var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.3.7003.10.yyxi0q/Metal.xctoolchain/usr/lib/swift/iphonesimulator' not found
 [InkOS] Create Universal Binary InkOS

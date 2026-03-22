@@ -1,83 +1,25 @@
 //
-// SessionService.swift
+// NoteService.swift
 // InkOS
 //
-// Manages session lifecycle: create, list, resume, archive.
-// Sessions are persisted locally using JSON files in the app's documents directory.
-// Each session contains a NotebookDocument and session metadata.
+// Manages note lifecycle: create, list, load, save, delete.
+// Notes are persisted locally using JSON files in the app's documents directory.
 //
 
 import Foundation
 
-// MARK: - SessionMetadata
+// MARK: - NoteService
 
-// Lightweight session info for dashboard display.
-struct SessionMetadata: Identifiable, Codable, Sendable {
-  let id: String
-  var title: String
-  var updatedAt: Date
-  let createdAt: Date
-  var goalDescription: String?
-  var goalProgress: Int
-  var blockCount: Int
-  var userRenamed: Bool
-
-  init(
-    id: String = UUID().uuidString,
-    title: String,
-    updatedAt: Date = Date(),
-    createdAt: Date = Date(),
-    goalDescription: String? = nil,
-    goalProgress: Int = 0,
-    blockCount: Int = 0,
-    userRenamed: Bool = false
-  ) {
-    self.id = id
-    self.title = title
-    self.updatedAt = updatedAt
-    self.createdAt = createdAt
-    self.goalDescription = goalDescription
-    self.goalProgress = goalProgress
-    self.blockCount = blockCount
-    self.userRenamed = userRenamed
-  }
-}
-
-// MARK: - SessionData
-
-// Full session data including the notebook document and session model.
-struct SessionData: Codable, Sendable {
-  var metadata: SessionMetadata
-  var document: NotebookDocument
-  var sessionModel: SessionModel?
-  var conversationHistory: [ChatMessage]
-
-  init(
-    metadata: SessionMetadata,
-    document: NotebookDocument,
-    sessionModel: SessionModel? = nil,
-    conversationHistory: [ChatMessage] = []
-  ) {
-    self.metadata = metadata
-    self.document = document
-    self.sessionModel = sessionModel
-    self.conversationHistory = conversationHistory
-  }
-}
-
-// MARK: - SessionService
-
-// Manages session persistence using local JSON files.
+// Manages note persistence using local JSON files.
 @MainActor
 @Observable
-final class SessionService {
-  // All session metadata for dashboard display.
-  var sessions: [SessionMetadata] = []
+final class NoteService {
+  // All note metadata for sidebar display.
+  var notes: [NoteMetadata] = []
 
-  // Directory for session storage.
+  // Directory for note storage.
   private let storageDirectory: URL
 
-  // JSON encoder/decoder.
   private let encoder: JSONEncoder = {
     let e = JSONEncoder()
     e.dateEncodingStrategy = .iso8601
@@ -93,104 +35,87 @@ final class SessionService {
 
   init() {
     let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-    storageDirectory = docs.appendingPathComponent("sessions", isDirectory: true)
+    storageDirectory = docs.appendingPathComponent("notes", isDirectory: true)
 
     // Create directory if needed.
     try? FileManager.default.createDirectory(at: storageDirectory, withIntermediateDirectories: true)
 
-    // Load sessions on init.
-    loadSessionList()
+    // Load notes on init.
+    loadNoteList()
   }
 
-  // MARK: - Session CRUD
+  // MARK: - Note CRUD
 
-  // Creates a new session and returns its data.
-  func createSession(title: String) -> SessionData {
-    let sessionId = UUID().uuidString
-    let document = NotebookDocument(
-      id: NotebookDocumentID(sessionId),
-      sessionId: sessionId,
-      title: title,
-      blocks: []
-    )
-    let metadata = SessionMetadata(
-      id: sessionId,
-      title: title
-    )
-    let sessionModel = SessionModel.new(sessionId: sessionId)
-    let sessionData = SessionData(
-      metadata: metadata,
-      document: document,
-      sessionModel: sessionModel
-    )
+  // Creates a new empty note and returns its data.
+  func createNote(title: String) -> NoteData {
+    let metadata = NoteMetadata(title: title)
+    let noteData = NoteData(metadata: metadata)
 
     // Save to disk.
-    saveSession(sessionData)
+    saveNote(noteData)
 
-    // Update session list.
-    sessions.insert(metadata, at: 0)
+    // Update list.
+    notes.insert(metadata, at: 0)
 
-    return sessionData
+    return noteData
   }
 
-  // Loads full session data for a given session ID.
-  func loadSession(id: String) -> SessionData? {
+  // Loads full note data for a given note ID.
+  func loadNote(id: String) -> NoteData? {
     let fileURL = storageDirectory.appendingPathComponent("\(id).json")
     guard let data = try? Data(contentsOf: fileURL) else { return nil }
-    return try? decoder.decode(SessionData.self, from: data)
+    return try? decoder.decode(NoteData.self, from: data)
   }
 
-  // Saves session data to disk and updates the session list.
-  func saveSession(_ session: SessionData) {
-    let fileURL = storageDirectory.appendingPathComponent("\(session.metadata.id).json")
-    guard let data = try? encoder.encode(session) else { return }
+  // Saves note data to disk and updates the note list.
+  func saveNote(_ note: NoteData) {
+    let fileURL = storageDirectory.appendingPathComponent("\(note.metadata.id).json")
+    guard let data = try? encoder.encode(note) else { return }
     try? data.write(to: fileURL)
 
     // Update metadata in list.
-    if let index = sessions.firstIndex(where: { $0.id == session.metadata.id }) {
-      sessions[index] = session.metadata
+    if let index = notes.firstIndex(where: { $0.id == note.metadata.id }) {
+      notes[index] = note.metadata
     }
   }
 
-  // Renames a session by updating its title in metadata and document.
-  func renameSession(id: String, newTitle: String) {
-    guard var sessionData = loadSession(id: id) else { return }
-    sessionData.metadata.title = newTitle
-    sessionData.metadata.userRenamed = true
-    sessionData.document.title = newTitle
-    saveSession(sessionData)
+  // Renames a note.
+  func renameNote(id: String, newTitle: String) {
+    guard var noteData = loadNote(id: id) else { return }
+    noteData.metadata.title = newTitle
+    saveNote(noteData)
   }
 
-  // Deletes a session.
-  func deleteSession(id: String) {
+  // Deletes a note.
+  func deleteNote(id: String) {
     let fileURL = storageDirectory.appendingPathComponent("\(id).json")
     try? FileManager.default.removeItem(at: fileURL)
-    sessions.removeAll { $0.id == id }
+    notes.removeAll { $0.id == id }
   }
 
-  // MARK: - Session List
+  // MARK: - Note List
 
-  // Loads the session list from disk.
-  private func loadSessionList() {
+  // Loads the note list from disk.
+  private func loadNoteList() {
     guard let files = try? FileManager.default.contentsOfDirectory(
       at: storageDirectory,
       includingPropertiesForKeys: [.contentModificationDateKey],
       options: [.skipsHiddenFiles]
     ) else { return }
 
-    var loaded: [SessionMetadata] = []
+    var loaded: [NoteMetadata] = []
     for file in files where file.pathExtension == "json" {
       guard let data = try? Data(contentsOf: file),
-            let session = try? decoder.decode(SessionData.self, from: data) else { continue }
-      loaded.append(session.metadata)
+            let note = try? decoder.decode(NoteData.self, from: data) else { continue }
+      loaded.append(note.metadata)
     }
 
     // Sort by most recently updated.
-    sessions = loaded.sorted { $0.updatedAt > $1.updatedAt }
+    notes = loaded.sorted { $0.updatedAt > $1.updatedAt }
   }
 
-  // Refreshes the session list from disk.
-  func refreshSessions() {
-    loadSessionList()
+  // Refreshes the note list from disk.
+  func refreshNotes() {
+    loadNoteList()
   }
 }

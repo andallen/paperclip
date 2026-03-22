@@ -4,440 +4,74 @@ Version: 3.1.2
 ----------------------
 
 note: Building targets in dependency order
-note: Target dependency graph (38 targets)
-[BoringSSL-GRPC-openssl_grpc] Processing ResourceBundle-openssl_grpc-BoringSSL-GRPC-Info.plist
-[FirebaseAuth-FirebaseAuth_Privacy] Processing ResourceBundle-FirebaseAuth_Privacy-FirebaseAuth-Info.plist
-[FirebaseCoreInternal-FirebaseCoreInternal_Privacy] Processing ResourceBundle-FirebaseCoreInternal_Privacy-FirebaseCoreInternal-Info.plist
-[FirebaseCore-FirebaseCore_Privacy] Processing ResourceBundle-FirebaseCore_Privacy-FirebaseCore-Info.plist
-[GoogleUtilities-GoogleUtilities_Privacy] Processing ResourceBundle-GoogleUtilities_Privacy-GoogleUtilities-Info.plist
-[FirebaseCoreExtension-FirebaseCoreExtension_Privacy] Processing ResourceBundle-FirebaseCoreExtension_Privacy-FirebaseCoreExtension-Info.plist
-[GTMSessionFetcher-GTMSessionFetcher_Core_Privacy] Processing ResourceBundle-GTMSessionFetcher_Core_Privacy-GTMSessionFetcher-Info.plist
-[FirebaseFirestore-FirebaseFirestore_Privacy] Processing ResourceBundle-FirebaseFirestore_Privacy-FirebaseFirestore-Info.plist
-[FirebaseFirestoreInternal-FirebaseFirestoreInternal_Privacy] Processing ResourceBundle-FirebaseFirestoreInternal_Privacy-FirebaseFirestoreInternal-Info.plist
-[abseil-xcprivacy] Processing ResourceBundle-xcprivacy-abseil-Info.plist
-[gRPC-C++-gRPCCertificates-Cpp] Processing ResourceBundle-gRPCCertificates-Cpp-gRPC-C++-Info.plist
-[gRPC-C++-grpcpp] Processing ResourceBundle-grpcpp-gRPC-C++-Info.plist
-[gRPC-Core-grpc] Processing ResourceBundle-grpc-gRPC-Core-Info.plist
-[leveldb-library-leveldb_Privacy] Processing ResourceBundle-leveldb_Privacy-leveldb-library-Info.plist
-[nanopb-nanopb_Privacy] Processing ResourceBundle-nanopb_Privacy-nanopb-Info.plist
-[iosMath-mathFonts] Processing ResourceBundle-mathFonts-iosMath-Info.plist
-note: Run script build phase 'Copy Recognition Assets' will be run during every build because the option to run the script phase "Based on dependency analysis" is unchecked. (in target 'InkOS' from project 'InkOS')
-[!]  /Users/andrewallen/Desktop/swift_projects/InkOS/InkOS/Features/Block/Content/GraphicsContent.swift:493:7: stored property 'value' of 'Sendable'-conforming struct 'AnyCodable' has non-Sendable type 'Any'; this is an error in the Swift 6 language mode
-  let value: Any
-      ^
-[!]  /Users/andrewallen/Desktop/swift_projects/InkOS/InkOS/Features/Block/Content/GraphicsContent.swift:493:7: stored property 'value' of 'Sendable'-conforming struct 'AnyCodable' has non-Sendable type 'Any'; this is an error in the Swift 6 language mode
-  let value: Any
-      ^
-[InkOS] Compiling BlockContainerView.swift
-[InkOS] Compiling BlockContainerView.swift
-[InkOS] Linking InkOS.debug.dylib
-[!] ld: ignoring duplicate libraries: '-lc++'
-[!] ld: search path '/var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.3.48.0.fNcRTW/Metal.xctoolchain/usr/lib/swift/iphonesimulator' not found
-[!] ld: duplicate symbol 'absl::lts_20240722::str_format_internal::FormatConvertImpl(wchar_t const*, absl::lts_20240722::str_format_internal::FormatConversionSpecImpl, absl::lts_20240722::str_format_internal::FormatSinkImpl*)' in:
-[!] ld: duplicate symbol 're2::DFA::WorkqToCachedState(re2::DFA::Workq*, re2::DFA::Workq*, unsigned int)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::StrAppend(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>>*, absl::lts_20240722::AlphaNum const&, absl::lts_20240722::AlphaNum const&)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::StrCat(absl::lts_20240722::AlphaNum const&, absl::lts_20240722::AlphaNum const&, absl::lts_20240722::AlphaNum const&, absl::lts_20240722::AlphaNum const&)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::cord_internal::CordRepBtree::GetAppendBufferSlow(unsigned long)' in:
-[!] ld: duplicate symbol 're2::Prog::Inst::InitEmptyWidth(re2::EmptyOp, unsigned int)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::str_format_internal::FormatConvertImpl(long long, absl::lts_20240722::str_format_internal::FormatConversionSpecImpl, absl::lts_20240722::str_format_internal::FormatSinkImpl*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::MinLogLevel()' in:
-[!] ld: duplicate symbol 're2::DFA::CachedState(int*, int, unsigned int)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessage::OstreamView::~OstreamView()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::MakeCheckOpValueString(std::__1::basic_ostream<char, std::__1::char_traits<char>>&, void const*)' in:
-[!] ld: duplicate symbol 're2::Regexp::ParseState::PushLiteral(int)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::StrAppend(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>>*, absl::lts_20240722::AlphaNum const&)' in:
-[!] ld: duplicate symbol 're2::Regexp::ParseState::FinishRegexp(re2::Regexp*)' in:
-[!] ld: duplicate symbol 're2::FactorAlternationImpl::Round2(re2::Regexp**, int, re2::Regexp::ParseFlags, std::__1::vector<re2::Splice, std::__1::allocator<re2::Splice>>*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessage::~LogMessage()' in:
-[!] ld: duplicate symbol 're2::DFA::SearchTTF(re2::DFA::SearchParams*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessageFatal::LogMessageFatal(char const*, int)' in:
-[!] ld: duplicate symbol 're2::Regexp::ParseState::PushDollar()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessage::Flush()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::cord_internal::CordRepBtree::Rebuild(absl::lts_20240722::cord_internal::CordRepBtree*)' in:
-[!] ld: duplicate symbol 're2::Regexp::FactorAlternation(re2::Regexp**, int, re2::Regexp::ParseFlags)' in:
-[!] ld: duplicate symbol 're2::Prog::Inst::InitAlt(unsigned int, unsigned int)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessage::WithVerbosity(int)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::str_format_internal::ConvertBoolArg(bool, absl::lts_20240722::str_format_internal::FormatSinkImpl*)' in:
-[!] ld: duplicate symbol 're2::Prog::Inst::InitCapture(int, unsigned int)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::numbers_internal::FastIntToBuffer(int, char*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessage::LogMessage(char const*, int, absl::lts_20240722::log_internal::LogMessage::WarningTag)' in:
-[!] ld: duplicate symbol 're2::DFA::DFA(re2::Prog*, re2::Prog::MatchKind, long long)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::str_format_internal::FormatConvertImpl(unsigned long, absl::lts_20240722::str_format_internal::FormatConversionSpecImpl, absl::lts_20240722::str_format_internal::FormatSinkImpl*)' in:
-[!] ld: duplicate symbol 're2::DFA::SearchTFT(re2::DFA::SearchParams*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessage::OstreamView::OstreamView(absl::lts_20240722::log_internal::LogMessage::LogMessageData&)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::cord_internal::CordRepBtree::CopySuffix(unsigned long)' in:
-[!] ld: duplicate symbol 're2::NFA::~NFA()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::FormatTime(absl::lts_20240722::Time)' in:
-[!] ld: duplicate symbol 're2::RE2::RE2(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&)' in:
-[!] ld: duplicate symbol 're2::FactorAlternationImpl::Round3(re2::Regexp**, int, re2::Regexp::ParseFlags, std::__1::vector<re2::Splice, std::__1::allocator<re2::Splice>>*)' in:
-[!] ld: duplicate symbol 're2::Regexp::ParseState::PushRegexp(re2::Regexp*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::numbers_internal::kHexChar' in:
-[!] ld: duplicate symbol 're2::RepetitionWalker::ShortVisit(re2::Regexp*, int)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessage::SendToLog()' in:
-[!] ld: duplicate symbol 're2::DFA::SearchFTF(re2::DFA::SearchParams*)' in:
-[!] ld: duplicate symbol 're2::RE2::Options::ParseFlags() const' in:
-[!] ld: duplicate symbol 're2::DFA::SearchTTT(re2::DFA::SearchParams*)' in:
-[!] ld: duplicate symbol 're2::DFA::AnalyzeSearchHelper(re2::DFA::SearchParams*, re2::DFA::StartInfo*, unsigned int)' in:
-[!] ld: duplicate symbol 're2::Prog::Inst::InitMatch(int)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::str_format_internal::FormatConvertImpl(absl::lts_20240722::uint128, absl::lts_20240722::str_format_internal::FormatConversionSpecImpl, absl::lts_20240722::str_format_internal::FormatSinkImpl*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::numbers_internal::FastIntToBuffer(long long, char*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::ShouldPrependLogPrefix()' in:
-[!] ld: duplicate symbol 're2::Regexp::ParseState::MaybeConcatString(int, re2::Regexp::ParseFlags)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::detect_specialization::StringifySink::StringifySink(std::__1::basic_ostream<char, std::__1::char_traits<char>>&)' in:
-[!] ld: duplicate symbol 're2::DFA::~DFA()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessageFatal::~LogMessageFatal()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::str_format_internal::FormatConvertImpl(std::__1::basic_string<wchar_t, std::__1::char_traits<wchar_t>, std::__1::allocator<wchar_t>> const&, absl::lts_20240722::str_format_internal::FormatConversionSpecImpl, absl::lts_20240722::str_format_internal::FormatSinkImpl*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessage::LogMessage(char const*, int, absl::lts_20240722::log_internal::LogMessage::InfoTag)' in:
-[!] ld: duplicate symbol 're2::DFA::StateSaver::StateSaver(re2::DFA*, re2::DFA::State*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::str_format_internal::FormatConvertImpl(unsigned short, absl::lts_20240722::str_format_internal::FormatConversionSpecImpl, absl::lts_20240722::str_format_internal::FormatSinkImpl*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::cord_internal::CordRepBtree::RemoveSuffix(absl::lts_20240722::cord_internal::CordRepBtree*, unsigned long)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessage::LogMessage(char const*, int, absl::lts_20240722::LogSeverity)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessageQuietlyFatal::LogMessageQuietlyFatal(char const*, int)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::cord_internal::CordRepBtree::CreateSlow(absl::lts_20240722::cord_internal::CordRep*)' in:
-[!] ld: duplicate symbol 're2::DFA::RWLocker::~RWLocker()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::str_format_internal::FormatConvertImpl(absl::lts_20240722::str_format_internal::VoidPtr, absl::lts_20240722::str_format_internal::FormatConversionSpecImpl, absl::lts_20240722::str_format_internal::FormatSinkImpl*)' in:
-[!] ld: duplicate symbol 're2::DFA::SearchFFT(re2::DFA::SearchParams*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessage::LogMessage(char const*, int, absl::lts_20240722::log_internal::LogMessage::ErrorTag)' in:
-[!] ld: duplicate symbol 're2::CycleFoldRune(int)' in:
-[!] ld: duplicate symbol 're2::Regexp::ParseState::DoVerticalBar()' in:
-[!] ld: duplicate symbol 're2::Prog::ComputeHints(std::__1::vector<re2::Prog::Inst, std::__1::allocator<re2::Prog::Inst>>*, int, int)' in:
-[!] ld: duplicate symbol 're2::Regexp::RemoveLeadingString(re2::Regexp*, int)' in:
-[!] ld: duplicate symbol 're2::Prog::Inst::InitByteRange(int, int, int, unsigned int)' in:
-[!] ld: duplicate symbol 're2::Prog::PrefixAccel_ShiftDFA(void const*, unsigned long)' in:
-[!] ld: duplicate symbol 're2::Prog::MarkDominator(int, re2::SparseArray<int>*, re2::SparseArray<int>*, std::__1::vector<std::__1::vector<int, std::__1::allocator<int>>, std::__1::allocator<std::__1::vector<int, std::__1::allocator<int>>>>*, re2::SparseSetT<void>*, std::__1::vector<int, std::__1::allocator<int>>*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::numbers_internal::FastIntToBuffer(unsigned int, char*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessage::OstreamView::stream()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessage::PrepareToDie()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessage::OstreamView::~OstreamView()' in:
-[!] ld: duplicate symbol 're2::DFA::StateSaver::Restore()' in:
-[!] ld: duplicate symbol 're2::RE2::ReverseProg() const' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::SetMinLogLevel(absl::lts_20240722::LogSeverityAtLeast)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::cord_internal::CordRepBtree::IsValid(absl::lts_20240722::cord_internal::CordRepBtree const*, bool)' in:
-[!] ld: duplicate symbol 're2::Regexp::ParseState::DoCollapse(re2::RegexpOp)' in:
-[!] ld: duplicate symbol 're2::Prog::Optimize()' in:
-[!] ld: duplicate symbol 're2::DFA::StateSaver::~StateSaver()' in:
-[!] ld: duplicate symbol 're2::Regexp::ParseState::PushCaret()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::CheckOpMessageBuilder::CheckOpMessageBuilder(char const*)' in:
-[!] ld: duplicate symbol 're2::DFA::FastSearchLoop(re2::DFA::SearchParams*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::str_format_internal::FlagsToString(absl::lts_20240722::str_format_internal::Flags)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessage::LogBacktraceIfNeeded()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::str_format_internal::FormatConvertImpl(char, absl::lts_20240722::str_format_internal::FormatConversionSpecImpl, absl::lts_20240722::str_format_internal::FormatSinkImpl*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessageQuietlyFatal::~LogMessageQuietlyFatal()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::StrAppend(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>>*, absl::lts_20240722::AlphaNum const&, absl::lts_20240722::AlphaNum const&, absl::lts_20240722::AlphaNum const&)' in:
-[!] ld: duplicate symbol 're2::NFA::NFA(re2::Prog*)' in:
-[!] ld: duplicate symbol 're2::hooks::GetDFAStateCacheResetHook()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::str_format_internal::FormatConvertImpl(char const*, absl::lts_20240722::str_format_internal::FormatConversionSpecImpl, absl::lts_20240722::str_format_internal::FormatSinkImpl*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::UpdateVLogSites()' in:
-[!] ld: duplicate symbol 're2::DFA::ClearCache()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::numbers_internal::PutTwoDigits(unsigned int, char*)' in:
-[!] ld: duplicate symbol 're2::Prog::Prog()' in:
-[!] ld: duplicate symbol 're2::Regexp::ParseState::IsMarker(re2::RegexpOp)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::cord_internal::CordRepBtree::Destroy(absl::lts_20240722::cord_internal::CordRepBtree*)' in:
-[!] ld: duplicate symbol 're2::RepetitionWalker::PostVisit(re2::Regexp*, int, int, int*, int)' in:
-[!] ld: duplicate symbol 're2::DFA::AnalyzeSearch(re2::DFA::SearchParams*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::cord_internal::CordRepBtree::ExtractAppendBuffer(absl::lts_20240722::cord_internal::CordRepBtree*, unsigned long)' in:
-[!] ld: duplicate symbol 're2::RE2::~RE2()' in:
-[!] ld: duplicate symbol 're2::DFA::RunStateOnByte(re2::DFA::State*, int)' in:
-[!] ld: duplicate symbol 're2::Regexp::ParseState::~ParseState()' in:
-[!] ld: duplicate symbol 're2::Regexp::ParseState::PushSimpleOp(re2::RegexpOp)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::str_format_internal::FormatConvertImpl(int, absl::lts_20240722::str_format_internal::FormatConversionSpecImpl, absl::lts_20240722::str_format_internal::FormatSinkImpl*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::RFC3339_full' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::numbers_internal::kHexTable' in:
-[!] ld: duplicate symbol 're2::Prog::Flatten()' in:
-[!] ld: duplicate symbol 're2::DFA::SearchTFF(re2::DFA::SearchParams*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessageQuietlyFatal::LogMessageQuietlyFatal(char const*, int)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::str_format_internal::FormatConvertImpl(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, absl::lts_20240722::str_format_internal::FormatConversionSpecImpl, absl::lts_20240722::str_format_internal::FormatSinkImpl*)' in:
-[!] ld: duplicate symbol 're2::DFA::AddToQueue(re2::DFA::Workq*, int, unsigned int)' in:
-[!] ld: duplicate symbol 're2::Prog::EmitList(int, re2::SparseArray<int>*, std::__1::vector<re2::Prog::Inst, std::__1::allocator<re2::Prog::Inst>>*, re2::SparseSetT<void>*, std::__1::vector<int, std::__1::allocator<int>>*)' in:
-[!] ld: duplicate symbol 're2::BitState::BitState(re2::Prog*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::str_format_internal::FormatConvertImpl(long, absl::lts_20240722::str_format_internal::FormatConversionSpecImpl, absl::lts_20240722::str_format_internal::FormatSinkImpl*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::str_format_internal::FormatConvertImpl(long double, absl::lts_20240722::str_format_internal::FormatConversionSpecImpl, absl::lts_20240722::str_format_internal::FormatSinkImpl*)' in:
-[!] ld: duplicate symbol 're2::CharClassBuilder::AddRangeFlags(int, int, re2::Regexp::ParseFlags)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::cord_internal::CordRepBtree::SubTree(unsigned long, unsigned long)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::StrCat(absl::lts_20240722::AlphaNum const&, absl::lts_20240722::AlphaNum const&, absl::lts_20240722::AlphaNum const&)' in:
-[!] ld: duplicate symbol 're2::Prog::IsOnePass()' in:
-[!] ld: duplicate symbol 'vtable for absl::lts_20240722::log_internal::LogMessage::OstreamView' in:
-[!] ld: duplicate symbol 're2::FactorAlternationImpl::Round1(re2::Regexp**, int, re2::Regexp::ParseFlags, std::__1::vector<re2::Splice, std::__1::allocator<re2::Splice>>*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessage::OstreamView::~OstreamView()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessage::OstreamView::OstreamView(absl::lts_20240722::log_internal::LogMessage::LogMessageData&)' in:
-[!] ld: duplicate symbol 're2::hooks::GetDFASearchFailureHook()' in:
-[!] ld: duplicate symbol 're2::Regexp::ParseState::PushDot()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::str_format_internal::FormatConvertImpl(absl::lts_20240722::int128, absl::lts_20240722::str_format_internal::FormatConversionSpecImpl, absl::lts_20240722::str_format_internal::FormatSinkImpl*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessage::LogMessageData::LogMessageData(char const*, int, absl::lts_20240722::LogSeverity, absl::lts_20240722::Time)' in:
-[!] ld: duplicate symbol 're2::Prog::DeleteDFA(re2::DFA*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::cord_internal::CordRepBtree::Rebuild(absl::lts_20240722::cord_internal::CordRepBtree**, absl::lts_20240722::cord_internal::CordRepBtree*, bool)' in:
-[!] ld: duplicate symbol 're2::BitState::Push(int, char const*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessageQuietlyFatal::~LogMessageQuietlyFatal()' in:
-[!] ld: duplicate symbol 're2::Prog::ConfigurePrefixAccel(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, bool)' in:
-[!] ld: duplicate symbol 're2::ByteMapBuilder::Recolor(int)' in:
-[!] ld: duplicate symbol 're2::DFA::SearchFFF(re2::DFA::SearchParams*)' in:
-[!] ld: duplicate symbol 're2::Regexp::ParseState::DoLeftParenNoCapture()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::RegisterAndInitialize(absl::lts_20240722::log_internal::VLogSite*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::StrCat(absl::lts_20240722::AlphaNum const&, absl::lts_20240722::AlphaNum const&)' in:
-[!] ld: duplicate symbol 're2::DFA::RunWorkqOnByte(re2::DFA::Workq*, re2::DFA::Workq*, int, unsigned int, bool*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessageFatal::~LogMessageFatal()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::numbers_internal::FastIntToBuffer(unsigned long long, char*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessage::FailQuietly()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::str_format_internal::FormatConvertImpl(short, absl::lts_20240722::str_format_internal::FormatConversionSpecImpl, absl::lts_20240722::str_format_internal::FormatSinkImpl*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::str_format_internal::FormatConvertImpl(unsigned long long, absl::lts_20240722::str_format_internal::FormatConversionSpecImpl, absl::lts_20240722::str_format_internal::FormatSinkImpl*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::str_format_internal::FormatConvertImpl(double, absl::lts_20240722::str_format_internal::FormatConversionSpecImpl, absl::lts_20240722::str_format_internal::FormatSinkImpl*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::CheckOpMessageBuilder::NewString()' in:
-[!] ld: duplicate symbol 're2::RE2::Options::Options(re2::RE2::CannedOptions)' in:
-[!] ld: duplicate symbol 're2::DFA::RunStateOnByteUnlocked(re2::DFA::State*, int)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::str_format_internal::FormatConvertImpl(unsigned char, absl::lts_20240722::str_format_internal::FormatConversionSpecImpl, absl::lts_20240722::str_format_internal::FormatSinkImpl*)' in:
-[!] ld: duplicate symbol 're2::Regexp::ParseState::PushWordBoundary(bool)' in:
-[!] ld: duplicate symbol 're2::ByteMapBuilder::Mark(int, int)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessage::operator<<(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&)' in:
-[!] ld: duplicate symbol 're2::Prog::PrefixAccel_FrontAndBack(void const*, unsigned long)' in:
-[!] ld: duplicate symbol 're2::RE2::~RE2()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessage::LogMessage(char const*, int, absl::lts_20240722::LogSeverity)' in:
-[!] ld: duplicate symbol 're2::ByteMapBuilder::Merge()' in:
-[!] ld: duplicate symbol 're2::RepetitionWalker::PreVisit(re2::Regexp*, int, bool*)' in:
-[!] ld: duplicate symbol 're2::Regexp::ParseState::DoRightParen()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessage::FailWithoutStackTrace()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::numbers_internal::SixDigitsToBuffer(double, char*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessage::~LogMessage()' in:
-[!] ld: duplicate symbol 're2::NFA::NFA(re2::Prog*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::VLogSite::SlowIsEnabled(int, int)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::cord_internal::CordRepBtree::CopyPrefix(unsigned long, bool)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::MakeCheckOpValueString(std::__1::basic_ostream<char, std::__1::char_traits<char>>&, char)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::StderrThreshold()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::str_format_internal::FormatConvertImpl(unsigned int, absl::lts_20240722::str_format_internal::FormatConversionSpecImpl, absl::lts_20240722::str_format_internal::FormatSinkImpl*)' in:
-[!] ld: duplicate symbol 'vtable for re2::RepetitionWalker' in:
-[!] ld: duplicate symbol 're2::BitState::TrySearch(int, char const*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::str_format_internal::FormatConvertImpl(float, absl::lts_20240722::str_format_internal::FormatConversionSpecImpl, absl::lts_20240722::str_format_internal::FormatSinkImpl*)' in:
-[!] ld: duplicate symbol 're2::Prog::GetDFA(re2::Prog::MatchKind)' in:
-[!] ld: duplicate symbol 're2::Prog::Inst::InitFail()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessage::LogMessageData::InitializeEncodingAndFormat()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::str_format_internal::FormatConvertImpl(signed char, absl::lts_20240722::str_format_internal::FormatConversionSpecImpl, absl::lts_20240722::str_format_internal::FormatSinkImpl*)' in:
-[!] ld: duplicate symbol 're2::Prog::MarkSuccessors(re2::SparseArray<int>*, re2::SparseArray<int>*, std::__1::vector<std::__1::vector<int, std::__1::allocator<int>>, std::__1::allocator<std::__1::vector<int, std::__1::allocator<int>>>>*, re2::SparseSetT<void>*, std::__1::vector<int, std::__1::allocator<int>>*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::cord_internal::CordRepBtree::PrependSlow(absl::lts_20240722::cord_internal::CordRepBtree*, absl::lts_20240722::cord_internal::CordRep*)' in:
-[!] ld: duplicate symbol 're2::DFA::SearchFTT(re2::DFA::SearchParams*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::MakeCheckOpValueString(std::__1::basic_ostream<char, std::__1::char_traits<char>>&, unsigned char)' in:
-[!] ld: duplicate symbol 're2::Prog::ComputeByteMap()' in:
-[!] ld: duplicate symbol 're2::Prog::~Prog()' in:
-[!] ld: duplicate symbol 're2::Prog::~Prog()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::cord_internal::CordRepBtree::GetCharacter(unsigned long) const' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::CheckOpMessageBuilder::ForVar2()' in:
-[!] ld: duplicate symbol 're2::Regexp::ParseState::DoFinish()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::cord_internal::CordRepBtree::AppendSlow(absl::lts_20240722::cord_internal::CordRepBtree*, absl::lts_20240722::cord_internal::CordRep*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::StrAppend(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>>*, absl::lts_20240722::AlphaNum const&, absl::lts_20240722::AlphaNum const&, absl::lts_20240722::AlphaNum const&, absl::lts_20240722::AlphaNum const&)' in:
-[!] ld: duplicate symbol 're2::DFA::ResetCache(re2::DFA::RWLocker*)' in:
-[!] ld: duplicate symbol 're2::RE2::RE2(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessage::LogMessageData::FinalizeEncodingAndFormat()' in:
-[!] ld: duplicate symbol 're2::Prog::Inst::InitNop(unsigned int)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::CheckOpMessageBuilder::CheckOpMessageBuilder(char const*)' in:
-[!] ld: duplicate symbol 're2::NFA::~NFA()' in:
-[InkOS] Linking InkOS.debug.dylib
-[!] ld: ignoring duplicate libraries: '-lc++'
-[!] ld: search path '/var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.3.48.0.fNcRTW/Metal.xctoolchain/usr/lib/swift/iphonesimulator' not found
-[!] ld: duplicate symbol 'absl::lts_20240722::str_format_internal::FormatConvertImpl(wchar_t const*, absl::lts_20240722::str_format_internal::FormatConversionSpecImpl, absl::lts_20240722::str_format_internal::FormatSinkImpl*)' in:
-[!] ld: duplicate symbol 're2::DFA::WorkqToCachedState(re2::DFA::Workq*, re2::DFA::Workq*, unsigned int)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::StrAppend(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>>*, absl::lts_20240722::AlphaNum const&, absl::lts_20240722::AlphaNum const&)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::StrCat(absl::lts_20240722::AlphaNum const&, absl::lts_20240722::AlphaNum const&, absl::lts_20240722::AlphaNum const&, absl::lts_20240722::AlphaNum const&)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::cord_internal::CordRepBtree::GetAppendBufferSlow(unsigned long)' in:
-[!] ld: duplicate symbol 're2::Prog::Inst::InitEmptyWidth(re2::EmptyOp, unsigned int)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::str_format_internal::FormatConvertImpl(long long, absl::lts_20240722::str_format_internal::FormatConversionSpecImpl, absl::lts_20240722::str_format_internal::FormatSinkImpl*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::MinLogLevel()' in:
-[!] ld: duplicate symbol 're2::DFA::CachedState(int*, int, unsigned int)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessage::OstreamView::~OstreamView()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::MakeCheckOpValueString(std::__1::basic_ostream<char, std::__1::char_traits<char>>&, void const*)' in:
-[!] ld: duplicate symbol 're2::Regexp::ParseState::PushLiteral(int)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::StrAppend(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>>*, absl::lts_20240722::AlphaNum const&)' in:
-[!] ld: duplicate symbol 're2::Regexp::ParseState::FinishRegexp(re2::Regexp*)' in:
-[!] ld: duplicate symbol 're2::FactorAlternationImpl::Round2(re2::Regexp**, int, re2::Regexp::ParseFlags, std::__1::vector<re2::Splice, std::__1::allocator<re2::Splice>>*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessage::~LogMessage()' in:
-[!] ld: duplicate symbol 're2::DFA::SearchTTF(re2::DFA::SearchParams*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessageFatal::LogMessageFatal(char const*, int)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::cord_internal::CordRepBtree::Rebuild(absl::lts_20240722::cord_internal::CordRepBtree*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessage::Flush()' in:
-[!] ld: duplicate symbol 're2::Regexp::ParseState::PushDollar()' in:
-[!] ld: duplicate symbol 're2::Regexp::FactorAlternation(re2::Regexp**, int, re2::Regexp::ParseFlags)' in:
-[!] ld: duplicate symbol 're2::Prog::Inst::InitAlt(unsigned int, unsigned int)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessage::WithVerbosity(int)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::str_format_internal::ConvertBoolArg(bool, absl::lts_20240722::str_format_internal::FormatSinkImpl*)' in:
-[!] ld: duplicate symbol 're2::Prog::Inst::InitCapture(int, unsigned int)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::numbers_internal::FastIntToBuffer(int, char*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessage::LogMessage(char const*, int, absl::lts_20240722::log_internal::LogMessage::WarningTag)' in:
-[!] ld: duplicate symbol 're2::DFA::DFA(re2::Prog*, re2::Prog::MatchKind, long long)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::str_format_internal::FormatConvertImpl(unsigned long, absl::lts_20240722::str_format_internal::FormatConversionSpecImpl, absl::lts_20240722::str_format_internal::FormatSinkImpl*)' in:
-[!] ld: duplicate symbol 're2::DFA::SearchTFT(re2::DFA::SearchParams*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessage::OstreamView::OstreamView(absl::lts_20240722::log_internal::LogMessage::LogMessageData&)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::cord_internal::CordRepBtree::CopySuffix(unsigned long)' in:
-[!] ld: duplicate symbol 're2::NFA::~NFA()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::FormatTime(absl::lts_20240722::Time)' in:
-[!] ld: duplicate symbol 're2::RE2::RE2(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&)' in:
-[!] ld: duplicate symbol 're2::FactorAlternationImpl::Round3(re2::Regexp**, int, re2::Regexp::ParseFlags, std::__1::vector<re2::Splice, std::__1::allocator<re2::Splice>>*)' in:
-[!] ld: duplicate symbol 're2::Regexp::ParseState::PushRegexp(re2::Regexp*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::numbers_internal::kHexChar' in:
-[!] ld: duplicate symbol 're2::RepetitionWalker::ShortVisit(re2::Regexp*, int)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessage::SendToLog()' in:
-[!] ld: duplicate symbol 're2::DFA::SearchFTF(re2::DFA::SearchParams*)' in:
-[!] ld: duplicate symbol 're2::RE2::Options::ParseFlags() const' in:
-[!] ld: duplicate symbol 're2::DFA::SearchTTT(re2::DFA::SearchParams*)' in:
-[!] ld: duplicate symbol 're2::DFA::AnalyzeSearchHelper(re2::DFA::SearchParams*, re2::DFA::StartInfo*, unsigned int)' in:
-[!] ld: duplicate symbol 're2::Prog::Inst::InitMatch(int)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::str_format_internal::FormatConvertImpl(absl::lts_20240722::uint128, absl::lts_20240722::str_format_internal::FormatConversionSpecImpl, absl::lts_20240722::str_format_internal::FormatSinkImpl*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::numbers_internal::FastIntToBuffer(long long, char*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::ShouldPrependLogPrefix()' in:
-[!] ld: duplicate symbol 're2::Regexp::ParseState::MaybeConcatString(int, re2::Regexp::ParseFlags)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::detect_specialization::StringifySink::StringifySink(std::__1::basic_ostream<char, std::__1::char_traits<char>>&)' in:
-[!] ld: duplicate symbol 're2::DFA::~DFA()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessageFatal::~LogMessageFatal()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::str_format_internal::FormatConvertImpl(std::__1::basic_string<wchar_t, std::__1::char_traits<wchar_t>, std::__1::allocator<wchar_t>> const&, absl::lts_20240722::str_format_internal::FormatConversionSpecImpl, absl::lts_20240722::str_format_internal::FormatSinkImpl*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessage::LogMessage(char const*, int, absl::lts_20240722::log_internal::LogMessage::InfoTag)' in:
-[!] ld: duplicate symbol 're2::DFA::StateSaver::StateSaver(re2::DFA*, re2::DFA::State*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::str_format_internal::FormatConvertImpl(unsigned short, absl::lts_20240722::str_format_internal::FormatConversionSpecImpl, absl::lts_20240722::str_format_internal::FormatSinkImpl*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::cord_internal::CordRepBtree::RemoveSuffix(absl::lts_20240722::cord_internal::CordRepBtree*, unsigned long)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessage::LogMessage(char const*, int, absl::lts_20240722::LogSeverity)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessageQuietlyFatal::LogMessageQuietlyFatal(char const*, int)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::cord_internal::CordRepBtree::CreateSlow(absl::lts_20240722::cord_internal::CordRep*)' in:
-[!] ld: duplicate symbol 're2::DFA::RWLocker::~RWLocker()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::str_format_internal::FormatConvertImpl(absl::lts_20240722::str_format_internal::VoidPtr, absl::lts_20240722::str_format_internal::FormatConversionSpecImpl, absl::lts_20240722::str_format_internal::FormatSinkImpl*)' in:
-[!] ld: duplicate symbol 're2::DFA::SearchFFT(re2::DFA::SearchParams*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessage::LogMessage(char const*, int, absl::lts_20240722::log_internal::LogMessage::ErrorTag)' in:
-[!] ld: duplicate symbol 're2::CycleFoldRune(int)' in:
-[!] ld: duplicate symbol 're2::Regexp::ParseState::DoVerticalBar()' in:
-[!] ld: duplicate symbol 're2::Prog::ComputeHints(std::__1::vector<re2::Prog::Inst, std::__1::allocator<re2::Prog::Inst>>*, int, int)' in:
-[!] ld: duplicate symbol 're2::Regexp::RemoveLeadingString(re2::Regexp*, int)' in:
-[!] ld: duplicate symbol 're2::Prog::Inst::InitByteRange(int, int, int, unsigned int)' in:
-[!] ld: duplicate symbol 're2::Prog::PrefixAccel_ShiftDFA(void const*, unsigned long)' in:
-[!] ld: duplicate symbol 're2::Prog::MarkDominator(int, re2::SparseArray<int>*, re2::SparseArray<int>*, std::__1::vector<std::__1::vector<int, std::__1::allocator<int>>, std::__1::allocator<std::__1::vector<int, std::__1::allocator<int>>>>*, re2::SparseSetT<void>*, std::__1::vector<int, std::__1::allocator<int>>*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::numbers_internal::FastIntToBuffer(unsigned int, char*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessage::OstreamView::stream()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessage::PrepareToDie()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessage::OstreamView::~OstreamView()' in:
-[!] ld: duplicate symbol 're2::DFA::StateSaver::Restore()' in:
-[!] ld: duplicate symbol 're2::RE2::ReverseProg() const' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::SetMinLogLevel(absl::lts_20240722::LogSeverityAtLeast)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::cord_internal::CordRepBtree::IsValid(absl::lts_20240722::cord_internal::CordRepBtree const*, bool)' in:
-[!] ld: duplicate symbol 're2::Regexp::ParseState::DoCollapse(re2::RegexpOp)' in:
-[!] ld: duplicate symbol 're2::Prog::Optimize()' in:
-[!] ld: duplicate symbol 're2::DFA::StateSaver::~StateSaver()' in:
-[!] ld: duplicate symbol 're2::Regexp::ParseState::PushCaret()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::CheckOpMessageBuilder::CheckOpMessageBuilder(char const*)' in:
-[!] ld: duplicate symbol 're2::DFA::FastSearchLoop(re2::DFA::SearchParams*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::str_format_internal::FlagsToString(absl::lts_20240722::str_format_internal::Flags)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessage::LogBacktraceIfNeeded()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::str_format_internal::FormatConvertImpl(char, absl::lts_20240722::str_format_internal::FormatConversionSpecImpl, absl::lts_20240722::str_format_internal::FormatSinkImpl*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessageQuietlyFatal::~LogMessageQuietlyFatal()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::StrAppend(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>>*, absl::lts_20240722::AlphaNum const&, absl::lts_20240722::AlphaNum const&, absl::lts_20240722::AlphaNum const&)' in:
-[!] ld: duplicate symbol 're2::NFA::NFA(re2::Prog*)' in:
-[!] ld: duplicate symbol 're2::hooks::GetDFAStateCacheResetHook()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::str_format_internal::FormatConvertImpl(char const*, absl::lts_20240722::str_format_internal::FormatConversionSpecImpl, absl::lts_20240722::str_format_internal::FormatSinkImpl*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::UpdateVLogSites()' in:
-[!] ld: duplicate symbol 're2::DFA::ClearCache()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::numbers_internal::PutTwoDigits(unsigned int, char*)' in:
-[!] ld: duplicate symbol 're2::Prog::Prog()' in:
-[!] ld: duplicate symbol 're2::Regexp::ParseState::IsMarker(re2::RegexpOp)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::cord_internal::CordRepBtree::Destroy(absl::lts_20240722::cord_internal::CordRepBtree*)' in:
-[!] ld: duplicate symbol 're2::RepetitionWalker::PostVisit(re2::Regexp*, int, int, int*, int)' in:
-[!] ld: duplicate symbol 're2::DFA::AnalyzeSearch(re2::DFA::SearchParams*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::cord_internal::CordRepBtree::ExtractAppendBuffer(absl::lts_20240722::cord_internal::CordRepBtree*, unsigned long)' in:
-[!] ld: duplicate symbol 're2::RE2::~RE2()' in:
-[!] ld: duplicate symbol 're2::DFA::RunStateOnByte(re2::DFA::State*, int)' in:
-[!] ld: duplicate symbol 're2::Regexp::ParseState::~ParseState()' in:
-[!] ld: duplicate symbol 're2::Regexp::ParseState::PushSimpleOp(re2::RegexpOp)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::str_format_internal::FormatConvertImpl(int, absl::lts_20240722::str_format_internal::FormatConversionSpecImpl, absl::lts_20240722::str_format_internal::FormatSinkImpl*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::RFC3339_full' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::numbers_internal::kHexTable' in:
-[!] ld: duplicate symbol 're2::Prog::Flatten()' in:
-[!] ld: duplicate symbol 're2::DFA::SearchTFF(re2::DFA::SearchParams*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessageQuietlyFatal::LogMessageQuietlyFatal(char const*, int)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::str_format_internal::FormatConvertImpl(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, absl::lts_20240722::str_format_internal::FormatConversionSpecImpl, absl::lts_20240722::str_format_internal::FormatSinkImpl*)' in:
-[!] ld: duplicate symbol 're2::DFA::AddToQueue(re2::DFA::Workq*, int, unsigned int)' in:
-[!] ld: duplicate symbol 're2::Prog::EmitList(int, re2::SparseArray<int>*, std::__1::vector<re2::Prog::Inst, std::__1::allocator<re2::Prog::Inst>>*, re2::SparseSetT<void>*, std::__1::vector<int, std::__1::allocator<int>>*)' in:
-[!] ld: duplicate symbol 're2::BitState::BitState(re2::Prog*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::str_format_internal::FormatConvertImpl(long, absl::lts_20240722::str_format_internal::FormatConversionSpecImpl, absl::lts_20240722::str_format_internal::FormatSinkImpl*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::str_format_internal::FormatConvertImpl(long double, absl::lts_20240722::str_format_internal::FormatConversionSpecImpl, absl::lts_20240722::str_format_internal::FormatSinkImpl*)' in:
-[!] ld: duplicate symbol 're2::CharClassBuilder::AddRangeFlags(int, int, re2::Regexp::ParseFlags)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::cord_internal::CordRepBtree::SubTree(unsigned long, unsigned long)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::StrCat(absl::lts_20240722::AlphaNum const&, absl::lts_20240722::AlphaNum const&, absl::lts_20240722::AlphaNum const&)' in:
-[!] ld: duplicate symbol 're2::Prog::IsOnePass()' in:
-[!] ld: duplicate symbol 'vtable for absl::lts_20240722::log_internal::LogMessage::OstreamView' in:
-[!] ld: duplicate symbol 're2::FactorAlternationImpl::Round1(re2::Regexp**, int, re2::Regexp::ParseFlags, std::__1::vector<re2::Splice, std::__1::allocator<re2::Splice>>*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessage::OstreamView::~OstreamView()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessage::OstreamView::OstreamView(absl::lts_20240722::log_internal::LogMessage::LogMessageData&)' in:
-[!] ld: duplicate symbol 're2::hooks::GetDFASearchFailureHook()' in:
-[!] ld: duplicate symbol 're2::Regexp::ParseState::PushDot()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::str_format_internal::FormatConvertImpl(absl::lts_20240722::int128, absl::lts_20240722::str_format_internal::FormatConversionSpecImpl, absl::lts_20240722::str_format_internal::FormatSinkImpl*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessage::LogMessageData::LogMessageData(char const*, int, absl::lts_20240722::LogSeverity, absl::lts_20240722::Time)' in:
-[!] ld: duplicate symbol 're2::Prog::DeleteDFA(re2::DFA*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::cord_internal::CordRepBtree::Rebuild(absl::lts_20240722::cord_internal::CordRepBtree**, absl::lts_20240722::cord_internal::CordRepBtree*, bool)' in:
-[!] ld: duplicate symbol 're2::BitState::Push(int, char const*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessageQuietlyFatal::~LogMessageQuietlyFatal()' in:
-[!] ld: duplicate symbol 're2::Prog::ConfigurePrefixAccel(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, bool)' in:
-[!] ld: duplicate symbol 're2::ByteMapBuilder::Recolor(int)' in:
-[!] ld: duplicate symbol 're2::DFA::SearchFFF(re2::DFA::SearchParams*)' in:
-[!] ld: duplicate symbol 're2::Regexp::ParseState::DoLeftParenNoCapture()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::RegisterAndInitialize(absl::lts_20240722::log_internal::VLogSite*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::StrCat(absl::lts_20240722::AlphaNum const&, absl::lts_20240722::AlphaNum const&)' in:
-[!] ld: duplicate symbol 're2::DFA::RunWorkqOnByte(re2::DFA::Workq*, re2::DFA::Workq*, int, unsigned int, bool*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessageFatal::~LogMessageFatal()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::numbers_internal::FastIntToBuffer(unsigned long long, char*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessage::FailQuietly()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::str_format_internal::FormatConvertImpl(short, absl::lts_20240722::str_format_internal::FormatConversionSpecImpl, absl::lts_20240722::str_format_internal::FormatSinkImpl*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::str_format_internal::FormatConvertImpl(unsigned long long, absl::lts_20240722::str_format_internal::FormatConversionSpecImpl, absl::lts_20240722::str_format_internal::FormatSinkImpl*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::str_format_internal::FormatConvertImpl(double, absl::lts_20240722::str_format_internal::FormatConversionSpecImpl, absl::lts_20240722::str_format_internal::FormatSinkImpl*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::CheckOpMessageBuilder::NewString()' in:
-[!] ld: duplicate symbol 're2::RE2::Options::Options(re2::RE2::CannedOptions)' in:
-[!] ld: duplicate symbol 're2::DFA::RunStateOnByteUnlocked(re2::DFA::State*, int)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::str_format_internal::FormatConvertImpl(unsigned char, absl::lts_20240722::str_format_internal::FormatConversionSpecImpl, absl::lts_20240722::str_format_internal::FormatSinkImpl*)' in:
-[!] ld: duplicate symbol 're2::Regexp::ParseState::PushWordBoundary(bool)' in:
-[!] ld: duplicate symbol 're2::ByteMapBuilder::Mark(int, int)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessage::operator<<(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&)' in:
-[!] ld: duplicate symbol 're2::Prog::PrefixAccel_FrontAndBack(void const*, unsigned long)' in:
-[!] ld: duplicate symbol 're2::RE2::~RE2()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessage::LogMessage(char const*, int, absl::lts_20240722::LogSeverity)' in:
-[!] ld: duplicate symbol 're2::ByteMapBuilder::Merge()' in:
-[!] ld: duplicate symbol 're2::RepetitionWalker::PreVisit(re2::Regexp*, int, bool*)' in:
-[!] ld: duplicate symbol 're2::Regexp::ParseState::DoRightParen()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessage::FailWithoutStackTrace()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::numbers_internal::SixDigitsToBuffer(double, char*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessage::~LogMessage()' in:
-[!] ld: duplicate symbol 're2::NFA::NFA(re2::Prog*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::VLogSite::SlowIsEnabled(int, int)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::cord_internal::CordRepBtree::CopyPrefix(unsigned long, bool)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::MakeCheckOpValueString(std::__1::basic_ostream<char, std::__1::char_traits<char>>&, char)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::StderrThreshold()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::str_format_internal::FormatConvertImpl(unsigned int, absl::lts_20240722::str_format_internal::FormatConversionSpecImpl, absl::lts_20240722::str_format_internal::FormatSinkImpl*)' in:
-[!] ld: duplicate symbol 'vtable for re2::RepetitionWalker' in:
-[!] ld: duplicate symbol 're2::BitState::TrySearch(int, char const*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::str_format_internal::FormatConvertImpl(float, absl::lts_20240722::str_format_internal::FormatConversionSpecImpl, absl::lts_20240722::str_format_internal::FormatSinkImpl*)' in:
-[!] ld: duplicate symbol 're2::Prog::GetDFA(re2::Prog::MatchKind)' in:
-[!] ld: duplicate symbol 're2::Prog::Inst::InitFail()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessage::LogMessageData::InitializeEncodingAndFormat()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::str_format_internal::FormatConvertImpl(signed char, absl::lts_20240722::str_format_internal::FormatConversionSpecImpl, absl::lts_20240722::str_format_internal::FormatSinkImpl*)' in:
-[!] ld: duplicate symbol 're2::Prog::MarkSuccessors(re2::SparseArray<int>*, re2::SparseArray<int>*, std::__1::vector<std::__1::vector<int, std::__1::allocator<int>>, std::__1::allocator<std::__1::vector<int, std::__1::allocator<int>>>>*, re2::SparseSetT<void>*, std::__1::vector<int, std::__1::allocator<int>>*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::cord_internal::CordRepBtree::PrependSlow(absl::lts_20240722::cord_internal::CordRepBtree*, absl::lts_20240722::cord_internal::CordRep*)' in:
-[!] ld: duplicate symbol 're2::DFA::SearchFTT(re2::DFA::SearchParams*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::MakeCheckOpValueString(std::__1::basic_ostream<char, std::__1::char_traits<char>>&, unsigned char)' in:
-[!] ld: duplicate symbol 're2::Prog::ComputeByteMap()' in:
-[!] ld: duplicate symbol 're2::Prog::~Prog()' in:
-[!] ld: duplicate symbol 're2::Prog::~Prog()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::cord_internal::CordRepBtree::GetCharacter(unsigned long) const' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::CheckOpMessageBuilder::ForVar2()' in:
-[!] ld: duplicate symbol 're2::Regexp::ParseState::DoFinish()' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::cord_internal::CordRepBtree::AppendSlow(absl::lts_20240722::cord_internal::CordRepBtree*, absl::lts_20240722::cord_internal::CordRep*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::StrAppend(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>>*, absl::lts_20240722::AlphaNum const&, absl::lts_20240722::AlphaNum const&, absl::lts_20240722::AlphaNum const&, absl::lts_20240722::AlphaNum const&)' in:
-[!] ld: duplicate symbol 're2::DFA::ResetCache(re2::DFA::RWLocker*)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::LogMessage::LogMessageData::FinalizeEncodingAndFormat()' in:
-[!] ld: duplicate symbol 're2::Prog::Inst::InitNop(unsigned int)' in:
-[!] ld: duplicate symbol 'absl::lts_20240722::log_internal::CheckOpMessageBuilder::CheckOpMessageBuilder(char const*)' in:
-[!] ld: duplicate symbol 're2::NFA::~NFA()' in:
+note: Target dependency graph (1 target)
+[InkOS] Write Auxiliary File InkOS.SwiftFileList
+[InkOS] Write Auxiliary File InkOS-OutputFileMap.json
+[InkOS] Write Auxiliary File InkOS.LinkFileList
+[InkOS] Write Auxiliary File InkOS.SwiftFileList
+[InkOS] Write Auxiliary File InkOS.SwiftConstValuesFileList
+[InkOS] Write Auxiliary File InkOS.LinkFileList
+[InkOS] Write Auxiliary File InkOS.SwiftConstValuesFileList
+[InkOS] Write Auxiliary File InkOS-OutputFileMap.json
+[InkOS] Compiling AppRootView.swift
+[InkOS] Compiling NoteModel.swift
+[InkOS] Compiling NotebookDesignTokens.swift
+[InkOS] Compiling SessionService.swift
+[InkOS] Compiling UIComponents.swift
+[InkOS] Compiling InkOSApp.swift
+[InkOS] Compiling GeneratedAssetSymbols.swift
+[InkOS] Compiling ContextMenuView.swift
+[InkOS] Compiling FileLogger.swift
+[InkOS] Compiling SettingsView.swift
+[InkOS] Compiling SidebarView.swift
+[InkOS] Compiling NotebookDesignTokens.swift
+[InkOS] Compiling SessionService.swift
+[InkOS] Compiling AppRootView.swift
+[InkOS] Compiling NoteModel.swift
+[InkOS] Compiling SettingsView.swift
+[InkOS] Compiling SidebarView.swift
+[InkOS] Compiling GeneratedAssetSymbols.swift
+[InkOS] Copy x86_64-apple-ios-simulator.swiftmodule -> InkOS.swiftmodule
+[InkOS] Copy x86_64-apple-ios-simulator.swiftdoc -> InkOS.swiftdoc
 [InkOS] Copy x86_64-apple-ios-simulator.abi.json -> InkOS.abi.json
-[InkOS] Copy arm64-apple-ios-simulator.abi.json -> InkOS.abi.json
 [InkOS] Copy x86_64-apple-ios-simulator.swiftsourceinfo -> InkOS.swiftsourceinfo
+[InkOS] Compiling UIComponents.swift
+[InkOS] Compiling InkOSApp.swift
+[InkOS] Compiling NotebookViewModel.swift
+[!]  /Users/andrewallen/Desktop/swift_projects/InkOS/InkOS/Features/Notebook/ViewModels/NotebookViewModel.swift:79:7: no 'async' operations occur within 'await' expression
+      await self?.saveNow()
+      ^
+[InkOS] Compiling CanvasInputView.swift
+[InkOS] Copy arm64-apple-ios-simulator.swiftmodule -> InkOS.swiftmodule
+[InkOS] Copy arm64-apple-ios-simulator.swiftdoc -> InkOS.swiftdoc
+[InkOS] Copy arm64-apple-ios-simulator.abi.json -> InkOS.abi.json
 [InkOS] Copy arm64-apple-ios-simulator.swiftsourceinfo -> InkOS.swiftsourceinfo
+[InkOS] Compiling ContextMenuView.swift
+[InkOS] Compiling FileLogger.swift
+[InkOS] Compiling NotebookCanvasView.swift
+[InkOS] Compiling PencilKitToolbarView.swift
+[InkOS] Compiling NotebookCanvasView.swift
+[InkOS] Compiling PencilKitToolbarView.swift
+[InkOS] Compiling NotebookViewModel.swift
+[!]  /Users/andrewallen/Desktop/swift_projects/InkOS/InkOS/Features/Notebook/ViewModels/NotebookViewModel.swift:79:7: no 'async' operations occur within 'await' expression
+      await self?.saveNow()
+      ^
+[InkOS] Compiling CanvasInputView.swift
+[InkOS] Linking InkOS.debug.dylib
+note: Emplaced /Users/andrewallen/Desktop/swift_projects/InkOS/Logs.nosync/DerivedData/Build/Products/Debug-iphonesimulator/InkOS.app/Assets.car (in target 'InkOS' from project 'InkOS')
+[InkOS] Processing Info.plist
+[InkOS] Linking InkOS.debug.dylib
 note: Using stub executor library with Swift entry point. (in target 'InkOS' from project 'InkOS')
 note: Using stub executor library with Swift entry point. (in target 'InkOS' from project 'InkOS')
 [InkOS] Create Universal Binary InkOS.debug.dylib
 [InkOS] Linking InkOS
-[!] ld: search path '/var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.3.48.0.fNcRTW/Metal.xctoolchain/usr/lib/swift/iphonesimulator' not found
 [InkOS] Linking InkOS
-[!] ld: search path '/var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.3.48.0.fNcRTW/Metal.xctoolchain/usr/lib/swift/iphonesimulator' not found
 [InkOS] Create Universal Binary InkOS
-[InkOS] Running script Copy Recognition Assets
 [InkOS] Extract App Intents Metadata
-[InkOS] Processing Info.plist
+[InkOS] RegisterExecutionPolicyException InkOS.app
+[InkOS] Validate InkOS.app
+[InkOS] Touching InkOS.app
+note: Removed stale file '/Users/andrewallen/Desktop/swift_projects/InkOS/Logs.nosync/DerivedData/Build/Intermediates.noindex/InkOS.build/Debug-iphonesimulator/InkOS.build/Metal/MetaballShader.air'
+note: Removed stale file '/Users/andrewallen/Desktop/swift_projects/InkOS/Logs.nosync/DerivedData/Build/Intermediates.noindex/InkOS.build/Debug-iphonesimulator/InkOS.build/Metal/MetaballShader.dat'
+note: Removed stale file '/Users/andrewallen/Desktop/swift_projects/InkOS/Logs.nosync/DerivedData/Build/Products/Debug-iphonesimulator/InkOS.app/default.metallib'
 Build Succeeded

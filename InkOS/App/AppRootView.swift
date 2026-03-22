@@ -1,38 +1,29 @@
+//
+// AppRootView.swift
+// InkOS
+//
+// Root view that owns shared services and presents the main canvas.
+// Manages sidebar visibility and note switching.
+//
+
 import SwiftUI
 
-// Root view that owns shared services and presents the main notebook UI.
-// Manages sidebar visibility and session switching.
 struct AppRootView: View {
-  @State private var sessionService = SessionService()
-  @State private var viewModel: NotebookViewModel
+  @State private var noteService = NoteService()
+  @State private var viewModel = NoteViewModel()
   @State private var showSidebar = false
   @State private var showSettings = false
-
-  init() {
-    let sessionService = SessionService()
-
-    // Start with a fresh session. Existing sessions are accessible via the sidebar.
-    let session = sessionService.createSession(title: "New Chat")
-    _sessionService = State(initialValue: sessionService)
-    _viewModel = State(initialValue: NotebookViewModel(
-      document: session.document,
-      sessionData: session,
-      sessionService: sessionService
-    ))
-  }
 
   // Sidebar width.
   private let sidebarWidth: CGFloat = 340
 
   var body: some View {
     ZStack(alignment: .topLeading) {
-      // Main notebook canvas (ignores container safe area for edge-to-edge paper,
-      // but respects keyboard safe area so the toolbar stays above the keyboard).
-      NotebookCanvasView(viewModel: viewModel)
+      // Main canvas (ignores container safe area for edge-to-edge paper).
+      NoteCanvasView(viewModel: viewModel)
         .ignoresSafeArea(.container)
 
-      // Hamburger menu button (top-left, respects safe area).
-      // Always in hierarchy so offset animation works. Slides left when sidebar opens.
+      // Hamburger menu button (top-left).
       hamburgerButton
         .padding(.top, 20)
         .padding(.leading, 20)
@@ -40,20 +31,23 @@ struct AppRootView: View {
         .animation(.easeInOut(duration: 0.25), value: showSidebar)
 
       // Invisible dismiss layer (only when sidebar is open).
-      // Dismisses keyboard and closes sidebar on tap.
       if showSidebar {
         Color.clear
           .contentShape(Rectangle())
           .ignoresSafeArea()
           .onTapGesture {
-            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+            UIApplication.shared.sendAction(
+              #selector(UIResponder.resignFirstResponder),
+              to: nil, from: nil, for: nil
+            )
             withAnimation(.easeInOut(duration: 0.25)) { showSidebar = false }
           }
       }
 
-      // Sidebar panel (always in hierarchy, offset to slide in/out).
+      // Sidebar panel.
       sidebarPanel
     }
+    .onAppear { loadOrCreateNote() }
     .sheet(isPresented: $showSettings) {
       SettingsView()
     }
@@ -61,7 +55,6 @@ struct AppRootView: View {
 
   // MARK: - Hamburger Button
 
-  // Circular liquid glass hamburger button with custom two-line icon.
   private var hamburgerButton: some View {
     Button {
       withAnimation(.easeInOut(duration: 0.25)) { showSidebar = true }
@@ -83,26 +76,21 @@ struct AppRootView: View {
 
   // MARK: - Sidebar Panel
 
-  // Floating sidebar card that slides in/out via offset.
-  // Inset from screen edges with rounded corners and drop shadow.
-  // Always in the view hierarchy so offset animation works reliably.
   private var sidebarPanel: some View {
     SidebarView(
-      sessionService: sessionService,
+      noteService: noteService,
       isPresented: $showSidebar,
-      activeSessionId: viewModel.document.id.rawValue,
-      onSelectSession: { sessionData in
-        switchToSession(sessionData)
+      activeNoteId: viewModel.noteData?.metadata.id,
+      onSelectNote: { noteData in
+        switchToNote(noteData)
         withAnimation(.easeInOut(duration: 0.25)) { showSidebar = false }
       },
-      onNewSession: {
-        let session = sessionService.createSession(title: "New Chat")
-        switchToSession(session)
+      onNewNote: {
+        createNewNote()
         withAnimation(.easeInOut(duration: 0.25)) { showSidebar = false }
       },
       onOpenSettings: {
         withAnimation(.easeInOut(duration: 0.25)) { showSidebar = false }
-        // Brief delay so sidebar closes before sheet presents.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
           showSettings = true
         }
@@ -119,25 +107,35 @@ struct AppRootView: View {
     .padding(.top, 12)
     .padding(.bottom, 12)
     .padding(.leading, 12)
-    // Offset the entire styled panel (width + leading padding) off-screen when hidden.
     .offset(x: showSidebar ? 0 : -(sidebarWidth + 24))
     .animation(.easeInOut(duration: 0.25), value: showSidebar)
   }
 
-  // Switches the active session by creating a new view model.
-  private func switchToSession(_ session: SessionData) {
-    viewModel = NotebookViewModel(
-      document: session.document,
-      sessionData: session,
-      sessionService: sessionService
-    )
-  }
-}
+  // MARK: - Note Management
 
-#if DEBUG
-struct AppRootView_Previews: PreviewProvider {
-  static var previews: some View {
-    AppRootView()
+  // Loads the most recent note or creates a new one.
+  private func loadOrCreateNote() {
+    if let first = noteService.notes.first,
+       let data = noteService.loadNote(id: first.id) {
+      viewModel.loadNote(data, service: noteService)
+    } else {
+      createNewNote()
+    }
+  }
+
+  // Creates a new note with today's date as the title.
+  private func createNewNote() {
+    let formatter = DateFormatter()
+    formatter.dateStyle = .medium
+    let title = formatter.string(from: Date())
+    let note = noteService.createNote(title: title)
+    viewModel.loadNote(note, service: noteService)
+  }
+
+  // Switches to an existing note.
+  private func switchToNote(_ noteData: NoteData) {
+    // Save current note before switching.
+    viewModel.saveNow()
+    viewModel.loadNote(noteData, service: noteService)
   }
 }
-#endif

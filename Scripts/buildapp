@@ -7,39 +7,19 @@ cd "$(dirname "$0")/.."
 mkdir -p ./Logs
 rm -f ./Logs/build_logs.txt
 
-echo "🔨 Compiling InkOS (No Tests)..."
+echo "Building InkOS..."
 
 DESTINATION="generic/platform=iOS Simulator"
 DERIVED_DATA_PATH="./Logs.nosync/DerivedData"
 CONFIGURATION="Debug"
 
-COMMON_BUILD_ARGS=(
-  -configuration "$CONFIGURATION"
-  -destination "$DESTINATION"
-  -derivedDataPath "$DERIVED_DATA_PATH"
-  -allowProvisioningUpdates
-  COMPILER_INDEX_STORE_ENABLE=NO
-  CODE_SIGNING_ALLOWED=NO
-)
-
-run_build() {
-  xcodebuild "$@" | xcbeautify --disable-colored-output | tee -a ./Logs/build_logs.txt
-}
-
-if xcodebuild -list -workspace InkOS.xcworkspace >/dev/null 2>&1; then
-  run_build build \
-    -workspace InkOS.xcworkspace \
-    -scheme InkOS \
-    "${COMMON_BUILD_ARGS[@]}"
-else
-  echo "⚠️  Workspace unavailable, building Pods and app projects directly." \
-    | tee -a ./Logs/build_logs.txt
-  run_build build \
-    -project Pods/Pods.xcodeproj \
-    -scheme Pods-InkOS \
-    "${COMMON_BUILD_ARGS[@]}"
-  run_build build \
-    -project InkOS.xcodeproj \
-    -scheme InkOS \
-    "${COMMON_BUILD_ARGS[@]}"
-fi
+xcodebuild build \
+  -project InkOS.xcodeproj \
+  -scheme InkOS \
+  -configuration "$CONFIGURATION" \
+  -destination "$DESTINATION" \
+  -derivedDataPath "$DERIVED_DATA_PATH" \
+  -allowProvisioningUpdates \
+  COMPILER_INDEX_STORE_ENABLE=NO \
+  CODE_SIGNING_ALLOWED=NO \
+  | xcbeautify --disable-colored-output | tee -a ./Logs/build_logs.txt
