@@ -1,0 +1,38 @@
+APP NAME (28/30 chars)
+PaperClip - Handwrite for AI
+
+SUBTITLE (26/30 chars)
+Take and Send Notes to Mac
+
+KEYWORDS (99/100 chars)
+pencil,drawing,paste,homework,diagram,laptop,computer,share,sketch,handwriting,image,claude,gpt,ai
+
+DESCRIPTION
+PaperClip turns your iPad into a handwriting input for AI. Write with Apple Pencil, tap Send, and your handwriting arrives on your Mac — ready to paste into ChatGPT, Claude Code, Gemini, or any other app that accepts images.
+
+Think on paper. Send to AI.
+
+WHY HANDWRITE?
+
+Some ideas are easier to draw than type: equations, diagrams, quick sketches, arrows connecting concepts, etc. PaperClip lets you think with your hands and send the result straight to AI.
+
+HOW IT WORKS
+
+1. Write or draw with Apple Pencil
+2. Tap Send
+3. Your handwriting is sent directly to your Mac over peer-to-peer Wi-Fi
+4. Paste into any AI chat, terminal, or editor
+
+FEATURES
+
+- Full-screen canvas with complete Apple Pencil toolbar
+- One-tap send directly to your Mac — no iCloud or clipboard relay needed
+- Send modes: crop a region, capture the screen, or grab the full canvas
+- Multiple notes with sidebar, search, and rename
+
+PRIVACY
+
+Completely free with all features included. No accounts. No analytics. No data collection. Notes stay on your iPad. Data only leaves to your Mac when you tap Send.
+
+APP REVIEW NOTES (private, only seen by Apple's review team)
+PaperClip is an iPad app for handwriting with Apple Pencil. Drawings can be sent to a Mac over peer-to-peer Wi-Fi using Bonjour discovery and Apple Wireless Direct Link (AWDL). The Mac side runs a small companion receiver (PaperClipReceiver) that listens for incoming images and places them on the Mac clipboard for pasting. The iPad app is fully functional standalone for note-taking; the send feature uses standard Apple networking APIs (Network.framework / NWBrowser / NWListener with peer-to-peer enabled). No data is sent to any external server.
