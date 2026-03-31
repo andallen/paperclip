@@ -12,3 +12,4 @@ DerivedData/
 buildServer.json
 .xcode-home/
 Logs.nosync/
+Logs/
