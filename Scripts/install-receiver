@@ -1,0 +1,63 @@
+#!/bin/bash
+set -euo pipefail
+
+# Install PaperClipReceiver as a launchd agent.
+# Builds the binary, copies it to ~/.local/bin, registers a launchd plist
+# so it runs on login and stays alive.
+
+cd "$(dirname "$0")/.."
+
+LABEL="me.andy.allen.PaperClipReceiver"
+INSTALL_DIR="$HOME/.local/bin"
+BINARY="$INSTALL_DIR/PaperClipReceiver"
+PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
+LOG_DIR="$HOME/Library/Logs"
+
+# Step 1: Build.
+echo "Building PaperClipReceiver..."
+Scripts/buildreceiver
+
+# Step 2: Install binary.
+mkdir -p "$INSTALL_DIR"
+cp build/PaperClipReceiver "$BINARY"
+chmod +x "$BINARY"
+echo "Installed binary to $BINARY"
+
+# Step 3: Unload existing agent (ignore errors on first install).
+launchctl bootout "gui/$(id -u)/$LABEL" 2>/dev/null || true
+
+# Step 4: Write launchd plist.
+mkdir -p "$LOG_DIR"
+cat > "$PLIST" <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>$LABEL</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>$BINARY</string>
+  </array>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>StandardOutPath</key>
+  <string>$LOG_DIR/PaperClipReceiver.log</string>
+  <key>StandardErrorPath</key>
+  <string>$LOG_DIR/PaperClipReceiver.log</string>
+</dict>
+</plist>
+EOF
+echo "Wrote plist to $PLIST"
+
+# Step 5: Load the agent.
+launchctl bootstrap "gui/$(id -u)" "$PLIST"
+echo ""
+echo "PaperClipReceiver is now running."
+echo "It will start automatically on login."
+echo ""
+echo "Verify: log stream --predicate 'subsystem == \"me.andy.allen.PaperClipReceiver\"'"
+echo "Uninstall: Scripts/uninstall-receiver"

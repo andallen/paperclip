@@ -47,7 +47,7 @@ Your workflow:
 Key considerations:
 - Pay special attention to actor isolation and MainActor requirements, as these are critical for this project's MyScript integration
 - Remember that MyScript's IINKEditor and IINKRenderer are not thread-safe and must be accessed from the main thread
-- Be aware of Swift/Objective-C bridging through InkOS-Bridging-Header.h
+- Be aware of Swift/Objective-C bridging through PaperClip-Bridging-Header.h
 - Respect the project's comment style: frequent, simple, direct, and impersonal
 - Do not modify MyScript certificate files or recognition-assets
 - If you encounter errors related to missing MyScript documentation, use the available context from Docs/myscript_docs.md, Docs/myscript_headers.txt, and Reference/ examples

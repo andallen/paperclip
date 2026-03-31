@@ -1,0 +1,23 @@
+#!/bin/bash
+set -euo pipefail
+
+# Uninstall PaperClipReceiver: stop the agent, remove plist and binary.
+
+LABEL="me.andy.allen.PaperClipReceiver"
+BINARY="$HOME/.local/bin/PaperClipReceiver"
+PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
+
+# Stop the agent.
+launchctl bootout "gui/$(id -u)/$LABEL" 2>/dev/null || true
+echo "Stopped agent"
+
+# Remove plist.
+rm -f "$PLIST"
+echo "Removed $PLIST"
+
+# Remove binary.
+rm -f "$BINARY"
+echo "Removed $BINARY"
+
+echo ""
+echo "PaperClipReceiver has been uninstalled."

@@ -6,8 +6,8 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
-LOCK_FILE="/tmp/inkos-ui-test.lock"
-RESULT_DIR="/tmp/inkos-ui-tests"
+LOCK_FILE="/tmp/paperclip-ui-test.lock"
+RESULT_DIR="/tmp/paperclip-ui-tests"
 SCREENSHOT_DIR="$RESULT_DIR/screenshots"
 
 # Device configuration.
@@ -41,11 +41,11 @@ run_test() {
 
     # Run the test on device using device ID for reliability.
     xcodebuild test \
-        -workspace InkOS.xcworkspace \
-        -scheme InkOS \
+        -workspace PaperClip.xcworkspace \
+        -scheme PaperClip \
         -destination "platform=iOS,id=$IPAD_UDID" \
-        -only-testing:"InkOSUITests/InkOSUITests/$test_name" \
-        -skip-testing:InkOSTests \
+        -only-testing:"PaperClipUITests/PaperClipUITests/$test_name" \
+        -skip-testing:PaperClipTests \
         -allowProvisioningUpdates \
         2>&1 | tee "$RESULT_DIR/output.log"
 

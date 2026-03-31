@@ -1,0 +1,21 @@
+#!/bin/bash
+set -euo pipefail
+
+# Build the PaperClipReceiver Mac daemon.
+# Output: build/PaperClipReceiver
+
+cd "$(dirname "$0")/.."
+
+mkdir -p build
+
+echo "Building PaperClipReceiver..."
+
+swiftc \
+  -o build/PaperClipReceiver \
+  -target arm64-apple-macosx14.0 \
+  -framework AppKit \
+  -framework Network \
+  -O \
+  PaperClipReceiver/main.swift
+
+echo "Built: build/PaperClipReceiver"

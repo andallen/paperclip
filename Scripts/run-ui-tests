@@ -7,9 +7,9 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
-LOCK_FILE="/tmp/inkos-ui-test.lock"
+LOCK_FILE="/tmp/paperclip-ui-test.lock"
 LOCK_TIMEOUT=300  # 5 min max test duration
-LOG_DIR="/tmp/inkos-ui-tests"
+LOG_DIR="/tmp/paperclip-ui-tests"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 
 # Device configuration.
@@ -89,15 +89,15 @@ run_tests() {
 
     # Build and test command.
     local cmd="xcodebuild test \
-        -workspace InkOS.xcworkspace \
-        -scheme InkOS \
+        -workspace PaperClip.xcworkspace \
+        -scheme PaperClip \
         -destination \"$destination\" \
         -resultBundlePath \"$RESULT_DIR/TestResults.xcresult\" \
         -derivedDataPath \"$PROJECT_DIR/Logs.nosync/DerivedData\""
 
     # Add test filter if specified.
     if [ -n "$test_filter" ]; then
-        cmd="$cmd -only-testing:InkOSUITests/$test_filter"
+        cmd="$cmd -only-testing:PaperClipUITests/$test_filter"
     fi
 
     # Run tests and capture output.
@@ -139,7 +139,7 @@ fetch_device_logs() {
 
     # Try to get recent logs using devicectl.
     xcrun devicectl device syslog --device "$IPAD_UDID" 2>/dev/null | \
-        grep -i "InkOS\|Dashboard" | \
+        grep -i "PaperClip\|Dashboard" | \
         tail -500 > "$RESULT_DIR/device_logs.txt" &
 
     local log_pid=$!
@@ -199,7 +199,7 @@ main() {
     local test_filter="${1:-}"
 
     echo "======================================"
-    echo "InkOS UI Test Runner"
+    echo "PaperClip UI Test Runner"
     echo "======================================"
     echo "Device: $IPAD_NAME"
     echo "Time: $(date)"

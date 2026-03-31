@@ -1,24 +1,24 @@
 #!/bin/bash
 set -euo pipefail
 
-# Build the InkOSRelay Mac companion app.
+# Build the PaperClipRelay Mac companion app.
 cd "$(dirname "$0")/.."
 
-echo "Building InkOSRelay..."
+echo "Building PaperClipRelay..."
 
 OUTPUT_DIR="./build"
 mkdir -p "$OUTPUT_DIR"
 
 swiftc \
-  -o "$OUTPUT_DIR/InkOSRelay" \
+  -o "$OUTPUT_DIR/PaperClipRelay" \
   -target arm64-apple-macosx14.0 \
   -framework AppKit \
   -framework ImageIO \
   -framework UniformTypeIdentifiers \
-  InkOSRelay/main.swift \
-  InkOSRelay/AppDelegate.swift \
-  InkOSRelay/ClipboardMonitor.swift \
-  InkOSRelay/PNGMetadata.swift
+  PaperClipRelay/main.swift \
+  PaperClipRelay/AppDelegate.swift \
+  PaperClipRelay/ClipboardMonitor.swift \
+  PaperClipRelay/PNGMetadata.swift
 
-echo "Built: $OUTPUT_DIR/InkOSRelay"
-echo "Run with: $OUTPUT_DIR/InkOSRelay"
+echo "Built: $OUTPUT_DIR/PaperClipRelay"
+echo "Run with: $OUTPUT_DIR/PaperClipRelay"

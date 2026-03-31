@@ -1,0 +1,103 @@
+#!/bin/bash
+set -euo pipefail
+
+# Loopback test for PaperClipReceiver.
+# Builds the receiver, launches it, captures its port from the log, sends a
+# framed test PNG via TCP, then verifies the Mac clipboard contains it.
+
+cd "$(dirname "$0")/.."
+
+echo "=== PaperClip Transfer Loopback Test ==="
+echo ""
+
+# Step 1: Build the receiver.
+echo "[1/5] Building PaperClipReceiver..."
+Scripts/buildreceiver
+
+# Step 2: Kill any existing receiver and start a fresh one.
+killall PaperClipReceiver 2>/dev/null || true
+sleep 0.5
+
+echo "[2/5] Starting PaperClipReceiver..."
+RECEIVER_LOG=$(mktemp /tmp/paperclip-receiver-XXXXXX.log)
+./build/PaperClipReceiver > "$RECEIVER_LOG" 2>&1 &
+RECEIVER_PID=$!
+
+# Wait for the receiver to print its port to stdout.
+PORT=""
+for i in $(seq 1 10); do
+  PORT=$(grep -o 'PAPERCLIP_PORT=[0-9]*' "$RECEIVER_LOG" 2>/dev/null | head -1 | cut -d= -f2 || true)
+  if [ -n "$PORT" ] && [ "$PORT" != "0" ]; then
+    break
+  fi
+  sleep 1
+done
+
+if [ -z "$PORT" ] || [ "$PORT" = "0" ]; then
+  echo "FAIL: Could not determine receiver port"
+  echo "  Log: $(cat "$RECEIVER_LOG" 2>/dev/null)"
+  kill $RECEIVER_PID 2>/dev/null || true
+  rm -f "$RECEIVER_LOG"
+  exit 1
+fi
+
+echo "  Receiver listening on port $PORT"
+
+# Step 3: Send a test PNG using python3 (raw TCP socket, no NWBrowser needed).
+echo "[3/5] Sending test PNG to localhost:$PORT..."
+
+python3 -c "
+import socket, struct
+
+# Minimal 1x1 PNG (67 bytes).
+png = bytes([
+  0x89,0x50,0x4E,0x47,0x0D,0x0A,0x1A,0x0A,
+  0x00,0x00,0x00,0x0D,0x49,0x48,0x44,0x52,
+  0x00,0x00,0x00,0x01,0x00,0x00,0x00,0x01,
+  0x08,0x02,0x00,0x00,0x00,0x90,0x77,0x53,
+  0xDE,0x00,0x00,0x00,0x0C,0x49,0x44,0x41,
+  0x54,0x08,0xD7,0x63,0xF8,0xCF,0xC0,0x00,
+  0x00,0x00,0x03,0x00,0x01,0x18,0xDD,0x8D,
+  0xB4,0x00,0x00,0x00,0x00,0x49,0x45,0x4E,
+  0x44,0xAE,0x42,0x60,0x82
+])
+
+# Frame: 4-byte big-endian length + PNG data.
+frame = struct.pack('>I', len(png)) + png
+
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sock.connect(('127.0.0.1', $PORT))
+sock.sendall(frame)
+print(f'Sent {len(png)} bytes to receiver')
+sock.close()
+"
+CLIENT_EXIT=$?
+
+# Give the receiver time to write to clipboard.
+sleep 1
+
+# Step 4: Check clipboard.
+echo "[4/5] Checking clipboard..."
+CLIP_INFO=$(osascript -e 'clipboard info' 2>&1)
+
+# Step 5: Cleanup.
+echo "[5/5] Cleaning up..."
+kill $RECEIVER_PID 2>/dev/null || true
+rm -f "$RECEIVER_LOG"
+
+echo ""
+
+if [ $CLIENT_EXIT -ne 0 ]; then
+  echo "FAIL: Test client reported failure"
+  exit 1
+fi
+
+if echo "$CLIP_INFO" | grep -q "PNGf\|«class PNGf»\|public.png"; then
+  echo "PASS: Clipboard contains PNG data"
+  echo "  Clipboard info: $CLIP_INFO"
+  exit 0
+else
+  echo "FAIL: Clipboard does not contain PNG data"
+  echo "  Clipboard info: $CLIP_INFO"
+  exit 1
+fi

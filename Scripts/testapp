@@ -4,9 +4,9 @@ set -uo pipefail
 # Navigate to the project root
 cd "$(dirname "$0")/.."
 
-# === LOCK FILE: Serialize test runs across all InkOS worktrees ===
+# === LOCK FILE: Serialize test runs across all PaperClip worktrees ===
 # This prevents multiple simulators from running simultaneously
-LOCKFILE="/tmp/inkos-test.lock"
+LOCKFILE="/tmp/paperclip-test.lock"
 exec 200>"$LOCKFILE"
 
 echo "⏳ Waiting for test lock (another test may be running)..."
@@ -29,7 +29,7 @@ rm -f ./Logs/test_logs_raw.txt
 
 : > ./Logs/test_logs.txt
 
-echo "🧪 Building and Testing InkOS..."
+echo "🧪 Building and Testing PaperClip..."
 
 DESTINATION="platform=iOS Simulator,name=iPad Pro 13-inch (M5)"
 DERIVED_DATA_PATH="./Logs.nosync/DerivedData"
@@ -37,11 +37,11 @@ DERIVED_DATA_PATH="./Logs.nosync/DerivedData"
 # Run tests and capture output - allow command to fail
 set +e
 xcodebuild test \
-  -workspace InkOS.xcworkspace \
-  -scheme InkOS \
+  -workspace PaperClip.xcworkspace \
+  -scheme PaperClip \
   -destination "$DESTINATION" \
   -derivedDataPath "$DERIVED_DATA_PATH" \
-  -only-testing:InkOSTests \
+  -only-testing:PaperClipTests \
   -allowProvisioningUpdates \
   COMPILER_INDEX_STORE_ENABLE=NO \
   | xcbeautify --disable-colored-output | tee ./Logs/test_logs_raw.txt

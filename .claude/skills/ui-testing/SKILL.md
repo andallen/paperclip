@@ -1,9 +1,9 @@
 ---
 name: ui-testing
-description: Run UI tests on the InkOS iPad app. Use when verifying UI behavior, testing animations, checking gestures, or capturing screenshots. Covers writing tests, running them on device, and viewing results. Use after making any UI update to ensure it works as you intended, if applicable.
+description: Run UI tests on the PaperClip iPad app. Use when verifying UI behavior, testing animations, checking gestures, or capturing screenshots. Covers writing tests, running them on device, and viewing results. Use after making any UI update to ensure it works as you intended, if applicable.
 ---
 
-# InkOS UI Testing
+# PaperClip UI Testing
 
 Run XCUITests to verify UI behavior, capture screenshots, and validate features.
 
@@ -101,13 +101,13 @@ Scripts/test-ui clean
 
 ## Writing Tests
 
-Tests live in `InkOSUITests/InkOSUITests.swift`. Follow this pattern:
+Tests live in `PaperClipUITests/PaperClipUITests.swift`. Follow this pattern:
 
 ```swift
 @MainActor
 func testFeatureName() throws {
     // 1. Wait for app to load
-    let navBar = app.navigationBars["InkOS"]
+    let navBar = app.navigationBars["PaperClip"]
     XCTAssertTrue(navBar.waitForExistence(timeout: 10), "Dashboard should load")
 
     // 2. Find elements using accessibility identifiers
@@ -161,7 +161,7 @@ app.cells.firstMatch
 
 The test file includes a `saveScreenshot(name:)` helper that:
 - Attaches screenshot to test results
-- Saves PNG to `/tmp/inkos-ui-tests/screenshots/`
+- Saves PNG to `/tmp/paperclip-ui-tests/screenshots/`
 
 ```swift
 saveScreenshot(name: "descriptive_name")
@@ -235,11 +235,11 @@ After running tests, extract screenshots from the xcresult bundle using the offi
 
 ```bash
 # Find the latest xcresult bundle
-xcresult_path=$(ls -td ~/Library/Developer/Xcode/DerivedData/InkOS-*/Logs/Test/*.xcresult 2>/dev/null | head -1)
+xcresult_path=$(ls -td ~/Library/Developer/Xcode/DerivedData/PaperClip-*/Logs/Test/*.xcresult 2>/dev/null | head -1)
 echo "Extracting from: $xcresult_path"
 
 # Create output directory
-output_dir="/tmp/inkos-ui-screenshots"
+output_dir="/tmp/paperclip-ui-screenshots"
 rm -rf "$output_dir"
 mkdir -p "$output_dir"
 
@@ -256,7 +256,7 @@ find "$output_dir" -name "*.png"
 
 ```bash
 # Export attachments for a specific test
-xcrun xcresulttool export attachments --path "$xcresult_path" --output-path "$output_dir" --test-id "InkOSUITests/testMethodName()"
+xcrun xcresulttool export attachments --path "$xcresult_path" --output-path "$output_dir" --test-id "PaperClipUITests/testMethodName()"
 
 # Export only attachments from failed tests
 xcrun xcresulttool export attachments --path "$xcresult_path" --output-path "$output_dir" --only-failures
@@ -267,7 +267,7 @@ xcrun xcresulttool export attachments --path "$xcresult_path" --output-path "$ou
 Use the Read tool on the extracted PNG files:
 
 ```
-/tmp/inkos-ui-screenshots/F8C0E679-F5BE-4010-A6E6-BFEAA6DBB457.png
+/tmp/paperclip-ui-screenshots/F8C0E679-F5BE-4010-A6E6-BFEAA6DBB457.png
 ```
 
 The export command also creates a `manifest.json` file with metadata about each attachment (test name, suggested filename, timestamp, etc.).
@@ -281,15 +281,15 @@ The export command also creates a `manifest.json` file with metadata about each 
 
 ## Lock File Protection
 
-A lock at `/tmp/inkos-ui-test.lock` prevents concurrent test runs:
+A lock at `/tmp/paperclip-ui-test.lock` prevents concurrent test runs:
 - Auto-expires after 5 minutes
-- Clear manually: `rm -f /tmp/inkos-ui-test.lock`
+- Clear manually: `rm -f /tmp/paperclip-ui-test.lock`
 
 ## Workflow
 
 1. **Add accessibility identifiers** to the UI elements you want to test
 2. **Determine test type**: Can this be verified with objective assertions (element exists, count, label, enabled state)? If yes, use objective tests. Only use screenshots for visual verification.
-3. **Write test method** in `InkOSUITests.swift` following the pattern above
+3. **Write test method** in `PaperClipUITests.swift` following the pattern above
 4. **Build the app**: `Scripts/buildapp`
 5. **Run the test**: `Scripts/test-ui run testMethodName`
 6. **Check results**: `Scripts/test-ui results`
@@ -383,7 +383,7 @@ Print accessibility hierarchy to find element identifiers:
 ```swift
 @MainActor
 func testPrintHierarchy() throws {
-    let navBar = app.navigationBars["InkOS"]
+    let navBar = app.navigationBars["PaperClip"]
     XCTAssertTrue(navBar.waitForExistence(timeout: 10))
 
     print("Cells count: \(app.cells.count)")

@@ -34,7 +34,7 @@ Find the Contract.swift file in the relevant feature directory. Extract:
 Create a test file following this structure:
 ```swift
 import XCTest
-@testable import InkOS
+@testable import PaperClip
 
 // MARK: - Mock Dependencies
 // Protocol mocks go here

@@ -7,15 +7,15 @@ cd "$(dirname "$0")/.."
 mkdir -p ./Logs
 rm -f ./Logs/build_logs.txt
 
-echo "Building InkOS..."
+echo "Building PaperClip..."
 
 DESTINATION="generic/platform=iOS Simulator"
 DERIVED_DATA_PATH="./Logs.nosync/DerivedData"
 CONFIGURATION="Debug"
 
 xcodebuild build \
-  -project InkOS.xcodeproj \
-  -scheme InkOS \
+  -project PaperClip.xcodeproj \
+  -scheme PaperClip \
   -configuration "$CONFIGURATION" \
   -destination "$DESTINATION" \
   -derivedDataPath "$DERIVED_DATA_PATH" \

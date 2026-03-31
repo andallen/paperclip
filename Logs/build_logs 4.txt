@@ -4,83 +4,21 @@ Version: 3.1.2
 ----------------------
 
 note: Building targets in dependency order
-note: Target dependency graph (37 targets)
-[iosMath-mathFonts] Processing ResourceBundle-mathFonts-iosMath-Info.plist
-[nanopb-nanopb_Privacy] Processing ResourceBundle-nanopb_Privacy-nanopb-Info.plist
-[leveldb-library-leveldb_Privacy] Processing ResourceBundle-leveldb_Privacy-leveldb-library-Info.plist
-[gRPC-Core-grpc] Processing ResourceBundle-grpc-gRPC-Core-Info.plist
-[gRPC-C++-grpcpp] Processing ResourceBundle-grpcpp-gRPC-C++-Info.plist
-[gRPC-C++-gRPCCertificates-Cpp] Copying roots.pem
-[gRPC-C++-gRPCCertificates-Cpp] Processing ResourceBundle-gRPCCertificates-Cpp-gRPC-C++-Info.plist
-[abseil-xcprivacy] Processing ResourceBundle-xcprivacy-abseil-Info.plist
-[abseil-xcprivacy] Copying PrivacyInfo.xcprivacy
-[gRPC-C++-grpcpp] RegisterExecutionPolicyException grpcpp.bundle
-[gRPC-C++-gRPCCertificates-Cpp] RegisterExecutionPolicyException gRPCCertificates-Cpp.bundle
-[GoogleUtilities-GoogleUtilities_Privacy] Processing ResourceBundle-GoogleUtilities_Privacy-GoogleUtilities-Info.plist
-[GoogleUtilities-GoogleUtilities_Privacy] Copying PrivacyInfo.xcprivacy
-[GTMSessionFetcher-GTMSessionFetcher_Core_Privacy] Copying PrivacyInfo.xcprivacy
-[GTMSessionFetcher-GTMSessionFetcher_Core_Privacy] Processing ResourceBundle-GTMSessionFetcher_Core_Privacy-GTMSessionFetcher-Info.plist
-[abseil-xcprivacy] RegisterExecutionPolicyException xcprivacy.bundle
-[FirebaseFirestoreInternal-FirebaseFirestoreInternal_Privacy] Processing ResourceBundle-FirebaseFirestoreInternal_Privacy-FirebaseFirestoreInternal-Info.plist
-[FirebaseFirestoreInternal-FirebaseFirestoreInternal_Privacy] Copying PrivacyInfo.xcprivacy
-[FirebaseFirestore-FirebaseFirestore_Privacy] Processing ResourceBundle-FirebaseFirestore_Privacy-FirebaseFirestore-Info.plist
-[FirebaseFirestore-FirebaseFirestore_Privacy] Copying PrivacyInfo.xcprivacy
-[FirebaseCoreInternal-FirebaseCoreInternal_Privacy] Processing ResourceBundle-FirebaseCoreInternal_Privacy-FirebaseCoreInternal-Info.plist
-[FirebaseCoreInternal-FirebaseCoreInternal_Privacy] Copying PrivacyInfo.xcprivacy
-[gRPC-C++-grpcpp] Touching grpcpp.bundle
-[gRPC-C++-gRPCCertificates-Cpp] Touching gRPCCertificates-Cpp.bundle
-[GoogleUtilities-GoogleUtilities_Privacy] RegisterExecutionPolicyException GoogleUtilities_Privacy.bundle
-[FirebaseCoreExtension-FirebaseCoreExtension_Privacy] Copying PrivacyInfo.xcprivacy
-[FirebaseCoreExtension-FirebaseCoreExtension_Privacy] Processing ResourceBundle-FirebaseCoreExtension_Privacy-FirebaseCoreExtension-Info.plist
-[FirebaseCore-FirebaseCore_Privacy] Processing ResourceBundle-FirebaseCore_Privacy-FirebaseCore-Info.plist
-[FirebaseCore-FirebaseCore_Privacy] Copying PrivacyInfo.xcprivacy
-[abseil-xcprivacy] Touching xcprivacy.bundle
-[GTMSessionFetcher-GTMSessionFetcher_Core_Privacy] RegisterExecutionPolicyException GTMSessionFetcher_Core_Privacy.bundle
-[FirebaseFirestoreInternal-FirebaseFirestoreInternal_Privacy] RegisterExecutionPolicyException FirebaseFirestoreInternal_Privacy.bundle
-[FirebaseFirestore-FirebaseFirestore_Privacy] RegisterExecutionPolicyException FirebaseFirestore_Privacy.bundle
-[GoogleUtilities-GoogleUtilities_Privacy] Touching GoogleUtilities_Privacy.bundle
-[FirebaseCoreInternal-FirebaseCoreInternal_Privacy] RegisterExecutionPolicyException FirebaseCoreInternal_Privacy.bundle
-[FirebaseAuth-FirebaseAuth_Privacy] Processing ResourceBundle-FirebaseAuth_Privacy-FirebaseAuth-Info.plist
-[GTMSessionFetcher-GTMSessionFetcher_Core_Privacy] Touching GTMSessionFetcher_Core_Privacy.bundle
-[FirebaseAuth-FirebaseAuth_Privacy] Copying PrivacyInfo.xcprivacy
-[FirebaseCoreExtension-FirebaseCoreExtension_Privacy] RegisterExecutionPolicyException FirebaseCoreExtension_Privacy.bundle
-[FirebaseCore-FirebaseCore_Privacy] RegisterExecutionPolicyException FirebaseCore_Privacy.bundle
-[FirebaseFirestoreInternal-FirebaseFirestoreInternal_Privacy] Touching FirebaseFirestoreInternal_Privacy.bundle
-[BoringSSL-GRPC-openssl_grpc] Processing ResourceBundle-openssl_grpc-BoringSSL-GRPC-Info.plist
-[BoringSSL-GRPC-openssl_grpc] Copying PrivacyInfo.xcprivacy
-[FirebaseFirestore-FirebaseFirestore_Privacy] Touching FirebaseFirestore_Privacy.bundle
-[FirebaseAuth-FirebaseAuth_Privacy] RegisterExecutionPolicyException FirebaseAuth_Privacy.bundle
-[FirebaseCoreInternal-FirebaseCoreInternal_Privacy] Touching FirebaseCoreInternal_Privacy.bundle
-[BoringSSL-GRPC-openssl_grpc] RegisterExecutionPolicyException openssl_grpc.bundle
-[FirebaseCoreExtension-FirebaseCoreExtension_Privacy] Touching FirebaseCoreExtension_Privacy.bundle
-[FirebaseCore-FirebaseCore_Privacy] Touching FirebaseCore_Privacy.bundle
-[FirebaseAuth-FirebaseAuth_Privacy] Touching FirebaseAuth_Privacy.bundle
-[BoringSSL-GRPC-openssl_grpc] Touching openssl_grpc.bundle
-[iosMath] Compiling MTMathAtomFactory.m
-[iosMath] Compiling MTFontMathTable.m
-[!]  /Users/andrewallen/Desktop/swift_projects/InkOS/Pods/iosMath/iosMath/render/internal/MTFontMathTable.m:489:54: 'kCTFontHorizontalOrientation' is deprecated: first deprecated in iOS 9.0 - Deprecated [-Wdeprecated-declarations]
-  489 |         CTFontGetAdvancesForGlyphs(self.font.ctFont, kCTFontHorizontalOrientation, &glyph, &advances, 1);
-      |                                                      ^
-[iosMath] Compiling MTFontManager.m
-[iosMath] Compiling MTFont.m
-[gRPC-Core] Compiling xds_wrr_locality.cc
-[x] /Users/andrewallen/Desktop/swift_projects/InkOS/Pods/Headers/Private/gRPC-Core/grpc/support/json.h:28:10: 'absl/strings/str_cat.h' file not found
-   28 | #include "absl/strings/str_cat.h"
-      |          ^~~~~~~~~~~~~~~~~~~~~~~~
-[gRPC-Core] Compiling xds_transport_grpc.cc
-[x] /Users/andrewallen/Desktop/swift_projects/InkOS/Pods/gRPC-Core/src/core/xds/grpc/xds_transport_grpc.h:29:10: 'absl/container/flat_hash_map.h' file not found
-   29 | #include "absl/container/flat_hash_map.h"
-      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-[gRPC-Core] Compiling xds_server_grpc.cc
-[x] /Users/andrewallen/Desktop/swift_projects/InkOS/Pods/gRPC-Core/src/core/lib/security/credentials/channel_creds_registry.h:27:10: 'absl/strings/string_view.h' file not found
-   27 | #include "absl/strings/string_view.h"
-      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
-[gRPC-Core] Compiling xds_server_config_fetcher.cc
-[x] /Users/andrewallen/Desktop/swift_projects/InkOS/Pods/gRPC-Core/src/core/server/xds_server_config_fetcher.cc:35:10: 'absl/base/thread_annotations.h' file not found
-   35 | #include "absl/base/thread_annotations.h"
-      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-[iosMath] Building library libiosMath.a
-[gRPC-Core] Compiling xds_routing.cc
-[gRPC-Core] Compiling xds_route_config_parser.cc
-[gRPC-Core] Compiling xds_route_config.cc
-note: Run script build phase 'Copy Recognition Assets' will be run during every build because the option to run the script phase "Based on dependency analysis" is unchecked. (in target 'InkOS' from project 'InkOS')
+note: Target dependency graph (1 target)
+[InkOS] Compiling NotebookCanvasView.swift
+[InkOS] Compiling NotebookCanvasView.swift
+[InkOS] Copy arm64-apple-ios-simulator.swiftsourceinfo -> InkOS.swiftsourceinfo
+[InkOS] Copy arm64-apple-ios-simulator.abi.json -> InkOS.abi.json
+[InkOS] Copy x86_64-apple-ios-simulator.swiftsourceinfo -> InkOS.swiftsourceinfo
+[InkOS] Copy x86_64-apple-ios-simulator.abi.json -> InkOS.abi.json
+[InkOS] Linking InkOS.debug.dylib
+[InkOS] Linking InkOS.debug.dylib
+note: Using stub executor library with Swift entry point. (in target 'InkOS' from project 'InkOS')
+[InkOS] Create Universal Binary InkOS.debug.dylib
+note: Using stub executor library with Swift entry point. (in target 'InkOS' from project 'InkOS')
+[InkOS] Linking InkOS
+[InkOS] Linking InkOS
+[InkOS] Create Universal Binary InkOS
+[InkOS] Extract App Intents Metadata
+[InkOS] Processing Info.plist
+Build Succeeded

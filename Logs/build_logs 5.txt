@@ -1,0 +1,9 @@
+
+----- xcbeautify -----
+Version: 3.1.2
+----------------------
+
+note: Building targets in dependency order
+note: Target dependency graph (1 target)
+[InkOS] Processing Info.plist
+Build Succeeded

@@ -108,7 +108,7 @@ Provide a structured summary:
 2. **Respect test integrity**: Tests define correctness. Implementation must conform to tests, not vice versa.
 3. **Be thorough**: Run the complete test suite unless specifically asked to run a subset.
 4. **Stay factual**: Base all analysis on actual test output, not assumptions.
-5. **Align with InkOS standards**: Follow the project's architectural principles (see CLAUDE.md), especially regarding error handling (no force unwraps, proper throws) and commenting style.
+5. **Align with PaperClip standards**: Follow the project's architectural principles (see CLAUDE.md), especially regarding error handling (no force unwraps, proper throws) and commenting style.
 
 ## When to Escalate
 
