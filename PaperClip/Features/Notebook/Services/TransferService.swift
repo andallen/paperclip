@@ -197,6 +197,7 @@ final class TransferService {
       connectionState = .connected
       connectedMacName = name
       log.info("Connected to \(name)")
+      sendDeviceName()
 
     case .failed(let error):
       log.error("Connection to \(name) failed: \(error.localizedDescription)")
@@ -224,6 +225,28 @@ final class TransferService {
   }
 
   // MARK: - Sending
+
+  // Sends the iPad's device name as the first frame after connecting.
+  // The Mac distinguishes this from PNG data by checking for PNG magic bytes.
+  private func sendDeviceName() {
+    guard let connection = connection else { return }
+    let name = UIDevice.current.name
+    guard let nameData = name.data(using: .utf8) else { return }
+
+    // Same 4-byte length-prefixed framing as PNG sends.
+    var frame = Data(capacity: 4 + nameData.count)
+    var length = UInt32(nameData.count).bigEndian
+    frame.append(Data(bytes: &length, count: 4))
+    frame.append(nameData)
+
+    connection.send(content: frame, completion: .contentProcessed { error in
+      if let error = error {
+        log.error("Failed to send device name: \(error.localizedDescription)")
+      } else {
+        log.info("Sent device name: \(name)")
+      }
+    })
+  }
 
   // Sends a PNG image to the connected Mac. The data is framed as a 4-byte
   // big-endian length header followed by the raw PNG bytes.

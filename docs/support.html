@@ -25,22 +25,44 @@
 
   <h2>Report a Bug or Request a Feature</h2>
   <p>Open an issue on GitHub:<br>
-    <a href="https://github.com/andallen/paperclip/issues">github.com/andallen/ai-tutor/issues</a>
+    <a href="https://github.com/andallen/paperclip/issues">github.com/andallen/paperclip/issues</a>
   </p>
 
   <h2>Getting Started</h2>
   <ol>
-    <li>Install PaperClipReceiver on your Mac (the companion receiver app)</li>
+    <li>Install <strong>PaperClip Receiver</strong> on your Mac from the Mac App Store — it's free</li>
+    <li>Launch it — you'll see a paperclip icon in your menu bar. That means it's ready</li>
     <li>Open PaperClip on your iPad</li>
     <li>Write or draw with Apple Pencil</li>
-    <li>Tap the Send button — your drawing is sent directly to your Mac over peer-to-peer Wi-Fi</li>
-    <li>Paste (⌘V) into any app on your Mac</li>
+    <li>Tap Send — your drawing arrives on your Mac clipboard instantly</li>
+    <li>Paste (⌘V) into any app: ChatGPT, Claude Code, Gemini, email, documents</li>
   </ol>
+
+  <h2>Troubleshooting Connection Issues</h2>
+
+  <h3>"No Mac found" on iPad</h3>
+  <p>If the iPad app says "No Mac found", try these steps in order:</p>
+  <ol>
+    <li><strong>Is PaperClip Receiver running on your Mac?</strong> Look for the paperclip icon in your menu bar (top-right of your screen). If it's not there, open the app</li>
+    <li><strong>Allow Local Network access on iPad.</strong> Go to Settings → Privacy & Security → Local Network and make sure PaperClip is enabled. If you denied the prompt when it first appeared, you need to enable it here</li>
+    <li><strong>Check Wi-Fi on both devices.</strong> Both your iPad and Mac need Wi-Fi turned on. They don't need to be on the same network — peer-to-peer works directly — but Wi-Fi must be enabled</li>
+    <li><strong>Check your Mac firewall.</strong> Go to System Settings → Network → Firewall. If the firewall is on, make sure it's not blocking incoming connections for PaperClip Receiver</li>
+    <li><strong>Restart both apps.</strong> Quit PaperClip Receiver on Mac (click the menu bar icon → Quit), relaunch it, then close and reopen PaperClip on iPad</li>
+  </ol>
+
+  <h3>Drawing sent but nothing on clipboard</h3>
+  <p>Check the PaperClip Receiver menu — it shows a count of received images. If the count went up, the image is on your clipboard. Try pressing ⌘V in a different app. Some apps (like Terminal) don't accept image pastes.</p>
+
+  <h3>Connection drops frequently</h3>
+  <p>Peer-to-peer Wi-Fi works best when your devices are within about 30 feet of each other. The connection will automatically re-establish when the devices are in range again.</p>
 
   <h2>Frequently Asked Questions</h2>
 
-  <h3>How do I get my drawing onto my Mac?</h3>
-  <p>PaperClip sends drawings directly to your Mac over peer-to-peer Wi-Fi using Apple Wireless Direct Link (AWDL). A small companion app, PaperClipReceiver, runs on your Mac and places the received drawing on your clipboard so you can paste it anywhere.</p>
+  <h3>How does the transfer work?</h3>
+  <p>PaperClip sends drawings directly to your Mac over peer-to-peer Wi-Fi using Apple Wireless Direct Link (AWDL). PaperClip Receiver runs in your Mac's menu bar, receives the drawing, and places it on your clipboard. No data passes through any external server.</p>
+
+  <h3>Do both devices need to be on the same Wi-Fi network?</h3>
+  <p>No. The connection uses Apple's peer-to-peer technology (AWDL), which works directly between devices. Both devices just need Wi-Fi turned on — they'll find each other automatically, even on restricted networks like eduroam.</p>
 
   <h3>Where are my notes stored?</h3>
   <p>Notes are saved locally on your iPad in the app's private storage. They are not uploaded to any server.</p>

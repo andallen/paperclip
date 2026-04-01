@@ -2,212 +2,242 @@
 
 ## Overview
 
-This document tracks every step needed to publish PaperClip to the App Store. Steps are grouped into phases. All steps within "Phase 2" can be done in parallel. Everything else is sequential.
+PaperClip is a two-app system: an iPad app for handwriting with Apple Pencil and a macOS menu bar companion app (PaperClipMac) that receives drawings over peer-to-peer Wi-Fi and places them on the Mac clipboard. Both apps need to be published to their respective App Stores.
+
+This document tracks every step needed to ship both apps. Steps are grouped into phases. All steps within a phase can be done in parallel unless noted otherwise.
 
 ---
 
-## Phase 1: Code Changes (Sequential)
+## Phase 1: Code Changes (Done)
 
 ### ~~1. Rename project from InkOS to PaperClip~~
 **Status:** Done
-**Why:** InkOS was the old project name. The App Store listing, bundle ID, and all internal references need to be consistent under the final name. The bundle ID is permanent once published.
 
 ### ~~2. Add Privacy Manifest (PrivacyInfo.xcprivacy)~~
-**Status:** Done (updated — clipboard declaration removed since the app no longer uses `UIPasteboard`)
-**Why:** Apple requires all apps to declare which "required reason APIs" they use. PaperClip previously accessed the system clipboard, but now sends drawings over peer-to-peer Wi-Fi instead. The manifest is kept with an empty API types array since the file is still required.
+**Status:** Done (empty API types array — no privacy-sensitive APIs used)
 
 ### ~~3. Add ITSAppUsesNonExemptEncryption to Info.plist~~
+**Status:** Done (both iPad and Mac Info.plist)
+
+### ~~4. Replace Universal Clipboard with peer-to-peer transfer~~
 **Status:** Done
-**Why:** Every time you upload a build, Apple asks whether the app uses non-exempt encryption (for US export compliance). PaperClip doesn't use any custom encryption — just standard system APIs. Adding `ITSAppUsesNonExemptEncryption = NO` to Info.plist answers this question automatically so you don't have to click through it on every upload.
+**What was done:**
+- iPad: `TransferService` discovers Mac via Bonjour (`_paperclip._tcp`) over AWDL, sends framed PNGs over persistent TCP connection
+- Mac: `ReceiverService` listens via NWListener with `.includePeerToPeer`, writes received PNGs to NSPasteboard
+- Both: `NSLocalNetworkUsageDescription` and `NSBonjourServices` in Info.plist
+- UIPasteboard writes removed entirely from iPad app
+
+### ~~5. Build macOS companion app (PaperClipMac)~~
+**Status:** Done
+**What was done:**
+- SwiftUI MenuBarExtra with LSUIElement (no Dock icon)
+- ReceiverService: Observable NWListener, 4-byte length-prefixed PNG protocol
+- MenuBarView: status display, "Start at Login" toggle (SMAppService), quit button
+- Sandboxed with network.client + network.server entitlements
+- Build script: `Scripts/buildmac`
 
 ---
 
-## Phase 2: Pre-Submission Prep (All Parallel)
+## Phase 2: Pre-Submission Content (Parallel)
 
-These six tasks have no dependencies on each other and can be done simultaneously by different people. None of them require an Apple Developer account.
+### ~~6. Decide on Deployment Target~~
+**Status:** Done (iPad: iOS 26.0, Mac: macOS 14.0)
 
-### ~~4. Decide on Deployment Target~~
-**Status:** Done (set to 26.0)
-**What:** The app's minimum iOS version is currently set to 26.2. This means only devices running iOS 26.2+ can install it.
-**Why this matters:** A higher deployment target means fewer people can download the app. Lowering it (e.g., to 18.0) opens the app to more users, but may require adding compatibility checks for newer APIs like `liquidGlassBackground` that don't exist on older iOS versions.
-**How to do it:**
-1. Open `PaperClip.xcodeproj` in Xcode
-2. Select the PaperClip target → General → Minimum Deployments
-3. Choose a target version (18.0 is a common choice for broad support, 26.0 if you only want current devices)
-4. Build the app and fix any compiler errors from APIs unavailable on the older target
-5. Test on a simulator running the minimum version to verify nothing crashes
+### ~~7. Take App Store Screenshots — iPad~~
+**Status:** Done — 5 screenshots at 2064x2752 in `/Users/andrewallen/Downloads/appstore_screenshots/`
 
-**Deliverable:** A working build at the chosen deployment target.
+### ~~8. Take App Store Screenshots — Mac~~
+**Status:** Done
+**What:** The Mac App Store requires screenshots for the macOS companion app listing.
+**Required resolutions (at least one):**
 
-### ~~5. Take App Store Screenshots~~
-**Status:** Done — 5 screenshots at 2064×2752 in `/Users/andrewallen/Downloads/appstore_screenshots/`
-**What:** The App Store requires screenshots at the **13-inch iPad** resolution (2064 × 2752). This is the only mandatory iPad size — Apple auto-scales it for all smaller iPads on the store listing.
-**Why this matters:** Screenshots are the first thing users see on your App Store listing. Apple will reject the submission if screenshots are missing. They also reject screenshots that don't match the actual app UI.
-
-**Required resolution:**
-
-| Device | Resolution (portrait) | Required? |
+| Display | Resolution | Required? |
 |---|---|---|
-| 13" iPad | 2064 × 2752 | Yes (only mandatory iPad size) |
-| iPhone 6.9" | 1320 × 2868 | Only if you support iPhone |
-
-**Important:** Screenshots from your physical iPad (A16, 11-inch) won't work — its native resolution is 2360 × 1640, which doesn't match the required 2064 × 2752. App Store Connect requires exact pixel-match uploads. You need to use the Xcode simulator for this.
+| Retina 16" | 3456 x 2234 | Recommended |
+| Retina 13" | 2880 x 1800 | Alternative |
 
 **How to do it:**
-1. Open the project in Xcode and run the app in the **iPad Pro 13-inch (M4) simulator**
-2. Take screenshots with **Cmd+S** in the simulator (saves to Desktop)
-3. Capture 3-5 screenshots showing key screens:
-   - A blank canvas (the "fresh paper" experience)
-   - A canvas with handwriting on it (showing what it looks like in use)
-   - The sidebar open with multiple notes listed
-   - The send action / toast confirmation
-4. **Optional polish:** Use a free tool like [AppMockUp](https://app-mockup.com) or Rotato to place the raw screenshots inside iPad device frames with colored backgrounds and short marketing text (e.g., "Write naturally with Apple Pencil"). This is what makes App Store listings look professional — the device frame + text overlay style.
-5. You need minimum 1, maximum 10 screenshots
+1. Run `Scripts/buildmac` then `open build/PaperClipMac.app`
+2. Click the menu bar icon to open the dropdown
+3. Take a screenshot of the menu bar area showing the dropdown (Cmd+Shift+4, drag)
+4. Show at least: "Waiting for iPad" state, and "Connected" state with a device name
+5. Optionally show the menu bar icon in context (top-right of screen)
 
-**Deliverable:** 1-10 PNG or JPEG images at 2064×2752.
+**Note:** Mac screenshots can be more minimal — the app is a menu bar utility. 2-3 screenshots are sufficient. Consider compositing them into a single image with labels.
 
-### ~~6. Create a Privacy Policy URL~~
+**Deliverable:** 2-3 PNG or JPEG images at one of the required resolutions.
+
+### ~~9. Create a Privacy Policy URL~~
 **Status:** Done — https://andallen.github.io/paperclip/privacy.html
-**What:** A publicly accessible webpage containing a privacy policy for the app.
-**Why this matters:** Apple requires this URL before you can submit. They will reject the app without it. The URL is displayed on the App Store listing and must remain accessible as long as the app is published.
 
-**What PaperClip's privacy policy should say:**
-- PaperClip does **not** collect any personal data
-- Drawings are stored locally on the device in the app's sandboxed Documents folder
-- No user accounts, no sign-in, no analytics, no tracking
-- The send feature transmits drawings directly to a companion Mac app over local peer-to-peer Wi-Fi (AWDL) — no data passes through Apple's servers or any external server
-- No third-party SDKs that collect data
-
-**How to do it:** Create a simple page on GitHub Pages, Notion (set to public), a personal website, or any static hosting. It can be a single paragraph. The legal bar for a free app with no data collection is very low — just be honest and accurate.
-
-**Deliverable:** A public URL (e.g., `https://yoursite.com/paperclip/privacy`).
-
-### ~~7. Create a Support URL~~
+### ~~10. Create a Support URL~~
 **Status:** Done — https://andallen.github.io/paperclip/support.html
-**What:** A publicly accessible URL where users can get help or report issues.
-**Why this matters:** Apple requires this field when creating the app listing. It appears on the App Store page. Without it, you cannot submit.
 
-**How to do it:** Any of these work:
-- A GitHub repository with Issues enabled (users file bugs as GitHub issues)
-- A simple webpage with a contact email address
-- A Google Form for feedback
-- A link to a personal site with a "Contact" section
+### ~~11. Update App Store Listing Copy~~
+**Status:** Done — `docs/app-store-copy.txt` updated with both iPad and Mac app listings. Review notes reference PaperClipMac companion app and bundle IDs. Keywords updated. Mac app copy written.
 
-**Deliverable:** A public URL.
+### ~~12. Update Onboarding Flow~~
+**Status:** Done — Page 2 Step 3 and Page 3 updated to reference companion app instead of Universal Clipboard.
 
-### ~~8. Write the App Store Listing Copy~~
-**Status:** Done — saved to `docs/app-store-copy.txt`
-**What:** The text content that appears on your App Store page, plus a private note to Apple's review team.
-**Why this matters:** These fields are required to create the app listing in App Store Connect. The description and keywords affect search ranking. The review notes prevent Apple from rejecting the app for being "incomplete" since the full workflow involves a Mac companion.
+### ~~13. Add Disconnected State UI~~
+**Status:** Done — Send button disabled when no Mac connected. "No Mac found" label with tappable `?` help button that expands a troubleshooting card with setup steps. Auto-dismisses when Mac connects.
 
-**Fields to write:**
+### ~~14. Update Privacy Policy Page~~
+**Status:** Done — Updated to mention both apps, companion Mac app by name, peer-to-peer transfer, local network access explanation. No Universal Clipboard references.
 
-| Field | Max Length | Guidance |
-|---|---|---|
-| **App Name** | 30 characters | The title on the App Store. e.g., "PaperClip" or "PaperClip - Digital Paper" |
-| **Subtitle** | 30 characters | One-line tagline shown below the name. e.g., "Handwrite to Claude Code" |
-| **Description** | 4000 characters | What the app does, who it's for, key features. Written for potential users browsing the store. |
-| **Keywords** | 100 characters total, comma-separated | Search terms users might type. e.g., "handwriting,apple pencil,clipboard,digital paper,notes,drawing,coding". Don't repeat words already in your app name. |
-| **App Review Notes** | No limit | A private note only Apple's reviewer sees. Explain the peer-to-peer architecture: the iPad sends drawings to a Mac companion receiver (PaperClipReceiver) over AWDL/Bonjour, and the Mac places them on the clipboard. The iPad app is standalone for note-taking; the send feature uses standard Apple networking APIs. |
-
-**Deliverable:** A text document with all five fields filled out.
+### ~~15. Update Support Page~~
+**Status:** Done — Added full troubleshooting section ("No Mac found", clipboard issues, connection drops), updated getting started with companion app install steps, added FAQ on peer-to-peer and network requirements. Fixed broken GitHub link.
 
 ---
 
-## Phase 3: Apple Developer Account (Sequential, blocks everything after)
+## Phase 3: Code Quality & Polish (Parallel)
 
-### ~~9. Purchase Apple Developer Program Membership~~
+### ~~16. App Icons~~
+**Status:** Done — Mac app now uses the same 1024x1024 AppIcon.png as the iPad app. Xcode downscales to all required Mac sizes automatically.
+
+### ~~17. Code Signing Setup~~
 **Status:** Done
-**What:** Enroll in the Apple Developer Program at [developer.apple.com/enroll](https://developer.apple.com/enroll). Costs $99/year.
-**Why this matters:** You cannot upload builds or create App Store listings without this. Nothing in Phase 4 can happen without an active membership.
-**How long:** Approval typically takes a few hours to a couple of days. Apple may request identity verification.
 
-### 10. Accept App Store Connect Agreements
-**Status:** Not started (blocked by step 9)
-**What:** Log into [appstoreconnect.apple.com](https://appstoreconnect.apple.com) and accept all required agreements. Fill out banking and tax information.
-**Why this matters:** Even for a free app, Apple requires the Paid Applications Agreement to be signed and tax/banking info filled in before you can submit. App Store Connect will show a banner at the top if agreements need attention.
+### ~~18. Version Numbers~~
+**Status:** Done — both apps at 1.0 (build 1). Mac Info.plist was missing version keys; added.
+
+### ~~19. Mac App Privacy Manifest~~
+**Status:** Done — created `PaperClipMac/PrivacyInfo.xcprivacy` (no tracking, no privacy-sensitive APIs). NSPasteboard is not a "required reason API" so no declaration needed.
+
+### ~~20. Mac App Sandbox Entitlements Review~~
+**Status:** Done — entitlements verified correct. `app-sandbox` + `network.client` + `network.server` covers all functionality. NSPasteboard works in sandbox without special entitlement. SMAppService is the modern sandbox-compatible login item API. Bonjour/AWDL verified working by end-to-end testing.
 
 ---
 
-## Phase 4: Submission (Sequential)
+## Phase 4: Apple Developer Account (Sequential)
 
-### 11. Create App in App Store Connect
-**Status:** Not started (blocked by step 10)
-**What:** Create the app listing in App Store Connect.
-**How to do it:**
-1. Go to [appstoreconnect.apple.com](https://appstoreconnect.apple.com) → My Apps → **+** → New App
+### ~~21. Purchase Apple Developer Program Membership~~
+**Status:** Done
+
+### ~~22. Accept App Store Connect Agreements~~
+**Status:** Done
+
+---
+
+## Phase 5: Submission — iPad App (Sequential)
+
+### ~~23. Create iPad App in App Store Connect~~
+**Status:** Done
+**How:**
+1. Go to appstoreconnect.apple.com → My Apps → + → New App
 2. Fill in:
    - **Platform:** iOS
-   - **Name:** (from step 8)
+   - **Name:** PaperClip - Handwrite for AI
    - **Primary Language:** English
-   - **Bundle ID:** Select `me.andy.allen.PaperClip` from the dropdown
-   - **SKU:** Any unique string (e.g., `paperclip-v1`)
-3. Set **Category** to Productivity (primary), Utilities (secondary)
-4. Complete the **Age Rating** questionnaire (PaperClip should be 4+ — no objectionable content)
-5. Upload screenshots (from step 5)
-6. Fill in name, subtitle, description, keywords (from step 8)
-7. Enter privacy policy URL (from step 6) and support URL (from step 7)
+   - **Bundle ID:** `me.andy.allen.PaperClip`
+   - **SKU:** `paperclip-ipad-v1`
+3. Category: Productivity (primary), Utilities (secondary)
+4. Age Rating: 4+ (no objectionable content)
+5. Upload iPad screenshots (from step 7)
+6. Fill in listing copy (from step 11)
+7. Enter privacy policy URL and support URL
 
-### 12. Archive and Upload the Build
-**Status:** Not started (blocked by step 11)
-**What:** Create a release build and upload it to App Store Connect.
-**How to do it:**
-1. In Xcode, set the device dropdown to **Any iOS Device (arm64)** (not a simulator)
-2. Go to **Product → Archive**
-3. When the Organizer window opens, click **Distribute App** → **App Store Connect** → **Upload**
-4. Xcode validates the build, checks code signing, and uploads
-5. Wait for a processing email from Apple (usually 5-30 minutes)
-6. Check the email for any compliance warnings
+### ~~24. Archive and Upload iPad Build~~
+**Status:** Done
+**How:**
+1. In Xcode, select the PaperClip scheme, set destination to "Any iOS Device (arm64)"
+2. Product → Archive
+3. Organizer → Distribute App → App Store Connect → Upload
+4. Wait for processing email (5-30 minutes)
 
-**Alternative (command line):**
-```bash
-xcodebuild archive \
-  -workspace PaperClip.xcworkspace \
-  -scheme PaperClip \
-  -archivePath build/PaperClip.xcarchive \
-  -destination "generic/platform=iOS"
+### ~~25. Submit iPad App for Review~~
+**Status:** Done — submitted 2026-04-01
+**How:**
+1. In App Store Connect → your app → App Store tab
+2. Select the uploaded build
+3. Paste App Review Notes explaining the companion app workflow
+4. Submit to App Review
 
-xcodebuild -exportArchive \
-  -archivePath build/PaperClip.xcarchive \
-  -exportPath build/AppStore \
-  -exportOptionsPlist ExportOptions.plist
-```
-(Requires an ExportOptions.plist with `method` set to `app-store-connect`.)
-
-### 13. Submit for App Review
-**Status:** Not started (blocked by step 12)
-**What:** Select the uploaded build and submit it to Apple's review team.
-**How to do it:**
-1. In App Store Connect, go to your app → **App Store** tab
-2. Scroll to the **Build** section → click **+** → select the uploaded build
-3. Paste the App Review Notes (from step 8) into the **Notes for Reviewer** field
-4. Click **Add for Review** → **Submit to App Review**
-
-**What to expect:**
-- First-time submissions typically take **24-48 hours** to review
-- You'll get an email when approved or if changes are requested
-- Common rejection reasons for first-timers:
-  - Missing privacy policy URL
-  - App feels incomplete or crashes
-  - Description doesn't match what the app actually does
-  - Unclear functionality (the review notes from step 8 help prevent this)
+**Important for review notes:** Explain that the full workflow requires the companion Mac app (PaperClipMac), but the iPad app is fully functional standalone for note-taking. The send feature requires the Mac app to be running. Provide clear instructions for the reviewer on how to test.
 
 ---
 
-## Quick Reference: What's Done
+## Phase 6: Submission — Mac Companion App (Sequential)
 
-| # | Step | Status |
-|---|---|---|
-| 1 | Rename project to PaperClip | Done |
-| 2 | Add PrivacyInfo.xcprivacy | Done |
-| 3 | Add ITSAppUsesNonExemptEncryption | Done |
-| 4 | Decide on deployment target | Done (26.0) |
-| 5 | Take screenshots | Done |
-| 6 | Privacy policy URL | Done |
-| 7 | Support URL | Done |
-| 8 | Store listing copy | Done |
-| 9 | Apple Developer membership | Done |
-| 10 | Accept App Store Connect agreements | Not started |
-| 11 | Create app in App Store Connect | Not started |
-| 12 | Archive and upload build | Not started |
-| 13 | Submit for App Review | Not started |
+### ~~26. Create Mac App in App Store Connect~~
+**Status:** Done
+**How:**
+1. Go to appstoreconnect.apple.com → My Apps → + → New App
+2. Fill in:
+   - **Platform:** macOS
+   - **Name:** PaperClip Receiver (or similar)
+   - **Primary Language:** English
+   - **Bundle ID:** `me.andy.allen.PaperClipMac`
+   - **SKU:** `paperclip-mac-v1`
+3. Category: Utilities (primary), Productivity (secondary)
+4. Age Rating: 4+
+5. Upload Mac screenshots (from step 8)
+6. Fill in Mac listing copy (from step 11)
+7. Enter same privacy policy URL and support URL
+
+### ~~27. Archive and Upload Mac Build~~
+**Status:** Done
+**How:**
+1. In Xcode, select the PaperClipMac scheme, set destination to "My Mac"
+2. Product → Archive
+3. Organizer → Distribute App → App Store Connect → Upload
+4. Wait for processing email
+
+**Note:** macOS archive builds require proper code signing and may need a provisioning profile for the App Store. Ensure the sandbox entitlements are included.
+
+### ~~28. Submit Mac App for Review~~
+**Status:** Done — submitted 2026-04-01
+**How:**
+1. In App Store Connect → your Mac app → App Store tab
+2. Select the uploaded build
+3. Paste App Review Notes explaining it's a companion to the iPad app
+4. Submit to App Review
+
+**Important for review notes:** This is a menu bar utility — no main window, no Dock icon. Explain this is intentional (LSUIElement). Describe the two-app workflow. Mention the iPad app by name and bundle ID. If the iPad app is already approved, reference it.
+
+---
+
+## Phase 7: Post-Launch
+
+### 29. Cross-Link the Apps
+**Status:** Not started (blocked by both apps being approved)
+**What:** Once both apps are live:
+- Update the iPad app description to link to the Mac app ("Download PaperClip Receiver on the Mac App Store")
+- Update the Mac app description to link to the iPad app
+- Consider using App Store Connect's "Related Apps" feature if available
+
+---
+
+## Quick Reference
+
+| # | Step | Status | Blocks |
+|---|---|---|---|
+| 1 | Rename project | Done | — |
+| 2 | Privacy manifest | Done | — |
+| 3 | Encryption declaration | Done | — |
+| 4 | P2P transfer | Done | — |
+| 5 | Mac companion app | Done | — |
+| 6 | Deployment targets | Done | — |
+| 7 | iPad screenshots | Done | — |
+| 8 | Mac screenshots | Done | — |
+| 9 | Privacy policy URL | Done | — |
+| 10 | Support URL | Done | — |
+| 11 | Update listing copy | Done | — |
+| 12 | Update onboarding | Done | — |
+| 13 | Disconnected state UI | Done | — |
+| 14 | Update privacy page | Done | — |
+| 15 | Update support page | Done | — |
+| 16 | App icons | Done | — |
+| 17 | Code signing | Done | 24, 27 |
+| 18 | Version numbers | Done | — |
+| 19 | Mac privacy manifest | Done | — |
+| 20 | Sandbox entitlements review | Done | — |
+| 21 | Developer membership | Done | — |
+| 22 | App Store Connect agreements | Done | 23, 26 |
+| 23 | Create iPad listing | Done | — |
+| 24 | Upload iPad build | Done | — |
+| 25 | Submit iPad for review | Done (2026-04-01) | — |
+| 26 | Create Mac listing | Done | — |
+| 27 | Upload Mac build | Done | — |
+| 28 | Submit Mac for review | Done (2026-04-01) | — |
+| 29 | Cross-link apps | Not started | — |

@@ -5,7 +5,7 @@
 // Three-page onboarding flow shown on first launch.
 // Page 1: Animated paper airplane (app icon) drawing itself, with tagline.
 // Page 2: Three-step workflow overview (Write → Send → Arrive).
-// Page 3: Universal Clipboard setup checklist + Get Started button.
+// Page 3: Companion app setup instructions + Get Started button.
 //
 
 import SwiftUI
@@ -80,7 +80,7 @@ private enum OnboardingStyle {
 // MARK: - OnboardingView
 
 // Full-screen onboarding presented before the main app.
-// Three swipeable pages: welcome, workflow explanation, and setup checklist.
+// Three swipeable pages: welcome, workflow explanation, and companion app setup.
 struct OnboardingView: View {
   // Called when the user finishes onboarding via the Get Started button.
   let onComplete: () -> Void
@@ -215,7 +215,7 @@ struct OnboardingView: View {
         workflowStep(
           number: "1",
           title: "Write",
-          description: "Draw anything with Apple Pencil on the canvas.",
+          description: "Draw on the canvas with Apple Pencil. Only Pencil input draws; your finger scrolls.",
           visible: stepVisible[0]
         )
 
@@ -229,7 +229,7 @@ struct OnboardingView: View {
         workflowStep(
           number: "3",
           title: "Arrive",
-          description: "It lands on your Mac via Universal Clipboard. Simply ⌘V for it to appear.",
+          description: "It lands on your Mac's clipboard. Simply ⌘V to paste.",
           visible: stepVisible[2]
         )
       }
@@ -288,46 +288,46 @@ struct OnboardingView: View {
 
   // MARK: - Page 3: Setup
 
-  // Universal Clipboard requirements and Get Started CTA.
+  // Companion app install instructions and Get Started CTA.
   private var setupPage: some View {
     VStack(spacing: 0) {
       Spacer()
 
       // Section heading.
-      Text("One Last Thing")
+      Text("Set Up Your Mac")
         .font(NotebookTypography.display)
         .foregroundColor(NotebookPalette.ink)
 
       Spacer().frame(height: 10)
 
       // Setup explanation.
-      Text("Enable Universal Clipboard so your\nhandwriting can travel from iPad to Mac.")
+      Text("Install the free companion app so your\ndrawings arrive on your Mac instantly.")
         .font(NotebookTypography.body)
         .foregroundColor(NotebookPalette.inkSubtle)
         .multilineTextAlignment(.center)
 
       Spacer().frame(height: 44)
 
-      // Requirement cards with liquid glass backgrounds.
+      // Setup step cards with liquid glass backgrounds.
       VStack(spacing: 14) {
         setupCard(
-          icon: "person.circle",
-          title: "Same Apple ID",
-          detail: "Sign in on both your iPad and Mac",
+          icon: "arrow.down.circle",
+          title: "Get PaperClip for Mac",
+          detail: Text("Free companion app — lives in your menu bar"),
           visible: checkVisible[0]
         )
 
         setupCard(
-          icon: "wifi",
-          title: "Wi-Fi & Bluetooth",
-          detail: "Enabled on both devices",
+          icon: "desktopcomputer",
+          title: "Launch It",
+          detail: Text("Look for the \(Image(systemName: "paperclip")) icon in your menu bar"),
           visible: checkVisible[1]
         )
 
         setupCard(
-          icon: "arrow.left.arrow.right",
-          title: "Handoff",
-          detail: "Settings → General → AirPlay & Handoff",
+          icon: "checkmark.circle",
+          title: "You're Connected",
+          detail: Text("A green dot on your canvas means your Mac is nearby"),
           visible: checkVisible[2]
         )
       }
@@ -361,11 +361,11 @@ struct OnboardingView: View {
     .padding(.horizontal, 40)
   }
 
-  // Requirement card with icon, title, detail, and liquid glass background.
+  // Setup step card with icon, title, detail, and liquid glass background.
   private func setupCard(
     icon: String,
     title: String,
-    detail: String,
+    detail: Text,
     visible: Bool
   ) -> some View {
     HStack(spacing: 14) {
@@ -376,13 +376,13 @@ struct OnboardingView: View {
         .frame(width: 42, height: 42)
         .background(Circle().fill(OnboardingStyle.accentTint))
 
-      // Requirement text.
+      // Step text.
       VStack(alignment: .leading, spacing: 2) {
         Text(title)
           .font(NotebookTypography.headline)
           .foregroundColor(NotebookPalette.ink)
 
-        Text(detail)
+        detail
           .font(NotebookTypography.body)
           .foregroundColor(NotebookPalette.inkSubtle)
       }

@@ -1,0 +1,35 @@
+#!/bin/bash
+set -euo pipefail
+
+# Build the PaperClipMac menu bar companion app.
+# Output: build/PaperClipMac.app
+
+cd "$(dirname "$0")/.."
+
+mkdir -p build Logs
+
+echo "Building PaperClipMac..."
+
+DERIVED_DATA_PATH="./Logs.nosync/DerivedData"
+CONFIGURATION="${1:-Debug}"
+
+xcodebuild build \
+  -project PaperClip.xcodeproj \
+  -scheme PaperClipMac \
+  -configuration "$CONFIGURATION" \
+  -derivedDataPath "$DERIVED_DATA_PATH" \
+  -allowProvisioningUpdates \
+  COMPILER_INDEX_STORE_ENABLE=NO \
+  CODE_SIGNING_ALLOWED=NO \
+  2>&1 | grep -E "error:|BUILD SUCCEEDED|BUILD FAILED" | head -20
+
+# Copy the built .app to build/ for easy access.
+APP_PATH=$(find "$DERIVED_DATA_PATH/Build/Products/$CONFIGURATION" -name "PaperClipMac.app" -maxdepth 1 2>/dev/null | head -1)
+if [ -n "$APP_PATH" ]; then
+  rm -rf build/PaperClipMac.app
+  cp -R "$APP_PATH" build/PaperClipMac.app
+  echo "Built: build/PaperClipMac.app"
+else
+  echo "ERROR: Could not find built app"
+  exit 1
+fi

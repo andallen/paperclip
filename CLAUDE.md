@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-PaperClip is an iPad app that acts as digital paper. You write with Apple Pencil, tap send, and a raw image of your handwriting appears in Claude Code on your Mac. The iPad sends drawings directly to a small Mac receiver daemon over peer-to-peer Wi-Fi (AWDL), bypassing Universal Clipboard entirely.
+PaperClip is an iPad app that acts as digital paper. You write with Apple Pencil, tap send, and a raw image of your handwriting appears in Claude Code on your Mac. The iPad sends drawings directly to the PaperClipMac companion app over peer-to-peer Wi-Fi (AWDL), bypassing Universal Clipboard entirely.
 
 ## Directory Structure
 
@@ -36,12 +36,21 @@ PaperClip/
 ├── PaperClipUITests/
 │   └── PaperClipUITests.swift                      # UI test suite
 │
+├── PaperClipMac/                                   # macOS menu bar companion app
+│   ├── PaperClipMacApp.swift                       # @main entry with MenuBarExtra
+│   ├── ReceiverService.swift                       # Observable NWListener: receives PNGs, writes clipboard
+│   ├── MenuBarView.swift                           # Menu dropdown: status, login toggle, quit
+│   ├── Info.plist                                  # LSUIElement, Bonjour, network privacy
+│   ├── PaperClipMac.entitlements                   # Sandbox + network entitlements
+│   └── Assets.xcassets/                            # App icon
+│
 ├── PaperClipReceiver/
-│   └── main.swift                                  # Mac receiver daemon (single-file Swift CLI)
+│   └── main.swift                                  # Mac receiver CLI (developer use)
 │
 ├── Scripts/
 │   ├── buildapp                                # Build iPad app (xcodebuild)
-│   ├── buildreceiver                           # Build Mac receiver (swiftc)
+│   ├── buildmac                                # Build macOS companion app (xcodebuild)
+│   ├── buildreceiver                           # Build Mac receiver CLI (swiftc)
 │   ├── install-receiver                        # Install receiver as launchd agent
 │   ├── uninstall-receiver                      # Remove receiver and launchd agent
 │   ├── test-transfer                           # Loopback test: receiver + send + clipboard verify
@@ -66,11 +75,17 @@ PaperClip/
 - **Note persistence** — PKDrawing serialized to JSON files in Documents/notes/
 - **Sidebar** — slide-in panel for browsing notes, search, rename (long-press context menu), delete
 
-### Mac Receiver (PaperClipReceiver)
-- **Single-file Swift CLI** — listens on `_paperclip._tcp` with `.includePeerToPeer` (AWDL)
+### macOS Companion App (PaperClipMac)
+- **SwiftUI MenuBarExtra** — no Dock icon (`LSUIElement`), just a paperclip icon in the menu bar
+- **ReceiverService** — `@Observable` NWListener on `_paperclip._tcp` with `.includePeerToPeer` (AWDL)
 - **Protocol** — 4-byte big-endian UInt32 length header + raw PNG bytes (repeated on persistent connection)
 - **Clipboard** — received PNGs are written to `NSPasteboard.general` for Cmd+V
-- **launchd agent** — install once via `Scripts/install-receiver`, starts on login, runs silently
+- **Menu bar** — shows connection status, received count, "Start at Login" toggle (SMAppService)
+- **App Store ready** — sandboxed with network client+server entitlements
+
+### Mac Receiver CLI (PaperClipReceiver)
+- **Developer tool** — same listener logic as PaperClipMac but as a standalone CLI
+- **launchd agent** — install via `Scripts/install-receiver` for development use
 
 ### PNG Metadata Marker
 Images are marked by embedding `"PaperClip-v1"` in the PNG tEXt description chunk via `CGImageDestination`.
@@ -89,8 +104,9 @@ Images are marked by embedding `"PaperClip-v1"` in the PNG tEXt description chun
 ## Build Commands
 
 - **Build iOS**: `Scripts/buildapp`
-- **Build Mac receiver**: `Scripts/buildreceiver`
-- **Install Mac receiver**: `Scripts/install-receiver`
+- **Build macOS app**: `Scripts/buildmac`
+- **Build Mac receiver CLI**: `Scripts/buildreceiver`
+- **Install Mac receiver CLI**: `Scripts/install-receiver`
 - **Test iOS**: `Scripts/testapp`
 - **UI Test iOS**: `Scripts/test-ui`
 - **Test transfer**: `Scripts/test-transfer`

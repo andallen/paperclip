@@ -64,6 +64,9 @@ struct NoteCanvasView: View {
   @State private var cropDragStart: CGPoint? = nil
   @State private var cropDragCurrent: CGPoint? = nil
 
+  // Whether the troubleshooting help card is expanded.
+  @State private var showConnectionHelp = false
+
   var body: some View {
     ZStack {
       // Full-screen drawing surface with native PKToolPicker.
@@ -93,6 +96,14 @@ struct NoteCanvasView: View {
             viewportWidth = size.width
             viewportHeight = size.height
           }
+        },
+        onUserScrolled: {
+          // Dismiss the help card when the user scrolls the canvas.
+          if showConnectionHelp {
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+              showConnectionHelp = false
+            }
+          }
         }
       )
       .ignoresSafeArea()
@@ -114,13 +125,40 @@ struct NoteCanvasView: View {
       )
 
       // Crop overlay (only active in crop mode).
+      // Must ignore safe area so its coordinate space matches the canvas,
+      // which also ignores safe area. Without this, the crop rectangle is
+      // offset from the actual content by the safe-area top inset.
       if sendMode == .crop {
         cropOverlay
+          .ignoresSafeArea()
+      }
+
+      // Invisible full-screen tap target to dismiss the help card.
+      if showConnectionHelp {
+        Color.clear
+          .contentShape(Rectangle())
+          .onTapGesture {
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+              showConnectionHelp = false
+            }
+          }
+          .ignoresSafeArea()
       }
 
       // Bottom send controls: mode picker pill + send button.
       VStack {
         Spacer()
+
+        // Troubleshooting card (expanded from the help button).
+        if showConnectionHelp {
+          connectionHelpCard
+            .transition(.scale(scale: 0.85, anchor: .bottom).combined(with: .opacity))
+        }
+
+        // "No Mac found" status when disconnected.
+        if !isConnected {
+          disconnectedLabel
+        }
 
         // Mode label that fades out after switching.
         modeLabelView
@@ -142,6 +180,14 @@ struct NoteCanvasView: View {
       }
     }
     .accessibilityIdentifier("note_canvas")
+    // Dismiss help card when a Mac connects.
+    .onChange(of: transferService.connectionState) { _, newState in
+      if newState == .connected, showConnectionHelp {
+        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+          showConnectionHelp = false
+        }
+      }
+    }
     // Reset ruler when switching to a different note.
     .onChange(of: viewModel.noteData?.metadata.id) {
       isRulerActive = false
@@ -160,12 +206,19 @@ struct NoteCanvasView: View {
   }
 
   // Whether the send button should be enabled for the current mode.
+  // Requires both content to send and an active Mac connection.
   private var canSend: Bool {
+    guard transferService.connectionState == .connected else { return false }
     switch sendMode {
     case .crop:       return cropContentRect() != nil
     case .viewport:   return viewportContentRect() != nil
     case .fullCanvas: return fullCanvasRect() != nil
     }
+  }
+
+  // Whether the Mac is reachable.
+  private var isConnected: Bool {
+    transferService.connectionState == .connected
   }
 
   // MARK: - Capture Rect Helpers
@@ -543,8 +596,16 @@ struct NoteCanvasView: View {
       context.fill(CGRect(origin: .zero, size: pixelSize))
       drawingImage.draw(in: CGRect(origin: .zero, size: pixelSize))
     }
+    // Map SendMode to CaptureMode for PNG metadata.
+    let captureMode: CaptureMode
+    switch sendMode {
+    case .crop:       captureMode = .crop
+    case .viewport:   captureMode = .viewport
+    case .fullCanvas: captureMode = .fullCanvas
+    }
+
     guard let cgImage = composited.cgImage,
-          let pngData = PNGMetadata.buildMarkedPNG(from: cgImage)
+          let pngData = PNGMetadata.buildMarkedPNG(from: cgImage, mode: captureMode)
     else { return }
 
     // Haptic feedback.
@@ -593,7 +654,7 @@ struct NoteCanvasView: View {
   // MARK: - Connection Indicator
 
   // Small dot showing peer-to-peer connection status. Green when connected,
-  // pulsing gray when searching.
+  // grey when searching, hidden when unavailable.
   private var connectionIndicator: some View {
     Group {
       switch transferService.connectionState {
@@ -608,6 +669,111 @@ struct NoteCanvasView: View {
       case .unavailable:
         EmptyView()
       }
+    }
+  }
+
+  // MARK: - Disconnected State
+
+  // "No Mac found" label with a tappable help button, shown above the send
+  // controls when no Mac connection is active.
+  private var disconnectedLabel: some View {
+    VStack(spacing: 0) {
+      Text("No Mac found")
+        .font(NotebookTypography.caption)
+        .foregroundColor(NotebookPalette.inkFaint)
+
+      // Help button — expands the troubleshooting card.
+      // Uses a generous content shape so the tap target is large enough
+      // to intercept finger touches before PencilKit's canvas does.
+      Button {
+        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+          showConnectionHelp.toggle()
+        }
+      } label: {
+        Image(systemName: "questionmark.circle.fill")
+          .font(.system(size: 20, weight: .medium))
+          .foregroundColor(NotebookPalette.inkFaint)
+          .frame(width: 44, height: 44)
+          .contentShape(Rectangle())
+      }
+    }
+    .padding(.horizontal, 16)
+    .padding(.top, 8)
+    .padding(.bottom, 4)
+    .liquidGlassBackground(cornerRadius: 22)
+  }
+
+  // Compact troubleshooting card that drops down above the send controls.
+  // Lists the three most common fixes for connection issues.
+  private var connectionHelpCard: some View {
+    VStack(alignment: .leading, spacing: 12) {
+      // Card header with dismiss button.
+      HStack {
+        Text("Setup")
+          .font(NotebookTypography.headline)
+          .foregroundColor(NotebookPalette.ink)
+
+        Spacer()
+
+        Button {
+          withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+            showConnectionHelp = false
+          }
+        } label: {
+          Image(systemName: "xmark")
+            .font(.system(size: 12, weight: .semibold))
+            .foregroundColor(NotebookPalette.inkFaint)
+            .frame(width: 24, height: 24)
+        }
+      }
+
+      // Troubleshooting steps.
+      helpStep(
+        number: "1",
+        text: "Install **PaperClip Receiver** on your Mac. It's a free companion app that lives in your menu bar"
+      )
+
+      helpStep(
+        number: "2",
+        text: "Launch it. If you see the paperclip in your menu bar, it's ready. Nothing else to do"
+      )
+
+      helpStep(
+        number: "3",
+        text: "Make sure both devices are on the same Wi-Fi"
+      )
+
+      helpStep(
+        number: "💡",
+        text: "Still not connecting? Quit and reopen the PaperClip app on your Mac"
+      )
+    }
+    .padding(16)
+    .frame(maxWidth: 320, alignment: .leading)
+    .background(
+      RoundedRectangle(cornerRadius: 14)
+        .fill(.ultraThinMaterial)
+        .shadow(color: .black.opacity(0.08), radius: 12, y: 4)
+    )
+    .padding(.horizontal, 24)
+    .padding(.bottom, 8)
+  }
+
+  // Single numbered step within the help card.
+  private func helpStep(number: String, text: String) -> some View {
+    HStack(alignment: .top, spacing: 10) {
+      // Number badge — small ink circle.
+      Text(number)
+        .font(.system(size: 12, weight: .bold, design: .rounded))
+        .foregroundColor(NotebookPalette.paper)
+        .frame(width: 22, height: 22)
+        .background(Circle().fill(NotebookPalette.ink))
+
+      // Step text with inline bold support via Markdown.
+      Text(LocalizedStringKey(text))
+        .font(NotebookTypography.caption)
+        .foregroundColor(NotebookPalette.inkSubtle)
+        .fixedSize(horizontal: false, vertical: true)
     }
   }
 }

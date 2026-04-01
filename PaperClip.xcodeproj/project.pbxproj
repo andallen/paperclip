@@ -27,6 +27,7 @@
 		AE1AC10D2EFB3B9E00E6E4BA /* PaperClipUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PaperClipUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AEAFC2392EF4B85B00811728 /* PaperClip.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PaperClip.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AECB52312F022B2A007CACA0 /* PaperClipTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PaperClipTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		CC0001012F0A000000000001 /* PaperClipMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PaperClipMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -36,6 +37,13 @@
 				Info.plist,
 			);
 			target = AEAFC2382EF4B85B00811728 /* PaperClip */;
+		};
+		CC0001032F0A000000000003 /* Exceptions for "PaperClipMac" folder in "PaperClipMac" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = CC00010A2F0A00000000000A /* PaperClipMac */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -56,6 +64,14 @@
 		AECB52322F022B2B007CACA0 /* PaperClipTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = PaperClipTests;
+			sourceTree = "<group>";
+		};
+		CC0001022F0A000000000002 /* PaperClipMac */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				CC0001032F0A000000000003 /* Exceptions for "PaperClipMac" folder in "PaperClipMac" target */,
+			);
+			path = PaperClipMac;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -82,6 +98,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		CC0001052F0A000000000005 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -89,6 +112,7 @@
 			isa = PBXGroup;
 			children = (
 				AEAFC23B2EF4B85B00811728 /* PaperClip */,
+				CC0001022F0A000000000002 /* PaperClipMac */,
 				AE1AC10E2EFB3B9E00E6E4BA /* PaperClipUITests */,
 				AECB52322F022B2B007CACA0 /* PaperClipTests */,
 				AEAFC23A2EF4B85B00811728 /* Products */,
@@ -99,6 +123,7 @@
 			isa = PBXGroup;
 			children = (
 				AEAFC2392EF4B85B00811728 /* PaperClip.app */,
+				CC0001012F0A000000000001 /* PaperClipMac.app */,
 				AE1AC10D2EFB3B9E00E6E4BA /* PaperClipUITests.xctest */,
 				AECB52312F022B2A007CACA0 /* PaperClipTests.xctest */,
 			);
@@ -170,6 +195,26 @@
 			productReference = AECB52312F022B2A007CACA0 /* PaperClipTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		CC00010A2F0A00000000000A /* PaperClipMac */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CC0001092F0A000000000009 /* Build configuration list for PBXNativeTarget "PaperClipMac" */;
+			buildPhases = (
+				CC0001042F0A000000000004 /* Sources */,
+				CC0001052F0A000000000005 /* Frameworks */,
+				CC0001062F0A000000000006 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				CC0001022F0A000000000002 /* PaperClipMac */,
+			);
+			name = PaperClipMac;
+			productName = PaperClipMac;
+			productReference = CC0001012F0A000000000001 /* PaperClipMac.app */;
+			productType = "com.apple.product-type.application";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -191,6 +236,9 @@
 						CreatedOnToolsVersion = 26.2;
 						TestTargetID = AEAFC2382EF4B85B00811728;
 					};
+					CC00010A2F0A00000000000A = {
+						CreatedOnToolsVersion = 26.2;
+					};
 				};
 			};
 			buildConfigurationList = AEAFC2342EF4B85B00811728 /* Build configuration list for PBXProject "PaperClip" */;
@@ -208,6 +256,7 @@
 			projectRoot = "";
 			targets = (
 				AEAFC2382EF4B85B00811728 /* PaperClip */,
+				CC00010A2F0A00000000000A /* PaperClipMac */,
 				AE1AC10C2EFB3B9E00E6E4BA /* PaperClipUITests */,
 				AECB52302F022B2A007CACA0 /* PaperClipTests */,
 			);
@@ -236,6 +285,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		CC0001062F0A000000000006 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -254,6 +310,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		AECB522D2F022B2A007CACA0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CC0001042F0A000000000004 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -462,12 +525,16 @@
 				PRODUCT_MODULE_NAME = PaperClip;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 2;
 			};
 			name = Debug;
 		};
@@ -496,12 +563,16 @@
 				PRODUCT_MODULE_NAME = PaperClip;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 2;
 			};
 			name = Release;
 		};
@@ -557,6 +628,68 @@
 			};
 			name = Release;
 		};
+		CC0001072F0A000000000007 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = PaperClipMac/PaperClipMac.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8LSA357AU5;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = PaperClipMac/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = me.andy.allen.PaperClipMac;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		CC0001082F0A000000000008 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = PaperClipMac/PaperClipMac.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8LSA357AU5;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = PaperClipMac/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = me.andy.allen.PaperClipMac;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -592,6 +725,15 @@
 			buildConfigurations = (
 				AECB52372F022B2B007CACA0 /* Debug */,
 				AECB52382F022B2B007CACA0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CC0001092F0A000000000009 /* Build configuration list for PBXNativeTarget "PaperClipMac" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CC0001072F0A000000000007 /* Debug */,
+				CC0001082F0A000000000008 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

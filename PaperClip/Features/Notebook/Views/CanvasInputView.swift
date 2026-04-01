@@ -142,6 +142,9 @@ struct CanvasView: UIViewRepresentable {
   // More accurate than SwiftUI GeometryReader for safe-area-ignoring views.
   var onViewportSizeChanged: ((CGSize) -> Void)?
 
+  // Callback when the user begins a finger drag on the canvas.
+  var onUserScrolled: (() -> Void)?
+
   func makeUIView(context: Context) -> OverlayPassthroughCanvasView {
     let canvas = OverlayPassthroughCanvasView()
     canvas.drawing = drawing
@@ -151,6 +154,11 @@ struct CanvasView: UIViewRepresentable {
     canvas.drawingPolicy = .pencilOnly
     canvas.isScrollEnabled = false
     canvas.isUserInteractionEnabled = isInteractive
+
+    // Prevent UIKit from adding automatic safe-area content insets.
+    // Without this, contentOffset.y starts at -safeAreaInsets.top at rest,
+    // which complicates the coordinate math for crop and viewport capture.
+    canvas.contentInsetAdjustmentBehavior = .never
 
     // Create and attach the native PKToolPicker.
     let toolPicker = PKToolPicker()
@@ -233,6 +241,11 @@ struct CanvasView: UIViewRepresentable {
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
       parent.onScrollOffsetChanged?(scrollView.contentOffset.y)
       parent.onViewportSizeChanged?(scrollView.bounds.size)
+    }
+
+    // Fires only on user-initiated drags, not layout-driven offset changes.
+    func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+      parent.onUserScrolled?()
     }
 
     func canvasViewDrawingDidChange(_ canvasView: PKCanvasView) {
