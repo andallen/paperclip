@@ -4,65 +4,33 @@ PaperClip sends handwriting from an iPad to a Mac's system clipboard over peer t
 
 There are two components: an iPad app built with SwiftUI and PencilKit, and a macOS menu bar app that listens for incoming images and writes them to `NSPasteboard`.
 
-## Transfer Protocol
+## How It Works
 
-Both devices discover each other automatically via Bonjour, advertising a `_paperclip._tcp` service. The connection uses `Network.framework` with `includePeerToPeer = true`, which enables AWDL (the same transport AirDrop uses). This means it works on restricted networks like college WiFi where multicast DNS might otherwise be blocked.
+The two devices find each other automatically using Bonjour. The connection runs over AWDL, which is the same transport AirDrop uses, so it works even on restricted networks like college WiFi. No internet connection is involved and nothing leaves your local network.
 
-Once the iPad discovers the Mac's service, it opens a persistent TCP connection that stays alive across multiple sends. The wire format is simple:
+Once connected, the iPad holds a persistent TCP connection to the Mac and reuses it for every send. Images arrive on the Mac as PNG data and get written straight to the system clipboard.
 
-```
-[4 bytes: payload length, big endian UInt32] [N bytes: payload]
-```
+There are three send modes: **Viewport** captures what's currently visible on screen, **Crop** lets you drag a selection rectangle, and **Full Canvas** captures everything from top to bottom. All three render at 2x scale with a white background.
 
-The first frame after connecting sends the iPad's device name as UTF 8 text. All subsequent frames are PNG image data. The Mac receiver distinguishes between the two by checking for PNG magic bytes (`89 50 4E 47 0D 0A 1A 0A`) at the start of each payload.
+## The iPad App
 
-Payloads can arrive in chunks smaller than the requested length, so the receiver accumulates bytes in a loop until the full frame is assembled before processing.
+The drawing surface uses PencilKit with Apple Pencil only input. The canvas scrolls vertically and extends as you draw, up to a height cap that keeps exported images within size limits that work well when pasting into AI chat apps.
 
-## PNG Metadata
+Notes are saved locally as JSON files with the drawing data serialized alongside metadata and a thumbnail. Auto save kicks in 2 seconds after your last stroke.
 
-Each PNG embeds a marker in its `tEXt` chunk via `kCGImagePropertyPNGDescription`. The format is `PaperClip-v1:<mode>` where mode is one of `crop`, `viewport`, or `fullCanvas`. The Mac app reads this to decide how to display the thumbnail (rounded corners for cropped/viewport captures, sharp corners for full canvas).
+## The Mac App
 
-The metadata is written using `CGImageDestination` and read back with `CGImageSource`, both from ImageIO.
+A menu bar app that advertises itself on the network and waits for connections. When an image arrives it goes directly to the clipboard. The menu bar shows connection status, a thumbnail of the last received image, and a start at login toggle.
 
-## Canvas
-
-The drawing surface is a `PKCanvasView` subclass (`OverlayPassthroughCanvasView`) with a few modifications:
-
-**Height capping.** The content height extends dynamically as you draw but is hard capped at 4000pt. At the 2x render scale used for export, that produces an 8000px tall image, which is the largest size that works reliably when pasting into AI chat interfaces.
-
-**Hit test passthrough.** PKCanvasView is a UIScrollView subclass and aggressively captures touch events. The custom `hitTest` temporarily hides the canvas from the view hierarchy and re runs the hit test on the window to find SwiftUI buttons layered above it in a ZStack. Without this, overlay controls are untappable.
-
-**Edit menu suppression.** PKCanvasView inherits UIScrollView's edit menu interaction, which causes a "Select All" popup on finger taps. The subclass strips `UIEditMenuInteraction` on every layout pass because PencilKit re adds it internally.
-
-## Send Modes
-
-Images are rendered at 2x scale with an opaque white background (avoids transparency issues in dark mode apps).
-
-**Viewport** captures the visible portion of the canvas. **Crop** lets you drag a rectangle and captures that region. **Full Canvas** renders from the top of the canvas down to the lowest stroke.
-
-## Note Storage
-
-Notes are stored as JSON files in the app's documents directory. Each file contains metadata (title, timestamps) and the PencilKit drawing serialized via `PKDrawing.dataRepresentation()`. Sidebar thumbnails are PNG snapshots stored inline. Auto save triggers 2 seconds after the last drawing change.
+There's also a headless CLI receiver (`PaperClipReceiver`) for setups without a GUI.
 
 ## Project Structure
 
 ```
-PaperClip/              iPad app
-  PaperClipApp.swift    Entry point, onboarding gate
-  Features/
-    Notebook/
-      Core/             NoteModel (metadata + drawing data)
-      Services/         TransferService (Bonjour + send), SessionService (persistence)
-      ViewModels/       NotebookViewModel (drawing state, auto save)
-      Views/            Canvas, sidebar, send controls
-    Shared/             PNGMetadata, OnboardingView
-
+PaperClip/              iPad app (SwiftUI + PencilKit)
 PaperClipMac/           macOS menu bar receiver
-  ReceiverService.swift NWListener + clipboard write
-  MenuBarView.swift     Status, thumbnail, settings
-
-PaperClipReceiver/      Headless CLI receiver (same protocol)
-Scripts/                Build and test shell scripts
+PaperClipReceiver/      Headless CLI receiver
+Scripts/                Build and test scripts
 ```
 
 ## Building
