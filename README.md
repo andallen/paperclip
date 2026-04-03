@@ -6,7 +6,7 @@ There are two components: an iPad app built with SwiftUI and PencilKit, and a ma
 
 ## Transfer Protocol
 
-Both devices discover each other automatically via Bonjour, advertising a `_paperclip._tcp` service. The connection uses `Network.framework` with `includePeerToPeer = true`, which enables AWDL (the same transport AirDrop uses). This means it works on restricted networks like eduroam where multicast DNS might otherwise be blocked.
+Both devices discover each other automatically via Bonjour, advertising a `_paperclip._tcp` service. The connection uses `Network.framework` with `includePeerToPeer = true`, which enables AWDL (the same transport AirDrop uses). This means it works on restricted networks like college WiFi where multicast DNS might otherwise be blocked.
 
 Once the iPad discovers the Mac's service, it opens a persistent TCP connection that stays alive across multiple sends. The wire format is simple:
 
