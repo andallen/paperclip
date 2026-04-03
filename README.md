@@ -42,9 +42,6 @@ Scripts/buildapp        # iPad app
 Scripts/buildmac        # Mac menu bar app
 Scripts/buildreceiver   # CLI receiver
 ```
-
-The iPad app requires iOS 17+ and the Mac app requires macOS 14+.
-
 ## License
 
 [MIT](LICENSE)
