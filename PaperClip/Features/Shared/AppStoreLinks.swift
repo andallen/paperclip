@@ -8,9 +8,7 @@
 import UIKit
 
 enum AppStoreLinks {
-  // Replace PLACEHOLDER with the real Mac app Apple ID once known
-  // e.g. "https://apps.apple.com/app/paperclip-receiver/id1234567890"
-  static let macReceiverURL = URL(string: "https://apps.apple.com/app/paperclip-receiver/idPLACEHOLDER")!
+  static let macReceiverURL = URL(string: "https://apps.apple.com/app/id6761500831")!
 
   /// Opens the Mac Receiver page in the App Store and fires a light haptic.
   static func openMacReceiver() {
