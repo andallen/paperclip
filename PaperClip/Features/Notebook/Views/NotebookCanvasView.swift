@@ -457,8 +457,11 @@ struct NoteCanvasView: View {
         .ignoresSafeArea()
         .allowsHitTesting(false)
 
-      // Gesture surface: fills the middle zone between top and bottom controls.
-      // A clear Color provides a concrete hit-test target for the drag gesture.
+      // Gesture surface: covers the full canvas minus the bottom send controls.
+      // Extends to the top of the screen (no topSafeZone padding) so that crop
+      // drags can start anywhere on the canvas. Toolbar button taps still work
+      // because those SwiftUI views sit above NoteCanvasView in AppRootView's
+      // ZStack and win the UIKit hit-test before the canvas is ever consulted.
       Color.clear
         .contentShape(Rectangle())
         .gesture(
@@ -473,11 +476,11 @@ struct NoteCanvasView: View {
               guard let start = cropDragStart, let end = cropDragCurrent else { return }
               let viewportRect = dragRect(from: start, to: end)
 
-              // Translate from gesture coordinates to canvas content coordinates.
-              // Add topSafeZone since this view starts below the top safe zone.
+              // Gesture local coords match screen coords (view starts at y=0),
+              // so only scrollOffset is needed to reach canvas content coords.
               let contentRect = CGRect(
                 x: viewportRect.minX,
-                y: viewportRect.minY + scrollOffset + topSafeZone,
+                y: viewportRect.minY + scrollOffset,
                 width: viewportRect.width,
                 height: viewportRect.height
               )
@@ -491,15 +494,11 @@ struct NoteCanvasView: View {
               cropDragCurrent = nil
             }
         )
-        .padding(.top, topSafeZone)
         .padding(.bottom, bottomSafeZone)
 
       // Live drag rectangle preview (in full-screen coordinate space).
       if let start = cropDragStart, let current = cropDragCurrent {
-        let rect = dragRect(
-          from: CGPoint(x: start.x, y: start.y + topSafeZone),
-          to: CGPoint(x: current.x, y: current.y + topSafeZone)
-        )
+        let rect = dragRect(from: start, to: current)
         Rectangle()
           .stroke(NotebookPalette.ink.opacity(0.6), style: StrokeStyle(lineWidth: 1.5, dash: [6, 4]))
           .background(Rectangle().fill(NotebookPalette.ink.opacity(0.04)))

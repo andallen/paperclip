@@ -28,6 +28,9 @@ struct SidebarView: View {
   @State private var renamingNote: NoteMetadata?
   @State private var renameText = ""
 
+  // Delete confirmation state.
+  @State private var deletingNote: NoteMetadata?
+
   // Notes filtered by search query.
   private var filteredNotes: [NoteMetadata] {
     if searchText.isEmpty {
@@ -75,6 +78,20 @@ struct SidebarView: View {
       }
     } message: {
       Text("Enter a new name for this note.")
+    }
+    .alert("Delete Note", isPresented: .init(
+      get: { deletingNote != nil },
+      set: { if !$0 { deletingNote = nil } }
+    )) {
+      Button("Cancel", role: .cancel) { deletingNote = nil }
+      Button("Delete", role: .destructive) {
+        if let note = deletingNote {
+          noteService.deleteNote(id: note.id)
+        }
+        deletingNote = nil
+      }
+    } message: {
+      Text("Are you sure you want to delete this note? This cannot be undone.")
     }
   }
 
@@ -183,7 +200,7 @@ struct SidebarView: View {
         Label("Rename", systemImage: "pencil")
       }
       Button(role: .destructive) {
-        noteService.deleteNote(id: note.id)
+        deletingNote = note
       } label: {
         Label("Delete", systemImage: "trash")
       }
