@@ -27,7 +27,7 @@
 		AE1AC10D2EFB3B9E00E6E4BA /* PaperClipUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PaperClipUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AEAFC2392EF4B85B00811728 /* PaperClip.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PaperClip.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AECB52312F022B2A007CACA0 /* PaperClipTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PaperClipTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		CC0001012F0A000000000001 /* PaperClipMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PaperClipMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CC0001012F0A000000000001 /* PaperClip Receiver.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "PaperClip Receiver.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -123,7 +123,7 @@
 			isa = PBXGroup;
 			children = (
 				AEAFC2392EF4B85B00811728 /* PaperClip.app */,
-				CC0001012F0A000000000001 /* PaperClipMac.app */,
+				CC0001012F0A000000000001 /* PaperClip Receiver.app */,
 				AE1AC10D2EFB3B9E00E6E4BA /* PaperClipUITests.xctest */,
 				AECB52312F022B2A007CACA0 /* PaperClipTests.xctest */,
 			);
@@ -212,7 +212,7 @@
 			);
 			name = PaperClipMac;
 			productName = PaperClipMac;
-			productReference = CC0001012F0A000000000001 /* PaperClipMac.app */;
+			productReference = CC0001012F0A000000000001 /* PaperClip Receiver.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
