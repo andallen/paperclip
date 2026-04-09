@@ -64,9 +64,8 @@ final class TransferService {
   // Persisted flag: true once this device has ever successfully connected
   // to a Mac running PaperClip Receiver. Used by the UI to hide the
   // "Get the Mac app" link once the user is a returning user.
-  var hasEverConnectedToMac: Bool {
-    get { UserDefaults.standard.bool(forKey: "hasEverConnectedToMac") }
-    set { UserDefaults.standard.set(newValue, forKey: "hasEverConnectedToMac") }
+  var hasEverConnectedToMac: Bool = UserDefaults.standard.bool(forKey: "hasEverConnectedToMac") {
+    didSet { UserDefaults.standard.set(hasEverConnectedToMac, forKey: "hasEverConnectedToMac") }
   }
 
   // The Bonjour browser that discovers Mac receivers.
