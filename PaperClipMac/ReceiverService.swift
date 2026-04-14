@@ -62,6 +62,9 @@ final class ReceiverService {
   // The active connection from an iPad.
   private var activeConnection: NWConnection?
 
+  // True once NSWorkspace sleep/wake observers have been installed.
+  private var sleepWakeObserversInstalled = false
+
   init() {}
 
   // MARK: - Lifecycle
@@ -104,6 +107,42 @@ final class ReceiverService {
     listener = newListener
     state = .waiting
     log.info("Receiver started, advertising as \"\(macName)\"")
+
+    installSleepWakeObserversIfNeeded()
+  }
+
+  // Subscribes to NSWorkspace sleep/wake notifications so the listener can
+  // be rebuilt after the Mac wakes. On sleep macOS tears down the underlying
+  // sockets, and on wake NWListener does not always transition to .failed,
+  // so the listener would otherwise sit in a broken state until the user
+  // manually restarts the app.
+  private func installSleepWakeObserversIfNeeded() {
+    guard !sleepWakeObserversInstalled else { return }
+    sleepWakeObserversInstalled = true
+    let center = NSWorkspace.shared.notificationCenter
+
+    center.addObserver(
+      forName: NSWorkspace.willSleepNotification,
+      object: nil,
+      queue: .main
+    ) { [weak self] _ in
+      Task { @MainActor in
+        log.info("Sleep notification — stopping listener")
+        self?.stop()
+      }
+    }
+
+    center.addObserver(
+      forName: NSWorkspace.didWakeNotification,
+      object: nil,
+      queue: .main
+    ) { [weak self] _ in
+      Task { @MainActor in
+        log.info("Wake notification — restarting listener")
+        self?.stop()
+        self?.start()
+      }
+    }
   }
 
   // Stops the listener and closes any active connection.

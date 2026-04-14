@@ -71,6 +71,7 @@ struct SidebarView: View {
       TextField("Note name", text: $renameText)
       Button("Cancel", role: .cancel) { renamingNote = nil }
       Button("Rename") {
+        print("[RENAME-DEBUG] alert Rename tapped: renamingNote.id=\(renamingNote?.id ?? "nil") title=\(renamingNote?.title ?? "nil") newText=\(renameText)")
         if let note = renamingNote, !renameText.isEmpty {
           noteService.renameNote(id: note.id, newTitle: renameText)
         }
@@ -194,6 +195,9 @@ struct SidebarView: View {
     .contextMenu {
       // Long-press context menu for rename and delete.
       Button {
+        print("[RENAME-DEBUG] contextMenu Rename tapped: note.id=\(note.id) note.title=\(note.title)")
+        let visibleIds = noteService.notes.prefix(8).map(\.id)
+        print("[RENAME-DEBUG]   first 8 notes in service: \(visibleIds)")
         renameText = note.title
         renamingNote = note
       } label: {
